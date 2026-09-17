@@ -52,6 +52,7 @@ namespace UltimateTruckEmpire.Bootstrap
             CreateRoad(new Vector3(0, -.15f, 70), new Vector3(180, .3f, 14));
             CreateRoad(new Vector3(0, -.15f, -70), new Vector3(180, .3f, 14));
             CreateRoad(new Vector3(-90, -.15f, 35), new Vector3(14, .3f, 140));
+            WorldVisualBuilder.Build();
             CreateDepot(new Vector3(-55, 0, 0), "Ahmedabad Logistics Depot", DeliveryTrigger.TriggerType.Pickup);
             CreateDepot(new Vector3(55, 0, 0), "Vadodara Factory Warehouse", DeliveryTrigger.TriggerType.Destination);
             CreateTruck(new Vector3(-20, 1.1f, 0)); CreateHud();
@@ -82,7 +83,7 @@ namespace UltimateTruckEmpire.Bootstrap
             var trailer = GameObject.CreatePrimitive(PrimitiveType.Cube); trailer.name = "Dry Van Trailer"; trailer.transform.SetParent(truck.transform); trailer.transform.localPosition = new Vector3(0, 1.35f, -2.35f); trailer.transform.localScale = new Vector3(2.75f, 2.8f, 4.2f); Object.Destroy(trailer.GetComponent<Collider>());
             truck.AddComponent<TrailerController>().Configure(TrailerType.DryVan);
             truck.AddComponent<TruckController>(); truck.AddComponent<TruckPhysics>(); truck.AddComponent<TruckInput>(); truck.AddComponent<TruckWheelRig>();
-            var camGo = new GameObject("Truck Camera"); camGo.transform.SetParent(truck.transform); camGo.transform.localPosition = new Vector3(0, 4, -8); camGo.transform.LookAt(truck.transform.position + Vector3.up); camGo.AddComponent<Camera>();
+            var camGo = new GameObject("Truck Camera"); camGo.transform.SetParent(truck.transform); camGo.localPosition = new Vector3(0, 4, -8); camGo.LookAt(truck.transform.position + Vector3.up); camGo.AddComponent<Camera>();
         }
 
         private static void CreateHud()
