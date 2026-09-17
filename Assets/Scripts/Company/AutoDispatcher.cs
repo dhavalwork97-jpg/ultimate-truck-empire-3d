@@ -15,8 +15,7 @@ namespace UltimateTruckEmpire.Company
         private void Awake()
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
+            Instance = this; DontDestroyOnLoad(gameObject);
         }
 
         private void Update()
@@ -31,26 +30,15 @@ namespace UltimateTruckEmpire.Company
         public int DispatchAvailable()
         {
             LastDispatches = 0;
-            var fleet = FleetManager.Instance;
-            var drivers = DriverManager.Instance;
-            var market = ContractMarket.Instance;
-            var delivery = AutomatedDeliveryManager.Instance;
+            var fleet = FleetManager.Instance; var drivers = DriverManager.Instance; var market = ContractMarket.Instance; var delivery = AutomatedDeliveryManager.Instance;
             if (fleet == null || drivers == null || market == null || delivery == null) return 0;
-
             foreach (var truck in fleet.Trucks.Where(t => t.available).ToList())
             {
                 var driver = drivers.Drivers.Where(d => d.available && d.employed).OrderByDescending(drivers.GetPerformance).FirstOrDefault();
                 if (driver == null) continue;
-                var offer = market.Offers
-                    .Where(o => o.weightTons <= truck.capacityTons)
-                    .OrderByDescending(o => Score(o, driver, truck))
-                    .FirstOrDefault();
+                var offer = market.Offers.Where(o => o.weightTons <= truck.capacityTons).OrderByDescending(o => Score(o, driver, truck)).FirstOrDefault();
                 if (offer == null) continue;
-                if (delivery.StartDelivery(truck, driver, offer) != null)
-                {
-                    market.Remove(offer);
-                    LastDispatches++;
-                }
+                if (delivery.StartDelivery(truck, driver, offer) != null) { market.Remove(offer); LastDispatches++; }
             }
             return LastDispatches;
         }
