@@ -16,6 +16,8 @@ namespace UltimateTruckEmpire
             root.AddComponent<PrototypeWorldBuilder>();
             root.AddComponent<ContractSystem>();
             root.AddComponent<MobileInput>();
+            root.AddComponent<FleetSystem>();
+            root.AddComponent<GarageService>();
             root.AddComponent<MobileHUD>();
         }
     }
