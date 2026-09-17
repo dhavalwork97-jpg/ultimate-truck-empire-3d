@@ -22,23 +22,21 @@ namespace UltimateTruckEmpire.Gameplay
         public static ContractMarket Instance { get; private set; }
         public IReadOnlyList<ContractOffer> Offers => offers;
         private readonly List<ContractOffer> offers = new();
-
+        private int seed = 42;
         private static readonly string[] Cargo = { "Electronics", "Refrigerated Food", "Steel Coils", "Furniture", "Machinery", "Agricultural Goods" };
         private static readonly string[] Cities = { "Ahmedabad", "Vadodara", "Surat", "Rajkot", "Gandhinagar", "Udaipur" };
 
         private void Awake()
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            Refresh();
+            Instance = this; DontDestroyOnLoad(gameObject); Refresh();
         }
 
         public void Refresh()
         {
             offers.Clear();
-            var rng = new System.Random(42);
-            for (int i = 0; i < 6; i++)
+            var rng = new System.Random(seed++);
+            for (int i = 0; i < 8; i++)
             {
                 var from = Cities[rng.Next(Cities.Length)];
                 var to = Cities[rng.Next(Cities.Length)];
@@ -48,6 +46,11 @@ namespace UltimateTruckEmpire.Gameplay
                 var difficulty = Mathf.Clamp(Mathf.CeilToInt(weight / 8f), 1, 5);
                 offers.Add(new ContractOffer { cargo = Cargo[rng.Next(Cargo.Length)], pickup = from, destination = to, weightTons = weight, distanceKm = distance, difficulty = difficulty, reward = 18000f + distance * 95f + weight * 850f, xp = 80 + difficulty * 55 });
             }
+        }
+
+        public bool Remove(ContractOffer offer)
+        {
+            return offer != null && offers.Remove(offer);
         }
     }
 }
