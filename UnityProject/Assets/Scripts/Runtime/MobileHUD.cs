@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace UltimateTruckEmpire
@@ -14,6 +15,7 @@ namespace UltimateTruckEmpire
         {
             input = FindFirstObjectByType<MobileInput>();
             tycoon = FindFirstObjectByType<TycoonStateService>();
+            EnsureEventSystem();
             Build();
         }
 
@@ -71,16 +73,35 @@ namespace UltimateTruckEmpire
             obj.transform.SetParent(parent, false);
             var image = obj.AddComponent<Image>();
             image.color = new Color(0.04f, 0.05f, 0.07f, 0.78f);
-            var button = obj.AddComponent<MobileDriveButton>();
-            var inputField = typeof(MobileDriveButton).GetField("input", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var actionField = typeof(MobileDriveButton).GetField("action", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            inputField?.SetValue(button, input);
-            actionField?.SetValue(button, action);
+            var driveButton = obj.AddComponent<MobileDriveButton>();
+            driveButton.Initialize(input, action);
+
+            var labelObject = new GameObject("Label");
+            labelObject.transform.SetParent(obj.transform, false);
+            var text = labelObject.AddComponent<Text>();
+            text.text = label;
+            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            text.fontSize = 24;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = Color.white;
+            var labelRect = text.rectTransform;
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
 
             var rect = obj.GetComponent<RectTransform>();
             rect.anchorMin = anchor;
             rect.anchorMax = anchor;
             rect.sizeDelta = new Vector2(150f, 100f);
+        }
+
+        private static void EnsureEventSystem()
+        {
+            if (FindFirstObjectByType<EventSystem>() != null) return;
+            var eventObject = new GameObject("EventSystem");
+            eventObject.AddComponent<EventSystem>();
+            eventObject.AddComponent<StandaloneInputModule>();
         }
     }
 }
