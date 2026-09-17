@@ -33,13 +33,12 @@ namespace UltimateTruckEmpire.Company
         private void Awake()
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
+            Instance = this; DontDestroyOnLoad(gameObject);
         }
 
         public AutomatedDelivery StartDelivery(FleetTruckData truck, DriverData driver, ContractOffer offer)
         {
-            if (truck == null || driver == null || offer == null) return null;
+            if (truck == null || driver == null || offer == null || FleetManager.Instance == null) return null;
             if (truck.capacityTons < offer.weightTons || !truck.available || !driver.available) return null;
             var delivery = new AutomatedDelivery {
                 id = "JOB-" + nextId++, truckId = truck.id, driverId = driver.id,
@@ -63,11 +62,7 @@ namespace UltimateTruckEmpire.Company
                 job.elapsedHours += hours;
                 float travel = Mathf.Max(1f, job.distanceKm / Mathf.Max(0.1f, job.etaHours));
                 job.remainingKm = Mathf.Max(0f, job.remainingKm - travel * hours);
-                if (job.remainingKm <= 0.01f)
-                {
-                    Complete(job);
-                    deliveries.RemoveAt(i);
-                }
+                if (job.remainingKm <= 0.01f) { Complete(job); deliveries.RemoveAt(i); }
             }
         }
 
@@ -77,15 +72,16 @@ namespace UltimateTruckEmpire.Company
             var truck = FleetManager.Instance?.Find(job.truckId);
             float performance = DriverManager.Instance?.GetPerformance(driver) ?? 50f;
             float bonus = job.reward * Mathf.Clamp((performance - 50f) / 1000f, 0f, 0.12f);
-            float fuelCost = Mathf.Max(0f, job.distanceKm * 0.38f);
-            if (truck != null) { truck.fuel = Mathf.Max(0f, truck.fuel - fuelCost); truck.condition = Mathf.Max(0f, truck.condition - job.distanceKm * 0.012f); }
+            float fuelLitres = Mathf.Max(0f, job.distanceKm * 0.38f);
+            if (truck != null) { truck.fuel = Mathf.Max(0f, truck.fuel - fuelLitres); truck.condition = Mathf.Max(0f, truck.condition - job.distanceKm * 0.012f); }
             float payment = job.reward + bonus;
             CompanyManager.Instance?.AddRevenue(payment);
-            FinanceManager.Instance?.RecordDelivery(payment, fuelCost * 105f, driver?.salary ?? 0f);
+            FinanceManager.Instance?.RecordDelivery(payment, fuelLitres * 105f, driver?.salary ?? 0f);
             DriverManager.Instance?.AddExperience(driver, Mathf.Max(20, Mathf.RoundToInt(job.distanceKm * 0.6f)));
             FleetManager.Instance?.Release(job.truckId);
-            job.completed = true;
-            job.active = false;
+            MissionManager.Instance?.NotifyDeliveryComplete();
+            ContractMarket.Instance?.Refresh();
+            job.completed = true; job.active = false;
         }
     }
 }
