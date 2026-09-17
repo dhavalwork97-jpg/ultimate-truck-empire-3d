@@ -30,40 +30,26 @@ namespace UltimateTruckEmpire.Company
         private readonly List<DriverData> drivers = new();
         private int nextId = 1;
 
-        private void Awake()
-        {
-            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-
+        private void Awake() { if (Instance != null && Instance != this) { Destroy(gameObject); return; } Instance = this; DontDestroyOnLoad(gameObject); }
         public DriverData HireDriver(string name, float salary = 18000f)
         {
-            if (CompanyManager.Instance == null || !CompanyManager.Instance.IsCompanyCreated) return null;
-            var data = CompanyManager.Instance.Data;
-            if (drivers.Count >= data.driverCapacity) return null;
+            if (CompanyManager.Instance == null || !CompanyManager.Instance.IsCompanyCreated || drivers.Count >= CompanyManager.Instance.Data.driverCapacity) return null;
             var driver = new DriverData { id = "DRV-" + nextId++, name = string.IsNullOrWhiteSpace(name) ? "New Driver" : name.Trim(), salary = Mathf.Max(0f, salary) };
-            drivers.Add(driver);
-            return driver;
+            drivers.Add(driver); return driver;
         }
-
         public DriverData Find(string id) => drivers.Find(d => d.id == id);
-
         public void AddExperience(DriverData driver, int amount)
         {
             if (driver == null || amount <= 0) return;
-            driver.experience += amount;
-            driver.level = Mathf.Clamp(1 + driver.experience / 500, 1, 20);
+            driver.experience += amount; driver.level = Mathf.Clamp(1 + driver.experience / 500, 1, 20);
             float growth = driver.level * 0.15f;
-            driver.driving = Mathf.Min(100f, driver.driving + growth);
-            driver.reliability = Mathf.Min(100f, driver.reliability + growth * 0.5f);
-            driver.safety = Mathf.Min(100f, driver.safety + growth * 0.35f);
+            driver.driving = Mathf.Min(100f, driver.driving + growth); driver.reliability = Mathf.Min(100f, driver.reliability + growth * .5f); driver.safety = Mathf.Min(100f, driver.safety + growth * .35f);
         }
-
-        public float GetPerformance(DriverData driver)
+        public float GetPerformance(DriverData driver) => driver == null ? 0f : (driver.driving + driver.fuelEfficiency + driver.reliability + driver.safety + driver.cargoHandling) / 5f;
+        public void Restore(DriverData[] saved)
         {
-            if (driver == null) return 0f;
-            return (driver.driving + driver.fuelEfficiency + driver.reliability + driver.safety + driver.cargoHandling) / 5f;
+            drivers.Clear(); if (saved == null) return; drivers.AddRange(saved);
+            nextId = 1; foreach (var d in drivers) if (d != null && int.TryParse(d.id?.Replace("DRV-", ""), out int n)) nextId = Mathf.Max(nextId, n + 1);
         }
     }
 }
