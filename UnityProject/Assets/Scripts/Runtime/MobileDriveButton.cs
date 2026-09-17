@@ -13,8 +13,14 @@ namespace UltimateTruckEmpire
             Brake
         }
 
-        [SerializeField] private MobileInput input;
-        [SerializeField] private ActionType action;
+        private MobileInput input;
+        private ActionType action;
+
+        public void Initialize(MobileInput mobileInput, ActionType buttonAction)
+        {
+            input = mobileInput;
+            action = buttonAction;
+        }
 
         private void Awake()
         {
