@@ -14,6 +14,9 @@ namespace UltimateTruckEmpire
             root.AddComponent<TycoonStateService>();
             root.AddComponent<GameBootstrap>();
             root.AddComponent<PrototypeWorldBuilder>();
+            root.AddComponent<ContractSystem>();
+            root.AddComponent<MobileInput>();
+            root.AddComponent<MobileHUD>();
         }
     }
 }
