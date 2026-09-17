@@ -30,6 +30,13 @@ namespace UltimateTruckEmpire
             body.centerOfMass = new Vector3(0f, -0.45f, 0.1f);
         }
 
+        public void Configure(float topSpeed, float newAcceleration, float newSteering)
+        {
+            maxForwardSpeed = Mathf.Max(10f, topSpeed);
+            acceleration = Mathf.Max(1f, newAcceleration);
+            steering = Mathf.Max(20f, newSteering);
+        }
+
         public void SetThrottle(float value) => throttle = Mathf.Clamp(value, -1f, 1f);
         public void SetSteering(float value) => steeringInput = Mathf.Clamp(value, -1f, 1f);
         public void SetBraking(bool value) => braking = value;
@@ -47,12 +54,9 @@ namespace UltimateTruckEmpire
         private void FixedUpdate()
         {
             Vector3 localVelocity = transform.InverseTransformDirection(body.linearVelocity);
-            float forwardLimit = maxForwardSpeed;
-            float reverseLimit = maxReverseSpeed;
-
-            if (throttle > 0f && localVelocity.z < forwardLimit)
+            if (throttle > 0f && localVelocity.z < maxForwardSpeed)
                 body.AddForce(transform.forward * (throttle * acceleration), ForceMode.Acceleration);
-            else if (throttle < 0f && localVelocity.z > -reverseLimit)
+            else if (throttle < 0f && localVelocity.z > -maxReverseSpeed)
                 body.AddForce(transform.forward * (throttle * reverseAcceleration), ForceMode.Acceleration);
 
             if (braking)
