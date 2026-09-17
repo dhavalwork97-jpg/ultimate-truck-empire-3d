@@ -46,7 +46,11 @@ namespace UltimateTruckEmpire.Company
                     .OrderByDescending(o => Score(o, driver, truck))
                     .FirstOrDefault();
                 if (offer == null) continue;
-                if (delivery.StartDelivery(truck, driver, offer) != null) LastDispatches++;
+                if (delivery.StartDelivery(truck, driver, offer) != null)
+                {
+                    market.Remove(offer);
+                    LastDispatches++;
+                }
             }
             return LastDispatches;
         }
