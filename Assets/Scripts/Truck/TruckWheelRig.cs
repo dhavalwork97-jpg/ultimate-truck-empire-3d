@@ -14,13 +14,14 @@ namespace UltimateTruckEmpire.Truck
         {
             var controller = GetComponent<TruckController>();
             if (controller == null) return;
-            CreateWheel("FrontLeft", new Vector3(-1.35f, 0.62f, 2.05f));
-            CreateWheel("FrontRight", new Vector3(1.35f, 0.62f, 2.05f));
-            CreateWheel("RearLeft", new Vector3(-1.35f, 0.62f, -2.05f));
-            CreateWheel("RearRight", new Vector3(1.35f, 0.62f, -2.05f));
+            var fl = CreateWheel("FrontLeft", new Vector3(-1.35f, 0.62f, 2.05f));
+            var fr = CreateWheel("FrontRight", new Vector3(1.35f, 0.62f, 2.05f));
+            var rl = CreateWheel("RearLeft", new Vector3(-1.35f, 0.62f, -2.05f));
+            var rr = CreateWheel("RearRight", new Vector3(1.35f, 0.62f, -2.05f));
+            controller.ConfigureWheels(fl, fr, rl, rr);
         }
 
-        private void CreateWheel(string wheelName, Vector3 localPosition)
+        private WheelCollider CreateWheel(string wheelName, Vector3 localPosition)
         {
             var go = new GameObject(wheelName);
             go.transform.SetParent(transform, false);
@@ -31,12 +32,14 @@ namespace UltimateTruckEmpire.Truck
             var suspension = wheel.suspensionSpring;
             suspension.spring = spring;
             suspension.damper = damper;
+            suspension.targetPosition = 0.5f;
             wheel.suspensionSpring = suspension;
             wheel.mass = 120f;
             wheel.wheelDampingRate = 1f;
             wheel.forwardFriction = MakeFriction(1.6f, 0.8f);
             wheel.sidewaysFriction = MakeFriction(1.8f, 0.9f);
             CreateVisual(go.transform, wheelName + " Visual");
+            return wheel;
         }
 
         private static WheelFrictionCurve MakeFriction(float stiffness, float extremum)
