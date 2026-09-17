@@ -4,6 +4,7 @@ using UltimateTruckEmpire.Core;
 using UltimateTruckEmpire.Gameplay;
 using UltimateTruckEmpire.Truck;
 using UltimateTruckEmpire.World;
+using UltimateTruckEmpire.Company;
 
 namespace UltimateTruckEmpire.Bootstrap
 {
@@ -19,6 +20,14 @@ namespace UltimateTruckEmpire.Bootstrap
         {
             if (GameManager.Instance == null) new GameObject("GameManager").AddComponent<GameManager>();
             if (DeliveryManager.Instance == null) new GameObject("DeliveryManager").AddComponent<DeliveryManager>();
+            if (CompanyManager.Instance == null) new GameObject("CompanyManager").AddComponent<CompanyManager>();
+            if (DriverManager.Instance == null) new GameObject("DriverManager").AddComponent<DriverManager>();
+            if (FleetManager.Instance == null) new GameObject("FleetManager").AddComponent<FleetManager>();
+            if (AutomatedDeliveryManager.Instance == null) new GameObject("AutomatedDeliveryManager").AddComponent<AutomatedDeliveryManager>();
+            if (FinanceManager.Instance == null) new GameObject("FinanceManager").AddComponent<FinanceManager>();
+            if (!CompanyManager.Instance.IsCompanyCreated) CompanyManager.Instance.CreateCompany("My Trucking Company", "Ahmedabad");
+            if (DriverManager.Instance.Drivers.Count == 0) DriverManager.Instance.HireDriver("Raj Patel");
+            if (FleetManager.Instance.Trucks.Count == 0) FleetManager.Instance.BuyTruck("UTE Hauler 300", 180000f, 30f);
         }
 
         private static void BuildWorld()
@@ -56,9 +65,8 @@ namespace UltimateTruckEmpire.Bootstrap
             building.name = name; building.transform.position = position + new Vector3(0, 5, 12); building.transform.localScale = new Vector3(28, 10, 18);
             var zone = new GameObject(name + " Zone"); zone.transform.position = position + Vector3.up;
             var box = zone.AddComponent<BoxCollider>(); box.isTrigger = true; box.size = new Vector3(22, 3, 12);
-            zone.AddComponent<DeliveryTrigger>();
-            var field = typeof(DeliveryTrigger).GetField("triggerType", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            field?.SetValue(zone.GetComponent<DeliveryTrigger>(), type);
+            var trigger = zone.AddComponent<DeliveryTrigger>();
+            trigger.Configure(type);
         }
 
         private static void CreateTruck(Vector3 position)
@@ -68,16 +76,17 @@ namespace UltimateTruckEmpire.Bootstrap
             var collider = truck.AddComponent<BoxCollider>(); collider.center = new Vector3(0, 1.2f, 0); collider.size = new Vector3(3, 2.4f, 7);
             var visual = GameObject.CreatePrimitive(PrimitiveType.Cube); visual.name = "TruckCab"; visual.transform.SetParent(truck.transform); visual.transform.localPosition = new Vector3(0, 1.2f, 1.3f); visual.transform.localScale = new Vector3(2.8f, 2.3f, 3);
             Object.Destroy(visual.GetComponent<Collider>());
-            var controller = truck.AddComponent<TruckController>();
+            truck.AddComponent<TruckController>();
             truck.AddComponent<TruckPhysics>();
-            var input = truck.AddComponent<TruckInput>();
+            truck.AddComponent<TruckInput>();
+            truck.AddComponent<TruckWheelRig>();
             var camGo = new GameObject("Truck Camera"); camGo.transform.SetParent(truck.transform); camGo.transform.localPosition = new Vector3(0, 4, -8); camGo.transform.LookAt(truck.transform.position + Vector3.up); camGo.AddComponent<Camera>();
         }
 
         private static void CreateHud()
         {
             var canvasGo = new GameObject("HUD"); var canvas = canvasGo.AddComponent<Canvas>(); canvas.renderMode = RenderMode.ScreenSpaceOverlay; canvasGo.AddComponent<CanvasScaler>(); canvasGo.AddComponent<GraphicRaycaster>();
-            var textGo = new GameObject("HUD Text"); textGo.transform.SetParent(canvasGo.transform); var text = textGo.AddComponent<Text>(); text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); text.fontSize = 24; text.alignment = TextAnchor.UpperLeft; text.text = "ULTIMATE TRUCK EMPIRE\n\nWASD / Arrows  Drive\nSPACE  Brake   I  Engine   L  Lights\n\nSTARTER CONTRACT\nAhmedabad Logistics Depot → Vadodara Factory Warehouse\nIndustrial Machinery   ₹145,000"; var rt = text.rectTransform; rt.anchorMin = new Vector2(0,1); rt.anchorMax = new Vector2(0,1); rt.pivot = new Vector2(0,1); rt.anchoredPosition = new Vector2(24,-24); rt.sizeDelta = new Vector2(650,300);
+            var textGo = new GameObject("HUD Text"); textGo.transform.SetParent(canvasGo.transform); var text = textGo.AddComponent<Text>(); text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); text.fontSize = 24; text.alignment = TextAnchor.UpperLeft; text.text = "ULTIMATE TRUCK EMPIRE\n\nWASD / Arrows  Drive\nSPACE  Brake   I  Engine   L  Lights\n\nCOMPANY\nMy Trucking Company  |  HQ Ahmedabad\nDriver: Raj Patel  |  Fleet: UTE Hauler 300\n\nSTARTER CONTRACT\nAhmedabad Logistics Depot → Vadodara Factory Warehouse\nIndustrial Machinery   ₹145,000"; var rt = text.rectTransform; rt.anchorMin = new Vector2(0,1); rt.anchorMax = new Vector2(0,1); rt.pivot = new Vector2(0,1); rt.anchoredPosition = new Vector2(24,-24); rt.sizeDelta = new Vector2(760,360);
             if (DeliveryManager.Instance != null) DeliveryManager.Instance.AcceptStarterContract();
         }
     }
