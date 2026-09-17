@@ -9,6 +9,7 @@ namespace UltimateTruckEmpire.Company
     {
         public string companyName = "My Trucking Company";
         public string headquarters = "Ahmedabad";
+        public string businessType = "General Freight";
         public int level = 1;
         public int truckCapacity = 2;
         public int driverCapacity = 2;
@@ -33,7 +34,7 @@ namespace UltimateTruckEmpire.Company
         public bool CreateCompany(string name, string headquarters, string type = "General Freight")
         {
             if (IsCompanyCreated || string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(headquarters)) return false;
-            Data = new CompanyData { companyName = name.Trim(), headquarters = headquarters.Trim(), companyValue = 0f };
+            Data = new CompanyData { companyName = name.Trim(), headquarters = headquarters.Trim(), businessType = string.IsNullOrWhiteSpace(type) ? "General Freight" : type.Trim() };
             return true;
         }
 
@@ -55,9 +56,15 @@ namespace UltimateTruckEmpire.Company
 
         public bool AddBranch(string city)
         {
-            if (Data == null || string.IsNullOrWhiteSpace(city) || Data.branches.Contains(city)) return false;
+            if (Data == null || string.IsNullOrWhiteSpace(city) || Data.branches.Contains(city.Trim())) return false;
             Data.branches.Add(city.Trim());
             return true;
+        }
+
+        public void Restore(CompanyData saved)
+        {
+            Data = saved;
+            if (Data != null && Data.branches == null) Data.branches = new List<string>();
         }
     }
 }
