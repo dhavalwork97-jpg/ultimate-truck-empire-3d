@@ -20,7 +20,9 @@ namespace UltimateTruckEmpire.UI
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.D) && root != null) root.SetActive(!root.activeSelf);
+            // F11, not D: D is also the steer-right key, so the dealership used to
+            // open every time the player turned right.
+            if (Input.GetKeyDown(KeyCode.F11) && root != null) root.SetActive(!root.activeSelf);
         }
 
         private void Build()

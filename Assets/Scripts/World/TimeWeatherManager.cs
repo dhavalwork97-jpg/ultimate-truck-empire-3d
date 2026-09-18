@@ -10,7 +10,7 @@ namespace UltimateTruckEmpire.World
         [Range(0f, 24f)] public float timeOfDay = 8f;
         public float timeScale = 0.08f;
         public WeatherState Weather { get; private set; } = WeatherState.Clear;
-        private Light sun;
+        private EnvironmentAtmosphere atmosphere;
 
         private void Awake()
         {
@@ -18,7 +18,9 @@ namespace UltimateTruckEmpire.World
             Instance = this; DontDestroyOnLoad(gameObject);
         }
 
-        private void Start() { sun = FindFirstObjectByType<Light>(); Apply(); }
+        // The old lookup grabbed "the first Light in the scene", which finds a
+        // street lamp as often as the sun. Lighting now lives in one system.
+        private void Start() { atmosphere = EnvironmentAtmosphere.Ensure(); Apply(); }
 
         private void Update()
         {
@@ -32,11 +34,11 @@ namespace UltimateTruckEmpire.World
 
         private void Apply()
         {
-            float daylight = Mathf.Clamp01(Mathf.Sin((timeOfDay - 6f) * Mathf.PI / 12f));
-            RenderSettings.ambientIntensity = Mathf.Lerp(.18f, 1.1f, daylight);
-            RenderSettings.fog = true;
-            RenderSettings.fogDensity = Weather == WeatherState.Fog ? .018f : Weather == WeatherState.HeavyRain || Weather == WeatherState.Storm ? .009f : .004f;
-            if (sun != null) { sun.intensity = Mathf.Lerp(.15f, 1.2f, daylight); sun.transform.rotation = Quaternion.Euler((timeOfDay - 6f) * 15f - 90f, -30f, 0f); }
+            if (atmosphere == null) atmosphere = EnvironmentAtmosphere.Ensure();
+            if (atmosphere != null) atmosphere.Apply(timeOfDay, Weather);
         }
+
+        /// <summary>Normalised daylight, 0 at night and 1 at midday. Handy for UI.</summary>
+        public float Daylight => Mathf.Clamp01(Mathf.Sin((timeOfDay - 6f) * Mathf.PI / 12f));
     }
 }

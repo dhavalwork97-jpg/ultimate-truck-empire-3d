@@ -11,6 +11,7 @@ namespace UltimateTruckEmpire.UI
         private InputField driverName;
         private InputField branchName;
         private AutoDispatcher dispatcher;
+        private GameObject root;
         private SaveManager save;
 
         private void Start()
@@ -18,11 +19,20 @@ namespace UltimateTruckEmpire.UI
             dispatcher = AutoDispatcher.Instance ?? new GameObject("AutoDispatcher").AddComponent<AutoDispatcher>();
             save = FindFirstObjectByType<SaveManager>();
             Build();
+            SetVisible(false);
         }
+
+        // F8 toggles the action panel so it never sits on top of the driving view.
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.F8)) SetVisible(root == null || !root.activeSelf);
+        }
+
+        public void SetVisible(bool visible) { if (root != null) root.SetActive(visible); }
 
         private void Build()
         {
-            var root = new GameObject("Management Actions"); var canvas = root.AddComponent<Canvas>(); canvas.renderMode = RenderMode.ScreenSpaceOverlay; root.AddComponent<CanvasScaler>(); root.AddComponent<GraphicRaycaster>();
+            root = new GameObject("Management Actions"); var canvas = root.AddComponent<Canvas>(); canvas.renderMode = RenderMode.ScreenSpaceOverlay; root.AddComponent<CanvasScaler>(); root.AddComponent<GraphicRaycaster>();
             var holder = new GameObject("Actions"); holder.transform.SetParent(root.transform, false); var rt = holder.AddComponent<RectTransform>(); rt.anchorMin=new Vector2(.58f,.08f);rt.anchorMax=new Vector2(.94f,.9f);rt.offsetMin=rt.offsetMax=Vector2.zero;
             var layout=holder.AddComponent<VerticalLayoutGroup>();layout.spacing=7;layout.padding=new RectOffset(12,12,12,12);
             AddButton(holder.transform,"DISPATCH BEST CONTRACTS",Dispatch); AddButton(holder.transform,"TOGGLE AUTO DISPATCH",ToggleDispatch);

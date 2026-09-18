@@ -16,6 +16,15 @@ namespace UltimateTruckEmpire.World
             Instance = this; DontDestroyOnLoad(gameObject);
         }
 
+        private void Start()
+        {
+            // This used to drop untextured boxes at random coordinates, which put
+            // them inside buildings and across roads. TrafficSpawner owns the
+            // actual traffic, so when it is present this manager stands down and
+            // simply tracks the fleet.
+            if (FindFirstObjectByType<TrafficSpawner>() != null) enabled = false;
+        }
+
         private void Update()
         {
             if (vehicles.Count >= targetVehicles || Time.time < nextSpawn) return;
@@ -25,11 +34,12 @@ namespace UltimateTruckEmpire.World
 
         private void SpawnVehicle()
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            // Fallback path only: a proper vehicle, parked on a lane rather than
+            // in the middle of a city block.
+            var go = TrafficVisualFactory.Create(vehicles.Count, transform);
             go.name = "Traffic Vehicle";
-            go.transform.position = new Vector3(Random.Range(-80f, 80f), .65f, Random.Range(-6f, 76f));
-            go.transform.localScale = new Vector3(1.7f, 1.1f, 3.5f);
-            Destroy(go.GetComponent<Collider>());
+            float x = Mathf.Lerp(-140f, 140f, (vehicles.Count * 0.17f) % 1f);
+            go.transform.position = new Vector3(x, .55f, vehicles.Count % 2 == 0 ? 3.5f : -3.5f);
             vehicles.Add(go);
         }
     }
