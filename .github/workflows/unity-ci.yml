@@ -54,7 +54,7 @@ jobs:
           testMode: all
           artifactsPath: test-results
           customParameters: -nographics
-          cliVersion: v0.1.0
+          cliVersion: v0.1.69
 
       - name: Upload test results
         if: always()
