@@ -31,6 +31,14 @@ jobs:
           restore-keys: |
             Unity-Library-${{ runner.os }}-
 
+      - name: Verify generated Unity files are ignored
+        run: |
+          git status --short
+          test -z "$(git status --short --untracked-files=all -- Library)" || {
+            echo "Library/ must remain ignored and untracked."
+            exit 1
+          }
+
       - name: Unity compile check
         uses: game-ci/unity-builder@v4
         env:
