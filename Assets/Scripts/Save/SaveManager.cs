@@ -2,6 +2,7 @@ using System.IO;
 using UnityEngine;
 using UltimateTruckEmpire.Core;
 using UltimateTruckEmpire.Company;
+using UltimateTruckEmpire.Gameplay;
 
 namespace UltimateTruckEmpire.Save
 {
@@ -18,21 +19,38 @@ namespace UltimateTruckEmpire.Save
             public DriverData[] drivers;
             public FleetTruckData[] trucks;
             public FinanceData finance;
+            public bool contractAccepted;
+            public bool cargoLoaded;
         }
 
         public void Save()
         {
             var game = GameManager.Instance;
             if (game == null) return;
-            var data = new SaveData {
-                money = game.Money,
-                xp = game.PlayerXp,
-                company = CompanyManager.Instance?.Data,
-                drivers = DriverManager.Instance == null ? null : new System.Collections.Generic.List<DriverData>(DriverManager.Instance.Drivers).ToArray(),
-                trucks = FleetManager.Instance == null ? null : new System.Collections.Generic.List<FleetTruckData>(FleetManager.Instance.Trucks).ToArray(),
-                finance = FinanceManager.Instance?.Data
-            };
-            File.WriteAllText(Path.Combine(Application.persistentDataPath, FileName), JsonUtility.ToJson(data, true));
+            try
+            {
+                var data = new SaveData {
+                    money = game.Money,
+                    xp = game.PlayerXp,
+                    company = CompanyManager.Instance?.Data,
+                    drivers = DriverManager.Instance == null ? null : new System.Collections.Generic.List<DriverData>(DriverManager.Instance.Drivers).ToArray(),
+                    trucks = FleetManager.Instance == null ? null : new System.Collections.Generic.List<FleetTruckData>(FleetManager.Instance.Trucks).ToArray(),
+                    finance = FinanceManager.Instance?.Data,
+                    contractAccepted = DeliveryManager.Instance != null && DeliveryManager.Instance.ContractAccepted,
+                    cargoLoaded = DeliveryManager.Instance != null && DeliveryManager.Instance.CargoLoaded
+                };
+                string directory = Application.persistentDataPath;
+                Directory.CreateDirectory(directory);
+                string path = Path.Combine(directory, FileName);
+                string tempPath = path + ".tmp";
+                File.WriteAllText(tempPath, JsonUtility.ToJson(data, true));
+                if (File.Exists(path)) File.Delete(path);
+                File.Move(tempPath, path);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"Save failed: {ex.Message}");
+            }
         }
 
         public void Load()
@@ -40,13 +58,21 @@ namespace UltimateTruckEmpire.Save
             var game = GameManager.Instance;
             string path = Path.Combine(Application.persistentDataPath, FileName);
             if (game == null || !File.Exists(path)) return;
-            var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
-            if (data == null) return;
-            game.Restore(data.money, data.xp);
-            if (CompanyManager.Instance != null && data.company != null) CompanyManager.Instance.Restore(data.company);
-            if (DriverManager.Instance != null && data.drivers != null) DriverManager.Instance.Restore(data.drivers);
-            if (FleetManager.Instance != null && data.trucks != null) FleetManager.Instance.Restore(data.trucks);
-            if (FinanceManager.Instance != null && data.finance != null) FinanceManager.Instance.Restore(data.finance);
+            try
+            {
+                var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+                if (data == null) return;
+                game.Restore(data.money, data.xp);
+                if (CompanyManager.Instance != null && data.company != null) CompanyManager.Instance.Restore(data.company);
+                if (DriverManager.Instance != null && data.drivers != null) DriverManager.Instance.Restore(data.drivers);
+                if (FleetManager.Instance != null && data.trucks != null) FleetManager.Instance.Restore(data.trucks);
+                if (FinanceManager.Instance != null && data.finance != null) FinanceManager.Instance.Restore(data.finance);
+                DeliveryManager.Instance?.Restore(data.contractAccepted, data.cargoLoaded);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"Load failed: {ex.Message}");
+            }
         }
 
         private void OnApplicationPause(bool pause) { if (pause) Save(); }
