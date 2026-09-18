@@ -21,6 +21,7 @@ namespace UltimateTruckEmpire.Save
             public FinanceData finance;
             public bool contractAccepted;
             public bool cargoLoaded;
+            public string activeTruckId;
         }
 
         public void Save()
@@ -37,7 +38,8 @@ namespace UltimateTruckEmpire.Save
                     trucks = FleetManager.Instance == null ? null : new System.Collections.Generic.List<FleetTruckData>(FleetManager.Instance.Trucks).ToArray(),
                     finance = FinanceManager.Instance?.Data,
                     contractAccepted = DeliveryManager.Instance != null && DeliveryManager.Instance.ContractAccepted,
-                    cargoLoaded = DeliveryManager.Instance != null && DeliveryManager.Instance.CargoLoaded
+                    cargoLoaded = DeliveryManager.Instance != null && DeliveryManager.Instance.CargoLoaded,
+                    activeTruckId = FleetManager.Instance?.ActiveTruck?.id ?? ""
                 };
                 string directory = Application.persistentDataPath;
                 Directory.CreateDirectory(directory);
@@ -65,7 +67,14 @@ namespace UltimateTruckEmpire.Save
                 game.Restore(data.money, data.xp);
                 if (CompanyManager.Instance != null && data.company != null) CompanyManager.Instance.Restore(data.company);
                 if (DriverManager.Instance != null && data.drivers != null) DriverManager.Instance.Restore(data.drivers);
-                if (FleetManager.Instance != null && data.trucks != null) FleetManager.Instance.Restore(data.trucks);
+                if (FleetManager.Instance != null && data.trucks != null)
+                {
+                    FleetManager.Instance.Restore(data.trucks);
+                    if (!string.IsNullOrWhiteSpace(data.activeTruckId))
+                        FleetManager.Instance.SetActiveTruck(data.activeTruckId);
+                    else
+                        FleetManager.Instance.EnsureActiveTruck();
+                }
                 if (FinanceManager.Instance != null && data.finance != null) FinanceManager.Instance.Restore(data.finance);
                 DeliveryManager.Instance?.Restore(data.contractAccepted, data.cargoLoaded);
             }
