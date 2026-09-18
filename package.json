@@ -13,8 +13,7 @@
     "vite": "latest",
     "three": "latest",
     "react": "latest",
-    "react-dom": "latest",
-    "com.unity.ugui": "2.0.0"
+    "react-dom": "latest"
   },
   "devDependencies": {}
 }
