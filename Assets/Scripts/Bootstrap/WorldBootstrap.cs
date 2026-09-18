@@ -55,6 +55,7 @@ namespace UltimateTruckEmpire.Bootstrap
             if (FindFirstObjectByType<ManagementActionUI>() == null) new GameObject("Management Actions").AddComponent<ManagementActionUI>();
             if (FindFirstObjectByType<DispatchAssignmentUI>() == null) new GameObject("Dispatch Assignment UI").AddComponent<DispatchAssignmentUI>();
             if (FindFirstObjectByType<TruckDealerUI>() == null) new GameObject("Truck Dealership UI").AddComponent<TruckDealerUI>();
+            if (FindFirstObjectByType<GarageUI>() == null) new GameObject("Garage UI").AddComponent<GarageUI>();
             if (FindFirstObjectByType<TrafficSpawner>() == null) new GameObject("Traffic Spawner").AddComponent<TrafficSpawner>();
         }
 
