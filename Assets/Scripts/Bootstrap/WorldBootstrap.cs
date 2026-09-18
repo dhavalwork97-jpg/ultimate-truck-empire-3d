@@ -37,10 +37,8 @@ namespace UltimateTruckEmpire.Bootstrap
             // fresh company/truck would overwrite the player's saved fleet on boot.
             var saveManager = FindFirstObjectByType<SaveManager>();
             if (saveManager == null)
-            {
                 saveManager = new GameObject("SaveManager").AddComponent<SaveManager>();
-                saveManager.Load();
-            }
+            saveManager.Load();
 
             if (!CompanyManager.Instance.IsCompanyCreated)
                 CompanyManager.Instance.CreateCompany("My Trucking Company", "Ahmedabad", "General Freight");
