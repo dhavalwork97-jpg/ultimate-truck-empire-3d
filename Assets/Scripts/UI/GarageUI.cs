@@ -105,6 +105,8 @@ namespace UltimateTruckEmpire.UI
                 new Vector2(.83f,.17f), new Vector2(.96f,.25f));
             AddButton(panel.transform, "RELIABILITY +", UpgradeReliability).GetComponent<RectTransform>().SetAnchors(
                 new Vector2(.47f,.07f), new Vector2(.62f,.15f));
+            AddButton(panel.transform, "SET AS PLAYER TRUCK", SetActive).GetComponent<RectTransform>().SetAnchors(
+                new Vector2(.63f,.07f), new Vector2(.82f,.15f));
             AddButton(panel.transform, "CLOSE", () => root.SetActive(false)).GetComponent<RectTransform>().SetAnchors(
                 new Vector2(.83f,.07f), new Vector2(.96f,.15f));
         }
@@ -137,6 +139,7 @@ namespace UltimateTruckEmpire.UI
             s.AppendLine("Condition      " + truck.condition.ToString("0") + "%");
             s.AppendLine("Reliability    " + truck.reliability.ToString("0") + "%");
             s.AppendLine("Status         " + (truck.available ? "AVAILABLE" : "ON DELIVERY"));
+            s.AppendLine("Player truck   " + (fleet.ActiveTruck == truck ? "ACTIVE" : "NOT ACTIVE"));
             s.AppendLine();
             s.AppendLine("Upgrades");
             s.AppendLine("Engine         Lv " + truck.engineUpgradeLevel + " / 5");
@@ -169,6 +172,12 @@ namespace UltimateTruckEmpire.UI
         private void UpgradeEngine() { var t = SelectedTruck(); if (t != null) FleetManager.Instance.UpgradeEngine(t.id); Refresh(); }
         private void UpgradeFuel() { var t = SelectedTruck(); if (t != null) FleetManager.Instance.UpgradeFuelTank(t.id); Refresh(); }
         private void UpgradeReliability() { var t = SelectedTruck(); if (t != null) FleetManager.Instance.UpgradeReliability(t.id); Refresh(); }
+        private void SetActive()
+        {
+            var t = SelectedTruck();
+            if (t != null) FleetManager.Instance.SetActiveTruck(t.id);
+            Refresh();
+        }
 
         private static Text AddText(Transform parent, string value, int size, TextAnchor anchor)
         {
