@@ -14,6 +14,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Free runner disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/local/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/powershell
+          sudo docker system prune -af || true
+          df -h
+
       - name: Cache Unity Library
         uses: actions/cache@v4
         with:
@@ -30,6 +39,7 @@ jobs:
           projectPath: .
           unityVersion: 6000.0.65f1
           targetPlatform: StandaloneLinux64
+          customImage: unityci/editor:ubuntu-6000.0.65f1-base-3
 
       - name: Report
         if: always()
