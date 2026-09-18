@@ -2,6 +2,8 @@ using UnityEngine;
 
 namespace UltimateTruckEmpire.Truck
 {
+    public enum GearState { Park, Reverse, Neutral, Drive }
+
     [RequireComponent(typeof(Rigidbody))]
     public sealed class TruckController : MonoBehaviour
     {
@@ -12,11 +14,53 @@ namespace UltimateTruckEmpire.Truck
         [SerializeField] private float maxForwardKph = 110f;
         [SerializeField] private float reverseTorqueMultiplier = 0.45f;
         [SerializeField] private TruckLights lights;
+
+        [Header("Steering feel")]
+        [SerializeField] private float steerRate = 2.6f;
+        [SerializeField] private float steerReturnRate = 4.2f;
+        [SerializeField] private float highSpeedSteerFactor = 0.35f;
+
+        [Header("Gearbox")]
+        [SerializeField] private KeyCode gearKey = KeyCode.G;
+        [SerializeField] private float shiftSpeedLimitKph = 5f;
+        [SerializeField] private float autoShiftHoldTime = 0.35f;
+
+        [Header("Cruise control")]
+        [SerializeField] private KeyCode cruiseKey = KeyCode.V;
+        [SerializeField] private float minCruiseKph = 25f;
+
         private Rigidbody body;
         private bool engineRunning = true;
+        private float steerInput, throttleInput;
+        private bool brakingInput;
+        private float autoShiftTimer;
+        private float cruiseSpeedKph;
+
         public float SpeedKph => body == null ? 0f : body.linearVelocity.magnitude * 3.6f;
         public float Fuel { get; private set; } = 100f;
         public bool EngineRunning => engineRunning;
+        public GearState Gear { get; private set; } = GearState.Drive;
+        public float SteerInput => steerInput;
+        public float ThrottleInput => throttleInput;
+        public bool Braking => brakingInput || Gear == GearState.Park;
+        public bool CruiseActive { get; private set; }
+        public float CruiseSpeedKph => cruiseSpeedKph;
+        public bool LimiterActive { get; private set; }
+        public bool Reversing => Gear == GearState.Reverse;
+
+        public string GearLabel
+        {
+            get
+            {
+                switch (Gear)
+                {
+                    case GearState.Park: return "P";
+                    case GearState.Reverse: return "R";
+                    case GearState.Neutral: return "N";
+                    default: return "D";
+                }
+            }
+        }
 
         private void Awake()
         {
@@ -24,6 +68,7 @@ namespace UltimateTruckEmpire.Truck
             body.mass = 8000f;
             body.centerOfMass = new Vector3(0f, -0.65f, 0.15f);
             body.interpolation = RigidbodyInterpolation.Interpolate;
+            if (lights == null) lights = GetComponent<TruckLights>();
         }
 
         public void ConfigureWheels(WheelCollider fl, WheelCollider fr, WheelCollider rl, WheelCollider rr)
@@ -31,25 +76,162 @@ namespace UltimateTruckEmpire.Truck
             frontLeft = fl; frontRight = fr; rearLeft = rl; rearRight = rr;
         }
 
-        private void FixedUpdate()
+        public void AttachLights(TruckLights truckLights) => lights = truckLights;
+
+        // Key presses are read in Update. Reading GetKeyDown from FixedUpdate drops
+        // or repeats presses depending on the frame/step ratio.
+        private void Update()
         {
-            float steer = Input.GetAxisRaw("Horizontal");
-            float throttle = engineRunning ? Input.GetAxisRaw("Vertical") : 0f;
-            bool braking = Input.GetKey(KeyCode.Space);
-            float speedFactor = Mathf.InverseLerp(0f, maxForwardKph, SpeedKph);
-            float steerLimit = Mathf.Lerp(maxSteerAngle, maxSteerAngle * 0.35f, speedFactor);
-            if (frontLeft) frontLeft.steerAngle = steer * steerLimit;
-            if (frontRight) frontRight.steerAngle = steer * steerLimit;
-            float torque = throttle > 0f ? motorTorque * (1f - speedFactor) : throttle * motorTorque * reverseTorqueMultiplier;
-            if (SpeedKph >= maxForwardKph && throttle > 0f) torque = 0f;
-            SetMotor(rearLeft, torque); SetMotor(rearRight, torque);
-            SetBrake(braking ? brakeTorque : 0f);
-            if (lights) lights.SetBrakes(braking);
-            if (Mathf.Abs(throttle) > 0.1f && engineRunning) Fuel = Mathf.Max(0f, Fuel - Time.fixedDeltaTime * (0.0015f + SpeedKph * 0.00002f));
             if (Input.GetKeyDown(KeyCode.I)) engineRunning = !engineRunning;
+            if (Input.GetKeyDown(gearKey)) CycleGear();
+            if (Input.GetKeyDown(cruiseKey)) ToggleCruise();
         }
 
+        private void FixedUpdate()
+        {
+            float dt = Time.fixedDeltaTime;
+
+            ReadInput(dt);
+            UpdateAutoShift(dt);
+            ApplySteering();
+            ApplyDrive();
+            ConsumeFuel(dt);
+
+            if (lights != null)
+            {
+                lights.SetBrakes(brakingInput || (Gear == GearState.Drive && throttleInput < -0.1f && SpeedKph > 1f));
+                lights.SetReverse(Gear == GearState.Reverse);
+            }
+        }
+
+        private void ReadInput(float dt)
+        {
+            float rawSteer = Input.GetAxisRaw("Horizontal");
+            float rate = Mathf.Abs(rawSteer) > 0.01f ? steerRate : steerReturnRate;
+            steerInput = Mathf.MoveTowards(steerInput, rawSteer, rate * dt);
+
+            throttleInput = Input.GetAxisRaw("Vertical");
+            brakingInput = Input.GetKey(KeyCode.Space);
+
+            if (brakingInput || (CruiseActive && throttleInput < -0.1f)) CruiseActive = false;
+        }
+
+        private void CycleGear()
+        {
+            bool stopped = SpeedKph <= shiftSpeedLimitKph;
+            switch (Gear)
+            {
+                case GearState.Park: Gear = GearState.Reverse; break;
+                case GearState.Reverse: Gear = GearState.Neutral; break;
+                case GearState.Neutral: Gear = GearState.Drive; break;
+                default: Gear = stopped ? GearState.Park : GearState.Neutral; break;
+            }
+            // Selecting P or R at speed is refused and falls back to neutral.
+            if (!stopped && (Gear == GearState.Park || Gear == GearState.Reverse)) Gear = GearState.Neutral;
+            CruiseActive = false;
+            autoShiftTimer = 0f;
+        }
+
+        private void ToggleCruise()
+        {
+            if (CruiseActive) { CruiseActive = false; return; }
+            if (Gear != GearState.Drive || !engineRunning || SpeedKph < minCruiseKph) return;
+            cruiseSpeedKph = Mathf.Min(SpeedKph, maxForwardKph);
+            CruiseActive = true;
+        }
+
+        /// Keeps the familiar "hold back to reverse" behaviour: from a standstill,
+        /// sustained opposite input swaps between D and R automatically.
+        private void UpdateAutoShift(float dt)
+        {
+            if (SpeedKph > shiftSpeedLimitKph || Gear == GearState.Park || Gear == GearState.Neutral)
+            {
+                autoShiftTimer = 0f;
+                return;
+            }
+
+            bool wantsReverse = Gear == GearState.Drive && throttleInput < -0.1f;
+            bool wantsForward = Gear == GearState.Reverse && throttleInput > 0.1f;
+            if (!wantsReverse && !wantsForward) { autoShiftTimer = 0f; return; }
+
+            autoShiftTimer += dt;
+            if (autoShiftTimer < autoShiftHoldTime) return;
+
+            Gear = wantsReverse ? GearState.Reverse : GearState.Drive;
+            autoShiftTimer = 0f;
+            CruiseActive = false;
+        }
+
+        private void ApplySteering()
+        {
+            float speedFactor = Mathf.InverseLerp(0f, maxForwardKph, SpeedKph);
+            float steerLimit = Mathf.Lerp(maxSteerAngle, maxSteerAngle * highSpeedSteerFactor, speedFactor);
+            float angle = steerInput * steerLimit;
+            if (frontLeft) frontLeft.steerAngle = angle;
+            if (frontRight) frontRight.steerAngle = angle;
+        }
+
+        private void ApplyDrive()
+        {
+            LimiterActive = false;
+
+            if (Gear == GearState.Park)
+            {
+                SetMotor(0f); SetBrake(brakeTorque); return;
+            }
+
+            if (!engineRunning || Gear == GearState.Neutral)
+            {
+                SetMotor(0f); SetBrake(brakingInput ? brakeTorque : 0f); return;
+            }
+
+            float speedFactor = Mathf.InverseLerp(0f, maxForwardKph, SpeedKph);
+            float torque = 0f;
+            float brake = brakingInput ? brakeTorque : 0f;
+
+            if (Gear == GearState.Drive)
+            {
+                if (CruiseActive)
+                {
+                    float error = cruiseSpeedKph - SpeedKph;
+                    torque = Mathf.Max(0f, Mathf.Clamp(error * 0.12f, -0.2f, 1f)) * motorTorque * (1f - speedFactor * 0.5f);
+                }
+                else if (throttleInput > 0.05f)
+                {
+                    torque = throttleInput * motorTorque * (1f - speedFactor);
+                }
+                else if (throttleInput < -0.05f)
+                {
+                    brake = Mathf.Max(brake, brakeTorque * 0.85f * -throttleInput);
+                }
+
+                if (SpeedKph >= maxForwardKph) { torque = 0f; LimiterActive = true; }
+            }
+            else
+            {
+                if (throttleInput < -0.05f) torque = throttleInput * motorTorque * reverseTorqueMultiplier;
+                else if (throttleInput > 0.05f) brake = Mathf.Max(brake, brakeTorque * 0.85f * throttleInput);
+
+                if (SpeedKph >= maxForwardKph * 0.35f) { torque = 0f; LimiterActive = true; }
+            }
+
+            SetMotor(torque);
+            SetBrake(brake);
+        }
+
+        private void ConsumeFuel(float dt)
+        {
+            if (!engineRunning) return;
+            if (Mathf.Abs(throttleInput) > 0.1f || CruiseActive)
+                Fuel = Mathf.Max(0f, Fuel - dt * (0.0015f + SpeedKph * 0.00002f));
+            if (Fuel <= 0f) { engineRunning = false; CruiseActive = false; }
+        }
+
+        public void Refuel(float amount) => Fuel = Mathf.Clamp(Fuel + amount, 0f, 100f);
+
+        private void SetMotor(float torque) { SetMotor(rearLeft, torque); SetMotor(rearRight, torque); }
         private static void SetMotor(WheelCollider wheel, float torque) { if (wheel) wheel.motorTorque = torque; }
+
         private void SetBrake(float torque)
         {
             if (frontLeft) frontLeft.brakeTorque = torque; if (frontRight) frontRight.brakeTorque = torque;

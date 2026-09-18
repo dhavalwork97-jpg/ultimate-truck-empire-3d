@@ -12,7 +12,18 @@ namespace UltimateTruckEmpire.UI
         private DriverData selectedDriver;
         private FleetTruckData selectedTruck;
 
-        private void Start() { Build(); Refresh(); }
+        private GameObject root;
+
+        private void Start() { Build(); Refresh(); SetVisible(false); }
+
+        // F10 toggles the dispatch panel; it covers half the screen, so it does not
+        // stay open while driving.
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.F10)) SetVisible(root == null || !root.activeSelf);
+        }
+
+        public void SetVisible(bool visible) { if (root != null) root.SetActive(visible); }
 
         private void Build()
         {
@@ -21,6 +32,7 @@ namespace UltimateTruckEmpire.UI
             gameObject.AddComponent<CanvasScaler>();
             gameObject.AddComponent<GraphicRaycaster>();
             var panel = new GameObject("Dispatch Assignment Panel");
+            root = panel;
             panel.transform.SetParent(transform, false);
             var image = panel.AddComponent<Image>();
             image.color = new Color(.025f, .03f, .04f, .97f);
