@@ -16,6 +16,7 @@ namespace UltimateTruckEmpire.Truck
         private bool engineRunning = true;
         public float SpeedKph => body == null ? 0f : body.linearVelocity.magnitude * 3.6f;
         public float Fuel { get; private set; } = 100f;
+        public bool EngineRunning => engineRunning;
 
         private void Awake()
         {
@@ -25,6 +26,11 @@ namespace UltimateTruckEmpire.Truck
             body.interpolation = RigidbodyInterpolation.Interpolate;
         }
 
+        public void ConfigureWheels(WheelCollider fl, WheelCollider fr, WheelCollider rl, WheelCollider rr)
+        {
+            frontLeft = fl; frontRight = fr; rearLeft = rl; rearRight = rr;
+        }
+
         private void FixedUpdate()
         {
             float steer = Input.GetAxisRaw("Horizontal");
@@ -32,16 +38,13 @@ namespace UltimateTruckEmpire.Truck
             bool braking = Input.GetKey(KeyCode.Space);
             float speedFactor = Mathf.InverseLerp(0f, maxForwardKph, SpeedKph);
             float steerLimit = Mathf.Lerp(maxSteerAngle, maxSteerAngle * 0.35f, speedFactor);
-
             if (frontLeft) frontLeft.steerAngle = steer * steerLimit;
             if (frontRight) frontRight.steerAngle = steer * steerLimit;
-
             float torque = throttle > 0f ? motorTorque * (1f - speedFactor) : throttle * motorTorque * reverseTorqueMultiplier;
             if (SpeedKph >= maxForwardKph && throttle > 0f) torque = 0f;
             SetMotor(rearLeft, torque); SetMotor(rearRight, torque);
             SetBrake(braking ? brakeTorque : 0f);
             if (lights) lights.SetBrakes(braking);
-
             if (Mathf.Abs(throttle) > 0.1f && engineRunning) Fuel = Mathf.Max(0f, Fuel - Time.fixedDeltaTime * (0.0015f + SpeedKph * 0.00002f));
             if (Input.GetKeyDown(KeyCode.I)) engineRunning = !engineRunning;
         }
