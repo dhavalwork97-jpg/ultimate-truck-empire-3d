@@ -26,8 +26,22 @@ jobs:
     timeout-minutes: 45
 
     steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Show available disk space
+        run: df -h
 
       - name: Unity CI
         uses: game-ci/unity-test-runner@v4
