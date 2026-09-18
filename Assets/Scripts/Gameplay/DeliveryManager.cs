@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UltimateTruckEmpire.Core;
 
@@ -21,8 +22,24 @@ namespace UltimateTruckEmpire.Gameplay
             DontDestroyOnLoad(gameObject);
         }
 
-        public void AcceptStarterContract() { ContractAccepted = true; CargoLoaded = false; }
-        public void LoadCargo() { if (ContractAccepted) CargoLoaded = true; }
+        public void AcceptStarterContract()
+        {
+            if (ContractAccepted) return;
+            ContractAccepted = true;
+            CargoLoaded = false;
+        }
+
+        public void Restore(bool contractAccepted, bool cargoLoaded)
+        {
+            ContractAccepted = contractAccepted;
+            CargoLoaded = contractAccepted && cargoLoaded;
+        }
+
+        public void LoadCargo()
+        {
+            if (ContractAccepted) CargoLoaded = true;
+        }
+
         public void CompleteDelivery()
         {
             if (!ContractAccepted || !CargoLoaded) return;
