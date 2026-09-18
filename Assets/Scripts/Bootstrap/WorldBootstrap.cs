@@ -32,10 +32,23 @@ namespace UltimateTruckEmpire.Bootstrap
             if (AutomatedDeliveryManager.Instance == null) new GameObject("AutomatedDeliveryManager").AddComponent<AutomatedDeliveryManager>();
             if (FinanceManager.Instance == null) new GameObject("FinanceManager").AddComponent<FinanceManager>();
             if (AutoDispatcher.Instance == null) new GameObject("AutoDispatcher").AddComponent<AutoDispatcher>();
-            if (!CompanyManager.Instance.IsCompanyCreated) CompanyManager.Instance.CreateCompany("My Trucking Company", "Ahmedabad", "General Freight");
-            if (DriverManager.Instance.Drivers.Count == 0) DriverManager.Instance.HireDriver("Raj Patel");
-            if (FleetManager.Instance.Trucks.Count == 0) FleetManager.Instance.BuyTruck("UTE Hauler 300", 180000f, 30f);
-            if (FindFirstObjectByType<SaveManager>() == null) new GameObject("SaveManager").AddComponent<SaveManager>();
+
+            // Restore the persistent game before creating starter data, otherwise a
+            // fresh company/truck would overwrite the player's saved fleet on boot.
+            var saveManager = FindFirstObjectByType<SaveManager>();
+            if (saveManager == null)
+            {
+                saveManager = new GameObject("SaveManager").AddComponent<SaveManager>();
+                saveManager.Load();
+            }
+
+            if (!CompanyManager.Instance.IsCompanyCreated)
+                CompanyManager.Instance.CreateCompany("My Trucking Company", "Ahmedabad", "General Freight");
+            if (DriverManager.Instance.Drivers.Count == 0)
+                DriverManager.Instance.HireDriver("Raj Patel");
+            if (FleetManager.Instance.Trucks.Count == 0)
+                FleetManager.Instance.BuyTruck("UTE Hauler 300", 180000f, 30f);
+            FleetManager.Instance.EnsureActiveTruck();
             EnsureEventSystem();
         }
 
@@ -158,6 +171,7 @@ namespace UltimateTruckEmpire.Bootstrap
 
             truck.AddComponent<TrailerController>().Configure(TrailerType.DryVan);
             var controller = truck.AddComponent<TruckController>();
+            truck.AddComponent<PlayerTruckFleetBinding>();
             truck.AddComponent<TruckPhysics>();
             truck.AddComponent<TruckInput>();
             var wheelRig = truck.AddComponent<TruckWheelRig>();
