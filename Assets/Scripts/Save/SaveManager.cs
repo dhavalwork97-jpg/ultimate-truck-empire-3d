@@ -32,6 +32,7 @@ namespace UltimateTruckEmpire.Save
             public CompanyData company;
             public DriverData[] drivers;
             public FleetTruckData[] trucks;
+            public FleetTrailerData[] trailers;
             public FinanceData finance;
             public bool contractAccepted;
             public bool cargoLoaded;
@@ -57,6 +58,7 @@ namespace UltimateTruckEmpire.Save
                     company = CompanyManager.Instance?.Data,
                     drivers = DriverManager.Instance == null ? null : new System.Collections.Generic.List<DriverData>(DriverManager.Instance.Drivers).ToArray(),
                     trucks = FleetManager.Instance == null ? null : new System.Collections.Generic.List<FleetTruckData>(FleetManager.Instance.Trucks).ToArray(),
+                    trailers = TrailerFleetManager.Instance == null ? null : new System.Collections.Generic.List<FleetTrailerData>(TrailerFleetManager.Instance.Trailers).ToArray(),
                     finance = FinanceManager.Instance?.Data,
                     contractAccepted = DeliveryManager.Instance != null && DeliveryManager.Instance.ContractAccepted,
                     cargoLoaded = DeliveryManager.Instance != null && DeliveryManager.Instance.CargoLoaded,
@@ -180,6 +182,8 @@ namespace UltimateTruckEmpire.Save
                     else
                         FleetManager.Instance.EnsureActiveTruck();
                 }
+                if (TrailerFleetManager.Instance != null)
+                    TrailerFleetManager.Instance.Restore(data.trailers);
                 if (FinanceManager.Instance != null && data.finance != null) FinanceManager.Instance.Restore(data.finance);
                 DeliveryManager.Instance?.Restore(data.contractAccepted, data.cargoLoaded, data.activeContract, data.completedContracts);
                 AutomatedDeliveryManager.Instance?.RestoreState(data.automatedDeliveries);
