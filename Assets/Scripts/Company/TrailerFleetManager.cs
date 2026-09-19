@@ -190,7 +190,7 @@ namespace UltimateTruckEmpire.Company
             if (assigned == null) return null;
             var controller = truck.GetComponent<TrailerController>();
             if (controller == null) controller = truck.gameObject.AddComponent<TrailerController>();
-            controller.Configure(ToPhysicalType(assigned.type));
+            controller.ConfigureGameplay(assigned.type);
             return controller;
         }
 
