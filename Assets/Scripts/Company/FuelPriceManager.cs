@@ -99,13 +99,23 @@ namespace UltimateTruckEmpire.Company
         public float GetPricePerLitre(string region)
         {
             EnsurePrices();
-            string key = string.IsNullOrWhiteSpace(region) ? "Ahmedabad" : region.Trim();
+            string key = ResolveRegion(region);
             if (!prices.TryGetValue(key, out float price))
             {
                 price = BasePricePerLitre;
                 prices[key] = price;
             }
             return price;
+        }
+
+        private static string ResolveRegion(string region)
+        {
+            if (string.IsNullOrWhiteSpace(region)) return "Ahmedabad";
+            string value = region.Trim();
+            foreach (string knownRegion in Regions)
+                if (value.IndexOf(knownRegion, StringComparison.OrdinalIgnoreCase) >= 0)
+                    return knownRegion;
+            return value;
         }
 
         public string GetPriceLabel(string region)
