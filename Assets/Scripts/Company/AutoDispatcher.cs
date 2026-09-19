@@ -34,9 +34,16 @@ namespace UltimateTruckEmpire.Company
             if (fleet == null || drivers == null || market == null || delivery == null) return 0;
             foreach (var truck in fleet.Trucks.Where(t => t.available).ToList())
             {
-                var driver = drivers.Drivers.Where(d => d.available && d.employed).OrderByDescending(drivers.GetPerformance).FirstOrDefault();
+                var driver = drivers.Drivers
+                    .Where(drivers.CanDispatch)
+                    .OrderByDescending(d => ScoreDriver(d, truck))
+                    .FirstOrDefault();
                 if (driver == null) continue;
-                var offer = market.Offers.Where(o => o.weightTons <= truck.capacityTons).OrderByDescending(o => Score(o, driver, truck)).FirstOrDefault();
+                var offer = market.Offers
+                    .Where(o => o.weightTons <= truck.capacityTons)
+                    .Where(o => HasTripReadiness(truck, o))
+                    .OrderByDescending(o => Score(o, driver, truck))
+                    .FirstOrDefault();
                 if (offer == null) continue;
                 if (delivery.StartDelivery(truck, driver, offer) != null) { market.Remove(offer); LastDispatches++; }
             }
@@ -47,10 +54,26 @@ namespace UltimateTruckEmpire.Company
         {
             float fuel = offer.distanceKm * 0.38f * 105f;
             float wear = offer.distanceKm * 0.012f * 300f;
-            float performance = DriverManager.Instance.GetPerformance(driver);
+            float performance = DriverManager.Instance.GetEffectivePerformance(driver);
             float skillBonus = offer.reward * Mathf.Clamp((performance - 50f) / 1000f, -0.05f, 0.12f);
             float capacityPenalty = Mathf.Max(0f, offer.weightTons / Mathf.Max(1f, truck.capacityTons) - 0.75f) * offer.reward * 0.1f;
             return offer.reward + skillBonus - fuel - wear - capacityPenalty;
+        }
+
+        private static float ScoreDriver(DriverData driver, FleetTruckData truck)
+        {
+            float performance = DriverManager.Instance.GetEffectivePerformance(driver);
+            float fatiguePenalty = driver.fatigue * 0.25f;
+            float reliabilityBonus = driver.reliability * 0.2f;
+            float truckCondition = truck.condition * 0.1f;
+            return performance + reliabilityBonus + truckCondition - fatiguePenalty;
+        }
+
+        private static bool HasTripReadiness(FleetTruckData truck, ContractOffer offer)
+        {
+            if (truck == null || offer == null || truck.condition < 20f) return false;
+            float estimatedFuel = offer.distanceKm / Mathf.Max(0.1f, truck.fuelEfficiency);
+            return truck.fuel >= estimatedFuel * 1.15f;
         }
     }
 }
