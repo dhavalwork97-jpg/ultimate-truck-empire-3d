@@ -178,7 +178,8 @@ namespace UltimateTruckEmpire.Gameplay
             CompletedContracts++; TrailerFleetManager.Instance?.ReleaseContract(truck?.id ?? ""); ContractQualityBonus = 0f; ContractQualityPenalty = 0f; MissionManager.Instance?.NotifyDeliveryComplete(); ContractAccepted = false; CargoLoaded = false; hasPickupPosition = false; pickupFuelLitres = -1f;
             ContractMarket.Instance?.Refresh(); SaveManager.Instance?.Save();
         }
+        // Legacy API retained for existing callers. New delivery completion uses the docking-aware overload so existing gameplay code remains source-compatible.
         public void CompleteDelivery(Vector3 worldPosition) => CompleteDelivery(worldPosition, 100f);
-        public void CompleteDelivery() => CompleteDelivery(Vector3.zero);
+        public void CompleteDelivery() => CompleteDelivery(Vector3.zero, 100f);
     }
 }
