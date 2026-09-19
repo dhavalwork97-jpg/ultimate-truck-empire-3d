@@ -3,11 +3,21 @@ using UnityEngine;
 using UltimateTruckEmpire.Core;
 using UltimateTruckEmpire.Company;
 using UltimateTruckEmpire.Gameplay;
+using System.Collections.Generic;
 
 namespace UltimateTruckEmpire.Save
 {
     public sealed class SaveManager : MonoBehaviour
     {
+        public static SaveManager Instance { get; private set; }
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+
         private const string FileName = "ute_save.json";
 
         [System.Serializable]
@@ -22,6 +32,7 @@ namespace UltimateTruckEmpire.Save
             public bool contractAccepted;
             public bool cargoLoaded;
             public string activeTruckId;
+            public AutomatedDelivery[] automatedDeliveries;
         }
 
         public void Save()
@@ -39,7 +50,8 @@ namespace UltimateTruckEmpire.Save
                     finance = FinanceManager.Instance?.Data,
                     contractAccepted = DeliveryManager.Instance != null && DeliveryManager.Instance.ContractAccepted,
                     cargoLoaded = DeliveryManager.Instance != null && DeliveryManager.Instance.CargoLoaded,
-                    activeTruckId = FleetManager.Instance?.ActiveTruck?.id ?? ""
+                    activeTruckId = FleetManager.Instance?.ActiveTruck?.id ?? "",
+                    automatedDeliveries = AutomatedDeliveryManager.Instance?.CaptureState()
                 };
                 string directory = Application.persistentDataPath;
                 Directory.CreateDirectory(directory);
@@ -77,6 +89,7 @@ namespace UltimateTruckEmpire.Save
                 }
                 if (FinanceManager.Instance != null && data.finance != null) FinanceManager.Instance.Restore(data.finance);
                 DeliveryManager.Instance?.Restore(data.contractAccepted, data.cargoLoaded);
+                AutomatedDeliveryManager.Instance?.RestoreState(data.automatedDeliveries);
             }
             catch (System.Exception ex)
             {
