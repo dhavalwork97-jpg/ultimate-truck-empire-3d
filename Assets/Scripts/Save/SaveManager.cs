@@ -20,6 +20,8 @@ namespace UltimateTruckEmpire.Save
         }
 
         private const string FileName = "ute_save.json";
+        private const string BackupFileName = "ute_save.json.bak";
+        private const int CurrentSaveVersion = 2;
 
         [System.Serializable]
         private sealed class SaveData
@@ -47,7 +49,7 @@ namespace UltimateTruckEmpire.Save
             if (game == null) return;
             try
             {
-                var data = new SaveData {
+                var data = new SaveData {\n                    saveVersion = CurrentSaveVersion,
                     money = game.Money,
                     xp = game.PlayerXp,
                     company = CompanyManager.Instance?.Data,
@@ -79,8 +81,14 @@ namespace UltimateTruckEmpire.Save
                 string directory = Application.persistentDataPath;
                 Directory.CreateDirectory(directory);
                 string path = Path.Combine(directory, FileName);
+                string backupPath = Path.Combine(directory, BackupFileName);
                 string tempPath = path + ".tmp";
-                File.WriteAllText(tempPath, JsonUtility.ToJson(data, true));
+                string json = JsonUtility.ToJson(data, true);
+
+                File.WriteAllText(tempPath, json);
+                if (File.Exists(path))
+                    File.Copy(path, backupPath, true);
+
                 if (File.Exists(path)) File.Delete(path);
                 File.Move(tempPath, path);
             }
@@ -107,6 +115,28 @@ namespace UltimateTruckEmpire.Save
             catch { return false; }
         }
 
+        private static SaveData TryReadSave(string path)
+        {
+            if (!File.Exists(path)) return null;
+            try
+            {
+                string json = File.ReadAllText(path);
+                var data = JsonUtility.FromJson<SaveData>(json);
+                if (data == null) return null;
+                if (data.saveVersion < 1 || data.saveVersion > CurrentSaveVersion)
+                {
+                    Debug.LogWarning($"Unsupported save version: {data.saveVersion}");
+                    return null;
+                }
+                return data;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"Save read failed: {ex.Message}");
+                return null;
+            }
+        }
+
         private static bool TryGetPlayerTransform(out Vector3 position, out Quaternion rotation)
         {
             var player = FindFirstObjectByType<TruckController>();
@@ -123,7 +153,14 @@ namespace UltimateTruckEmpire.Save
             if (game == null || !File.Exists(path)) return;
             try
             {
-                var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+                SaveData data = TryReadSave(path);
+                if (data == null)
+                {
+                    string backupPath = Path.Combine(Application.persistentDataPath, BackupFileName);
+                    data = TryReadSave(backupPath);
+                    if (data != null)
+                        Debug.LogWarning("Primary save was unreadable; restored from backup.");
+                }
                 if (data == null) return;
                 game.Restore(data.money, data.xp);
                 if (CompanyManager.Instance != null && data.company != null) CompanyManager.Instance.Restore(data.company);
