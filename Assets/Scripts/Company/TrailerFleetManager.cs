@@ -73,14 +73,9 @@ namespace UltimateTruckEmpire.Company
 
         public void EnsureStarterFleet()
         {
+            // New companies receive only the starter curtainsider. Existing saves are
+            // preserved by Restore(), so previously owned trailers are never removed.
             EnsureStarterTrailer();
-            // Provide a small, useful starting fleet so the contract system can
-            // actually exercise trailer compatibility from the first session.
-            EnsureOwnedType(UltimateTruckEmpire.Gameplay.TrailerType.Box, "UTE Box 30T", 110000f);
-            EnsureOwnedType(UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated, "UTE Reefer 28T", 165000f);
-            EnsureOwnedType(UltimateTruckEmpire.Gameplay.TrailerType.Flatbed, "UTE Flatbed 32T", 125000f);
-            EnsureOwnedType(UltimateTruckEmpire.Gameplay.TrailerType.Tanker, "UTE Tanker 30T", 180000f);
-            EnsureOwnedType(UltimateTruckEmpire.Gameplay.TrailerType.Lowboy, "UTE Lowboy 40T", 210000f);
         }
 
         private void EnsureOwnedType(UltimateTruckEmpire.Gameplay.TrailerType type, string model, float price)
@@ -178,6 +173,56 @@ namespace UltimateTruckEmpire.Company
             trailer.assignedTruckId = "";
             trailer.assignedContractId = "";
             trailer.available = true;
+        }
+
+
+
+        public float GetRepairCostPerConditionPoint(FleetTrailerData trailer)
+        {
+            return Mathf.Max(100f, trailer?.purchasePrice ?? 0f) * 0.00055f;
+        }
+
+        public bool Repair(string trailerId, float targetCondition = 100f)
+        {
+            var trailer = Find(trailerId);
+            var game = Core.GameManager.Instance;
+            if (trailer == null || game == null || !trailer.available) return false;
+
+            float target = Mathf.Clamp(targetCondition, 0f, 100f);
+            float points = target - trailer.condition;
+            if (points <= 0f) return false;
+
+            float cost = points * GetRepairCostPerConditionPoint(trailer);
+            if (!game.TrySpendMoney(cost)) return false;
+
+            trailer.condition = target;
+            FinanceManager.Instance?.RecordMaintenance(cost);
+            return true;
+        }
+
+        public bool AssignToTruck(string trailerId, string truckId)
+        {
+            var trailer = Find(trailerId);
+            var truck = FleetManager.Instance?.Find(truckId);
+            if (trailer == null || truck == null || !trailer.available || !truck.available) return false;
+            if (FindAssignedToTruck(truckId) != null) return false;
+
+            trailer.assignedTruckId = truckId;
+            trailer.assignedContractId = "";
+            trailer.available = true;
+            return true;
+        }
+
+        public bool Purchase(string model, UltimateTruckEmpire.Gameplay.TrailerType type, float price)
+        {
+            var company = CompanyManager.Instance;
+            var game = Core.GameManager.Instance;
+            if (company == null || !company.IsCompanyCreated || game == null || price < 0f) return false;
+            if (!game.TrySpendMoney(price)) return false;
+
+            AddTrailer("TRL-" + nextId++, model, type, price);
+            FinanceManager.Instance?.RecordCapitalExpense(price);
+            return true;
         }
 
         public void Restore(FleetTrailerData[] saved)
