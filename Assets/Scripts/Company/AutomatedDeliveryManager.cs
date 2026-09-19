@@ -33,10 +33,16 @@ namespace UltimateTruckEmpire.Company
         public AutomatedDelivery StartDelivery(FleetTruckData truck, DriverData driver, ContractOffer offer)
         {
             if (truck == null || driver == null || offer == null || FleetManager.Instance == null || DriverManager.Instance == null) return null;
-            if (truck.capacityTons < offer.weightTons || !truck.available || !driver.available) return null;
+            if (truck.capacityTons < offer.weightTons || !truck.available || !DriverManager.Instance.CanDispatch(driver)) return null;
             float speed = 48f + DriverManager.Instance.GetPerformance(driver) * .45f;
             var delivery = new AutomatedDelivery { id = "JOB-" + nextId++, truckId = truck.id, driverId = driver.id, cargo = offer.cargo, origin = offer.pickup, destination = offer.destination, reward = offer.reward, distanceKm = offer.distanceKm, remainingKm = offer.distanceKm, etaHours = Mathf.Max(.25f, offer.distanceKm / speed), active = true };
             if (!FleetManager.Instance.Assign(truck.id, driver.id, delivery.id)) return null;
+            if (!DriverManager.Instance.CanDispatch(driver))
+            {
+                FleetManager.Instance.Release(truck.id);
+                return null;
+            }
+            DriverManager.Instance.BeginDelivery(driver);
             deliveries.Add(delivery); return delivery;
         }
 
@@ -57,14 +63,24 @@ namespace UltimateTruckEmpire.Company
         private static void Complete(AutomatedDelivery job)
         {
             var driver = DriverManager.Instance?.Find(job.driverId); var truck = FleetManager.Instance?.Find(job.truckId);
-            float performance = DriverManager.Instance?.GetPerformance(driver) ?? 50f;
+            float performance = DriverManager.Instance?.GetEffectivePerformance(driver) ?? 50f;
             float bonus = job.reward * Mathf.Clamp((performance - 50f) / 1000f, 0f, .12f);
-            float fuelLitres = Mathf.Max(0f, job.distanceKm * .38f);
-            if (truck != null) { truck.fuel = Mathf.Max(0f, truck.fuel - fuelLitres); truck.condition = Mathf.Max(0f, truck.condition - job.distanceKm * .012f); }
+            float xp = Mathf.Max(20, Mathf.RoundToInt(job.distanceKm * .6f));
+            float fuelBefore = truck?.fuel ?? 0f;
+
+            if (truck != null)
+                FleetManager.Instance?.ApplyTripWear(job.truckId, job.distanceKm, 0f);
+
+            float fuelLitres = Mathf.Max(0f, fuelBefore - (truck?.fuel ?? fuelBefore));
             float payment = job.reward + bonus;
-            CompanyManager.Instance?.AddRevenue(payment); FinanceManager.Instance?.RecordDelivery(payment, fuelLitres * 105f, driver?.salary ?? 0f);
-            DriverManager.Instance?.AddExperience(driver, Mathf.Max(20, Mathf.RoundToInt(job.distanceKm * .6f)));
-            FleetManager.Instance?.Release(job.truckId); MissionManager.Instance?.NotifyDeliveryComplete(); ContractMarket.Instance?.Refresh();
+            CompanyManager.Instance?.AddRevenue(payment);
+            float fuelCost = FleetManager.Instance == null ? 0f : fuelLitres * FleetManager.Instance.GetFuelPricePerLitre();
+            FinanceManager.Instance?.RecordDelivery(payment, fuelCost, driver?.salary ?? 0f);
+
+            FleetManager.Instance?.Release(job.truckId);
+            DriverManager.Instance?.CompleteDelivery(driver, job.distanceKm, Mathf.RoundToInt(xp));
+            MissionManager.Instance?.NotifyDeliveryComplete();
+            ContractMarket.Instance?.Refresh();
             job.completed = true; job.active = false;
         }
     }

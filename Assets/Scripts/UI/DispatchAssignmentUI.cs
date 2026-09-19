@@ -47,7 +47,7 @@ namespace UltimateTruckEmpire.UI
             if (ContractMarket.Instance != null) foreach (var offer in ContractMarket.Instance.Offers) { var captured = offer; AddButton(contracts.transform, $"{offer.cargo} | {offer.pickup} → {offer.destination} | {offer.weightTons:0.0}t | ₹{offer.reward:0}", () => SelectContract(captured)); }
             AddLabel(panel.transform, "DRIVERS", 18);
             var drivers = new GameObject("Drivers"); drivers.transform.SetParent(panel.transform, false); drivers.AddComponent<VerticalLayoutGroup>().spacing = 3;
-            if (DriverManager.Instance != null) foreach (var driver in DriverManager.Instance.Drivers) { var captured = driver; AddButton(drivers.transform, $"{driver.name} | Lv {driver.level} | Perf {DriverManager.Instance.GetEffectivePerformance(driver):0} | {(driver.available ? "AVAILABLE" : "BUSY")}", () => SelectDriver(captured)); }
+            if (DriverManager.Instance != null) foreach (var driver in DriverManager.Instance.Drivers) { var captured = driver; AddButton(drivers.transform, $"{driver.name} | Lv {driver.level} | Perf {DriverManager.Instance.GetEffectivePerformance(driver):0} | Fatigue {driver.fatigue:0}% | {DriverStatus(driver)}", () => SelectDriver(captured)); }
             AddLabel(panel.transform, "TRUCKS", 18);
             var trucks = new GameObject("Trucks"); trucks.transform.SetParent(panel.transform, false); trucks.AddComponent<VerticalLayoutGroup>().spacing = 3;
             if (FleetManager.Instance != null) foreach (var truck in FleetManager.Instance.Trucks) { var captured = truck; AddButton(trucks.transform, $"{truck.model} | {truck.capacityTons:0}t | Fuel {truck.fuel:0} | {(truck.available ? "AVAILABLE" : "BUSY")}", () => SelectTruck(captured)); }
@@ -71,21 +71,26 @@ namespace UltimateTruckEmpire.UI
             if (selectedContract == null || selectedDriver == null || selectedTruck == null) { details.text += "\nSelect all three items first."; return; }
             if (!DriverManager.Instance.CanDispatch(selectedDriver) || !selectedTruck.available)
             {
-                details.text += "\nDriver is unavailable or too fatigued, or truck is already busy.";
+                details.text += "\nDriver is unavailable/resting/too fatigued, or truck is already busy.";
                 return;
             }
             if (selectedTruck.capacityTons < selectedContract.weightTons) { details.text += "\nSelected truck is too small for this cargo."; return; }
-            DriverManager.Instance.BeginDelivery(selectedDriver);
             var job = AutomatedDeliveryManager.Instance?.StartDelivery(selectedTruck, selectedDriver, selectedContract);
             if (job == null)
             {
-                selectedDriver.available = true;
                 details.text += "\nDispatch failed.";
                 return;
             }
             ContractMarket.Instance?.Remove(selectedContract);
             details.text = $"DISPATCHED {job.id}: {job.cargo}\n{job.origin} → {job.destination}\nETA {job.etaHours:0.0} h | ₹{job.reward:0}";
             selectedContract = null; selectedDriver = null; selectedTruck = null;
+        }
+
+        private static string DriverStatus(DriverData driver)
+        {
+            if (driver == null || !driver.employed) return "NOT EMPLOYED";
+            if (driver.resting) return "RESTING";
+            return driver.available ? "AVAILABLE" : "BUSY";
         }
 
         private static Text AddLabel(Transform parent, string value, int size)
