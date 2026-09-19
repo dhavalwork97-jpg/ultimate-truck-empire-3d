@@ -34,6 +34,7 @@ namespace UltimateTruckEmpire.Bootstrap
             if (CompanyManager.Instance == null) new GameObject("CompanyManager").AddComponent<CompanyManager>();
             if (DriverManager.Instance == null) new GameObject("DriverManager").AddComponent<DriverManager>();
             if (FleetManager.Instance == null) new GameObject("FleetManager").AddComponent<FleetManager>();
+            if (TrailerFleetManager.Instance == null) new GameObject("TrailerFleetManager").AddComponent<TrailerFleetManager>();
             if (TruckDealer.Instance == null) new GameObject("Truck Dealer").AddComponent<TruckDealer>();
             if (AutomatedDeliveryManager.Instance == null) new GameObject("AutomatedDeliveryManager").AddComponent<AutomatedDeliveryManager>();
             if (FinanceManager.Instance == null) new GameObject("FinanceManager").AddComponent<FinanceManager>();
@@ -51,6 +52,7 @@ namespace UltimateTruckEmpire.Bootstrap
             if (FleetManager.Instance.Trucks.Count == 0)
                 FleetManager.Instance.BuyTruck("UTE Hauler 300", 180000f, 30f);
             FleetManager.Instance.EnsureActiveTruck();
+            TrailerFleetManager.Instance.EnsureStarterFleet();
             EnsureEventSystem();
         }
 
@@ -161,7 +163,8 @@ namespace UltimateTruckEmpire.Bootstrap
             // There are two TrailerType enums in the project: the gameplay contract
             // catalog type and the physical truck trailer type. This bootstrap creates
             // a physical dry-van trailer, so explicitly select the truck namespace.
-            truck.AddComponent<TrailerController>().Configure(UltimateTruckEmpire.Truck.TrailerType.DryVan);
+            var trailerController = truck.AddComponent<TrailerController>();
+            trailerController.Configure(UltimateTruckEmpire.Truck.TrailerType.DryVan);
             var controller = truck.AddComponent<TruckController>();
             truck.AddComponent<PlayerTruckFleetBinding>();
             truck.AddComponent<TruckPhysics>();
@@ -173,6 +176,13 @@ namespace UltimateTruckEmpire.Bootstrap
             controller.AttachLights(lights);
 
             ApplyTruckVisuals(truck, wheelRig);
+            var activeFleetTruck = FleetManager.Instance?.EnsureActiveTruck();
+            if (activeFleetTruck != null)
+            {
+                if (TrailerFleetManager.Instance.GetAssigned(activeFleetTruck.id) == null)
+                    TrailerFleetManager.Instance.BindPlayerTrailer(activeFleetTruck.id, UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider);
+                TrailerFleetManager.Instance.ApplyToPlayerTruck(controller);
+            }
             TruckCockpitBuilder.Build(truck.transform);
             CreateCameraAnchors(truck.transform);
 
