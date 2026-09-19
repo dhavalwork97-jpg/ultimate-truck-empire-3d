@@ -24,10 +24,16 @@ namespace UltimateTruckEmpire.Gameplay
         public static DeliveryEvaluationResult EvaluatePlayer(FleetTruckData truck, float distanceKm, float fuelUsed,
             ContractModifierRules.Modifier modifier, float baseReward, float qualityBonus, float qualityPenalty)
         {
-            float score = 100f;
+            return EvaluatePlayer(truck, distanceKm, fuelUsed, 100f, modifier, baseReward, qualityBonus, qualityPenalty);
+        }
+
+        public static DeliveryEvaluationResult EvaluatePlayer(FleetTruckData truck, float distanceKm, float fuelUsed,
+            float dockingScore, ContractModifierRules.Modifier modifier, float baseReward, float qualityBonus, float qualityPenalty)
+        {
+            float score = Mathf.Lerp(55f, 100f, Mathf.Clamp01(dockingScore / 100f));
             if (truck != null)
             {
-                score -= Mathf.Clamp((100f - truck.ConditionPercent) * 0.55f, 0f, 30f);
+                score -= Mathf.Clamp((100f - truck.ConditionPercent) * 0.35f, 0f, 20f);
                 float expectedFuel = distanceKm / Mathf.Max(0.1f, truck.fuelEfficiency);
                 if (fuelUsed > expectedFuel * 1.15f)
                     score -= Mathf.Clamp((fuelUsed / Mathf.Max(1f, expectedFuel) - 1.15f) * 20f, 0f, 12f);
