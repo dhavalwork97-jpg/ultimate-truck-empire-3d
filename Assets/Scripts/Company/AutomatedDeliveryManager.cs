@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UltimateTruckEmpire.Gameplay;
+using UltimateTruckEmpire.Save;
 
 namespace UltimateTruckEmpire.Company
 {
@@ -17,6 +18,8 @@ namespace UltimateTruckEmpire.Company
         public static AutomatedDeliveryManager Instance { get; private set; }
         public IReadOnlyList<AutomatedDelivery> ActiveDeliveries => deliveries;
         [SerializeField] private float simulationSpeed = 60f;
+        [SerializeField] private float saveIntervalSeconds = 10f;
+        private float nextSaveTime;
         private readonly List<AutomatedDelivery> deliveries = new();
         private int nextId = 1;
 
@@ -25,9 +28,64 @@ namespace UltimateTruckEmpire.Company
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this; DontDestroyOnLoad(gameObject);
             simulationSpeed = Mathf.Clamp(simulationSpeed, 1f, 600f);
+            saveIntervalSeconds = Mathf.Max(2f, saveIntervalSeconds);
         }
 
         public float SimulationSpeed => simulationSpeed;
+
+        public AutomatedDelivery[] CaptureState()
+        {
+            return deliveries.Count == 0 ? Array.Empty<AutomatedDelivery>() : deliveries.ToArray();
+        }
+
+        public void RestoreState(AutomatedDelivery[] savedDeliveries)
+        {
+            deliveries.Clear();
+            nextId = 1;
+            if (savedDeliveries == null) return;
+
+            foreach (var saved in savedDeliveries)
+            {
+                if (saved == null || !saved.active || saved.completed) continue;
+                var truck = FleetManager.Instance?.Find(saved.truckId);
+                var driver = DriverManager.Instance?.Find(saved.driverId);
+                if (truck == null || driver == null)
+                {
+                    Debug.LogWarning($"[AutomatedDeliveryManager] Skipping saved job {saved.id}: truck or driver is missing.");
+                    continue;
+                }
+
+                // Save/Load already restored the fleet/driver assignment fields.
+                // Re-register the job without running StartDelivery, which would
+                // create a new ID and mutate driver availability.
+                truck.assignedContractId = saved.id;
+                truck.assignedDriverId = saved.driverId;
+                truck.available = false;
+                driver.assignedTruckId = saved.truckId;
+                driver.assignedContractId = saved.id;
+                driver.available = false;
+                driver.resting = false;
+
+                deliveries.Add(saved);
+                UpdateNextId(saved.id);
+            }
+
+            nextSaveTime = Time.time + saveIntervalSeconds;
+        }
+
+        private void UpdateNextId(string jobId)
+        {
+            if (string.IsNullOrWhiteSpace(jobId)) return;
+            const string prefix = "JOB-";
+            if (!jobId.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return;
+            if (int.TryParse(jobId.Substring(prefix.Length), out var number))
+                nextId = Mathf.Max(nextId, number + 1);
+        }
+
+        private void RequestSave()
+        {
+            SaveManager.Instance?.Save();
+        }
         public void SetSimulationSpeed(float value) => simulationSpeed = Mathf.Clamp(value, 1f, 600f);
 
         public AutomatedDelivery StartDelivery(FleetTruckData truck, DriverData driver, ContractOffer offer)
@@ -43,7 +101,10 @@ namespace UltimateTruckEmpire.Company
                 return null;
             }
             DriverManager.Instance.BeginDelivery(driver);
-            deliveries.Add(delivery); return delivery;
+            deliveries.Add(delivery);
+            RequestSave();
+            nextSaveTime = Time.time + saveIntervalSeconds;
+            return delivery;
         }
 
         private void Update()
@@ -56,7 +117,18 @@ namespace UltimateTruckEmpire.Company
                 job.elapsedHours += hours;
                 float travel = Mathf.Max(1f, job.distanceKm / Mathf.Max(.1f, job.etaHours));
                 job.remainingKm = Mathf.Max(0f, job.remainingKm - travel * hours);
-                if (job.remainingKm <= .01f) { Complete(job); deliveries.RemoveAt(i); }
+                if (job.remainingKm <= .01f)
+                {
+                    Complete(job);
+                    deliveries.RemoveAt(i);
+                    RequestSave();
+                }
+            }
+
+            if (Time.time >= nextSaveTime)
+            {
+                RequestSave();
+                nextSaveTime = Time.time + saveIntervalSeconds;
             }
         }
 
