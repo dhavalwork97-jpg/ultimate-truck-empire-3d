@@ -147,7 +147,8 @@ namespace UltimateTruckEmpire.Company
             float payment = job.reward + bonus;
             CompanyManager.Instance?.AddRevenue(payment);
             float fuelCost = FleetManager.Instance == null ? 0f : fuelLitres * FleetManager.Instance.GetFuelPricePerLitre();
-            FinanceManager.Instance?.RecordDelivery(payment, fuelCost, driver?.salary ?? 0f);
+            float payrollCost = EconomyConfig.GetAutomatedPayroll(driver?.salary ?? 0f, job.etaHours);
+            FinanceManager.Instance?.RecordDelivery(payment, fuelCost, payrollCost);
 
             FleetManager.Instance?.Release(job.truckId);
             DriverManager.Instance?.CompleteDelivery(driver, job.distanceKm, Mathf.RoundToInt(xp));
