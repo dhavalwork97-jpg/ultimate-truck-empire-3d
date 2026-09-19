@@ -142,9 +142,10 @@ namespace UltimateTruckEmpire.UI
             s.AppendLine("Player truck   " + (fleet.ActiveTruck == truck ? "ACTIVE" : "NOT ACTIVE"));
             s.AppendLine();
             s.AppendLine("Upgrades");
-            s.AppendLine("Engine         Lv " + truck.engineUpgradeLevel + " / 5");
-            s.AppendLine("Fuel tank      Lv " + truck.fuelUpgradeLevel + " / 3");
-            s.AppendLine("Reliability    Lv " + truck.reliabilityUpgradeLevel + " / 3");
+            int hqLevel = CompanyManager.Instance?.Data?.level ?? 1;
+            s.AppendLine("Engine         Lv " + truck.engineUpgradeLevel + " / 5  " + (hqLevel >= 2 ? "[UNLOCKED]" : "[HQ 2]"));
+            s.AppendLine("Fuel tank      Lv " + truck.fuelUpgradeLevel + " / 3  " + (hqLevel >= 2 ? "[UNLOCKED]" : "[HQ 2]"));
+            s.AppendLine("Reliability    Lv " + truck.reliabilityUpgradeLevel + " / 3  " + (hqLevel >= 3 ? "[UNLOCKED]" : "[HQ 3]"));
             s.AppendLine();
             s.AppendLine("Repair cost    ₹" + fleet.GetRepairCostPerConditionPoint(truck).ToString("0") + " / condition point");
             s.AppendLine("Fuel price     ₹" + fleet.GetFuelPricePerLitre().ToString("0") + " / litre");
