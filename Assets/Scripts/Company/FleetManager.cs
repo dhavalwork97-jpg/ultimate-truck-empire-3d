@@ -323,7 +323,6 @@ namespace UltimateTruckEmpire.Company
             }
 
             EnsureActiveTruck();
-            }
         }
     }
 }
