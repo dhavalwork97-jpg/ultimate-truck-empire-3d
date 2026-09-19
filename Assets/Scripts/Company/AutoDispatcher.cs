@@ -52,7 +52,8 @@ namespace UltimateTruckEmpire.Company
 
         private static float Score(ContractOffer offer, DriverData driver, FleetTruckData truck)
         {
-            float fuel = offer.distanceKm * 0.38f * 105f;
+            float fuelPricePerLitre = FleetManager.Instance?.GetFuelPricePerLitre() ?? 95f;
+            float fuel = offer.distanceKm * 0.38f * fuelPricePerLitre;
             float wear = offer.distanceKm * 0.012f * 300f;
             float performance = DriverManager.Instance.GetEffectivePerformance(driver);
             float skillBonus = offer.reward * Mathf.Clamp((performance - 50f) / 1000f, -0.05f, 0.12f);
