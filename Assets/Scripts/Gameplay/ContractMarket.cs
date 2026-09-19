@@ -15,6 +15,10 @@ namespace UltimateTruckEmpire.Gameplay
         public ContractModifierRules.Modifier modifier = ContractModifierRules.Modifier.Standard;
         public float qualityBonus;
         public float qualityPenalty;
+        public string originIndustryId;
+        public string destinationIndustryId;
+        public string customerName;
+        public string supplyChainRouteId;
     }
 
     public sealed class ContractMarket : MonoBehaviour
