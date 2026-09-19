@@ -8,7 +8,7 @@ namespace UltimateTruckEmpire.Truck
     public sealed class TrailerController : MonoBehaviour
     {
         public TrailerType Type { get; private set; } = TrailerType.DryVan;
-        public UltimateTruckEmpire.Gameplay.TrailerType ContractTrailerType { get; private set; } = CargoCatalogTrailerType.Curtainsider;
+        public UltimateTruckEmpire.Gameplay.TrailerType ContractTrailerType { get; private set; } = UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider;
         public float CargoWeightTons { get; private set; }
         public bool CargoLoaded { get; private set; }
 
@@ -24,7 +24,7 @@ namespace UltimateTruckEmpire.Truck
             ApplyPresentation();
         }
 
-        public void ConfigureGameplay(CargoCatalogTrailerType type, float weightTons = 0f)
+        public void ConfigureGameplay(UltimateTruckEmpire.Gameplay.TrailerType type, float weightTons = 0f)
         {
             ContractTrailerType = type;
             Type = ToPhysicalType(type);
@@ -60,44 +60,33 @@ namespace UltimateTruckEmpire.Truck
             DockingPoint = point.transform;
         }
 
-        public static TrailerType ToPhysicalType(CargoCatalogTrailerType type)
+        public static TrailerType ToPhysicalType(UltimateTruckEmpire.Gameplay.TrailerType type)
         {
             switch (type)
             {
-                case CargoCatalogTrailerType.Refrigerated: return TrailerType.Refrigerated;
-                case CargoCatalogTrailerType.Flatbed: return TrailerType.Flatbed;
-                case CargoCatalogTrailerType.Tanker: return TrailerType.Tanker;
-                case CargoCatalogTrailerType.Lowboy: return TrailerType.HeavyHaul;
-                case CargoCatalogTrailerType.Box:
-                case CargoCatalogTrailerType.Curtainsider:
+                case UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated: return TrailerType.Refrigerated;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Flatbed: return TrailerType.Flatbed;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Tanker: return TrailerType.Tanker;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Lowboy: return TrailerType.HeavyHaul;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Box:
+                case UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider:
                 default: return TrailerType.DryVan;
             }
         }
 
-        public static CargoCatalogTrailerType FromPhysicalType(TrailerType type)
+        public static UltimateTruckEmpire.Gameplay.TrailerType FromPhysicalType(TrailerType type)
         {
             switch (type)
             {
-                case TrailerType.Refrigerated: return CargoCatalogTrailerType.Refrigerated;
-                case TrailerType.Flatbed: return CargoCatalogTrailerType.Flatbed;
-                case TrailerType.Tanker: return CargoCatalogTrailerType.Tanker;
-                case TrailerType.HeavyHaul: return CargoCatalogTrailerType.Lowboy;
+                case TrailerType.Refrigerated: return UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated;
+                case TrailerType.Flatbed: return UltimateTruckEmpire.Gameplay.TrailerType.Flatbed;
+                case TrailerType.Tanker: return UltimateTruckEmpire.Gameplay.TrailerType.Tanker;
+                case TrailerType.HeavyHaul: return UltimateTruckEmpire.Gameplay.TrailerType.Lowboy;
                 case TrailerType.Container:
                 case TrailerType.DryVan:
-                default: return CargoCatalogTrailerType.Box;
+                default: return UltimateTruckEmpire.Gameplay.TrailerType.Box;
             }
         }
     }
 
-    // Alias keeps the public TrailerController API readable while explicitly
-    // distinguishing the gameplay contract enum from the physical enum.
-    public enum CargoCatalogTrailerType
-    {
-        Curtainsider = 0,
-        Box = 1,
-        Refrigerated = 2,
-        Flatbed = 3,
-        Tanker = 4,
-        Lowboy = 5
-    }
 }
