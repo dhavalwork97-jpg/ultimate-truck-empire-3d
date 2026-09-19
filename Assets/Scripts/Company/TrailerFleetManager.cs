@@ -24,7 +24,7 @@ namespace UltimateTruckEmpire.Company
     /// <summary>
     /// Persistent trailer ownership and assignment. Contract trailer types use the
     /// Gameplay catalogue; this manager is the single mapping point to physical
-    /// Truck.UltimateTruckEmpire.Gameplay.TrailerType values, avoiding the project's two UltimateTruckEmpire.Gameplay.TrailerType enums.
+    /// physical truck trailer enum values, avoiding the project's two UltimateTruckEmpire.Gameplay.TrailerType enums.
     /// </summary>
     public sealed class TrailerFleetManager : MonoBehaviour
     {
@@ -194,18 +194,5 @@ namespace UltimateTruckEmpire.Company
             return controller;
         }
 
-        public static UltimateTruckEmpire.Truck.UltimateTruckEmpire.Gameplay.TrailerType ToPhysicalType(UltimateTruckEmpire.Gameplay.TrailerType type)
-        {
-            switch (type)
-            {
-                case UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated: return UltimateTruckEmpire.Truck.UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated;
-                case UltimateTruckEmpire.Gameplay.TrailerType.Flatbed: return UltimateTruckEmpire.Truck.UltimateTruckEmpire.Gameplay.TrailerType.Flatbed;
-                case UltimateTruckEmpire.Gameplay.TrailerType.Tanker: return UltimateTruckEmpire.Truck.UltimateTruckEmpire.Gameplay.TrailerType.Tanker;
-                case UltimateTruckEmpire.Gameplay.TrailerType.Lowboy: return UltimateTruckEmpire.Truck.UltimateTruckEmpire.Gameplay.TrailerType.HeavyHaul;
-                case UltimateTruckEmpire.Gameplay.TrailerType.Box:
-                case UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider:
-                default: return UltimateTruckEmpire.Truck.UltimateTruckEmpire.Gameplay.TrailerType.DryVan;
-            }
-        }
     }
 }
