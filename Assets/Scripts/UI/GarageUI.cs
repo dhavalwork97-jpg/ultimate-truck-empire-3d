@@ -148,7 +148,8 @@ namespace UltimateTruckEmpire.UI
             s.AppendLine("Reliability    Lv " + truck.reliabilityUpgradeLevel + " / 3  " + (hqLevel >= 3 ? "[UNLOCKED]" : "[HQ 3]"));
             s.AppendLine();
             s.AppendLine("Repair cost    ₹" + fleet.GetRepairCostPerConditionPoint(truck).ToString("0") + " / condition point");
-            s.AppendLine("Fuel price     ₹" + fleet.GetFuelPricePerLitre().ToString("0") + " / litre");
+            s.AppendLine("Fuel price     ₹" + fleet.GetFuelPricePerLitre("Ahmedabad").ToString("0.00") + " / litre");
+            s.AppendLine("Fuel market    Ahmedabad  |  Kandla " + fleet.GetFuelPricePerLitre("Kandla").ToString("0.00") + "  |  Surat " + fleet.GetFuelPricePerLitre("Surat").ToString("0.00"));
             details.text = s.ToString();
         }
 
