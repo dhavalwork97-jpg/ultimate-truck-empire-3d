@@ -25,6 +25,7 @@ namespace UltimateTruckEmpire.Bootstrap
         private static void EnsureSystems()
         {
             if (GameManager.Instance == null) new GameObject("GameManager").AddComponent<GameManager>();
+            if (FuelPriceManager.Instance == null) new GameObject("Fuel Price Manager").AddComponent<FuelPriceManager>();
             if (DeliveryManager.Instance == null) new GameObject("DeliveryManager").AddComponent<DeliveryManager>();
             if (SupplyChainManager.Instance == null) new GameObject("Supply Chain Manager").AddComponent<SupplyChainManager>();
             if (ContractMarket.Instance == null) new GameObject("ContractMarket").AddComponent<ContractMarket>();
