@@ -3,6 +3,7 @@ using UnityEngine;
 using UltimateTruckEmpire.Core;
 using UltimateTruckEmpire.Company;
 using UltimateTruckEmpire.Gameplay;
+using UltimateTruckEmpire.Truck;
 using System.Collections.Generic;
 
 namespace UltimateTruckEmpire.Save
@@ -33,6 +34,9 @@ namespace UltimateTruckEmpire.Save
             public bool cargoLoaded;
             public string activeTruckId;
             public AutomatedDelivery[] automatedDeliveries;
+            public bool hasPlayerTransform;
+            public Vector3 playerPosition;
+            public Quaternion playerRotation;
         }
 
         public void Save()
@@ -51,6 +55,9 @@ namespace UltimateTruckEmpire.Save
                     contractAccepted = DeliveryManager.Instance != null && DeliveryManager.Instance.ContractAccepted,
                     cargoLoaded = DeliveryManager.Instance != null && DeliveryManager.Instance.CargoLoaded,
                     activeTruckId = FleetManager.Instance?.ActiveTruck?.id ?? "",
+                    hasPlayerTransform = TryGetPlayerTransform(out Vector3 playerPosition, out Quaternion playerRotation),
+                    playerPosition = playerPosition,
+                    playerRotation = playerRotation,
                     automatedDeliveries = AutomatedDeliveryManager.Instance?.CaptureState()
                 };
                 string directory = Application.persistentDataPath;
@@ -65,6 +72,37 @@ namespace UltimateTruckEmpire.Save
             {
                 Debug.LogError($"Save failed: {ex.Message}");
             }
+        }
+
+        public void SaveManual()
+        {
+            Save();
+        }
+
+        public bool TryGetSavedPlayerTransform(out Vector3 position, out Quaternion rotation)
+        {
+            position = default;
+            rotation = Quaternion.identity;
+            string path = Path.Combine(Application.persistentDataPath, FileName);
+            if (!File.Exists(path)) return false;
+            try
+            {
+                var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+                if (data == null || !data.hasPlayerTransform) return false;
+                position = data.playerPosition;
+                rotation = data.playerRotation;
+                return true;
+            }
+            catch { return false; }
+        }
+
+        private static bool TryGetPlayerTransform(out Vector3 position, out Quaternion rotation)
+        {
+            var player = FindFirstObjectByType<TruckController>();
+            if (player == null) { position = default; rotation = Quaternion.identity; return false; }
+            position = player.transform.position;
+            rotation = player.transform.rotation;
+            return true;
         }
 
         public void Load()
