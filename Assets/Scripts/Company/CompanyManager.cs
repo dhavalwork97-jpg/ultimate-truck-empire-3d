@@ -68,6 +68,7 @@ namespace UltimateTruckEmpire.Company
             if (!CanUpgradeHeadquarters(out _)) return false;
             int cost = GetHeadquartersUpgradeCost();
             if (!GameManager.Instance.TrySpendMoney(cost)) return false;
+            FinanceManager.Instance?.RecordCapitalExpense(cost);
             Data.level++;
             Data.truckCapacity = Data.level == 2 ? 5 : Data.level == 3 ? 15 : Data.level == 4 ? 30 : 100;
             Data.driverCapacity = Data.truckCapacity;
@@ -88,6 +89,7 @@ namespace UltimateTruckEmpire.Company
             if (Data.branches.Contains(city) || Data.level < 2 || Data.branches.Count >= Data.level - 1) return false;
             int cost = GetNextBranchCost();
             if (GameManager.Instance == null || !GameManager.Instance.TrySpendMoney(cost)) return false;
+            FinanceManager.Instance?.RecordCapitalExpense(cost);
             Data.branches.Add(city);
             Data.companyValue += cost * .5f;
             return true;
