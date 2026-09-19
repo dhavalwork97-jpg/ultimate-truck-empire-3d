@@ -121,7 +121,7 @@ namespace UltimateTruckEmpire.Save
                         FleetManager.Instance.EnsureActiveTruck();
                 }
                 if (FinanceManager.Instance != null && data.finance != null) FinanceManager.Instance.Restore(data.finance);
-                DeliveryManager.Instance?.Restore(data.contractAccepted, data.cargoLoaded);
+                DeliveryManager.Instance?.Restore(data.contractAccepted, data.cargoLoaded, data.activeContract, data.completedContracts);
                 AutomatedDeliveryManager.Instance?.RestoreState(data.automatedDeliveries);
             }
             catch (System.Exception ex)
