@@ -302,7 +302,6 @@ namespace UltimateTruckEmpire.Bootstrap
                 hudGo = go.AddComponent<DrivingHUD>();
             }
             hudGo.Bind(truck.GetComponent<TruckController>(), truck.GetComponent<TruckLights>());
-            DeliveryManager.Instance?.AcceptStarterContract();
         }
     }
 }
