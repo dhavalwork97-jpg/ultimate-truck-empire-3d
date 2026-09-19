@@ -84,6 +84,7 @@ namespace UltimateTruckEmpire.Bootstrap
                                new Vector3(13, 0, 9));
 
             var truck = CreateTruck(new Vector3(-20, 1.1f, 0));
+            RestorePlayerPosition(truck);
             CreateCamera(truck);
             CreateHud(truck);
 
@@ -266,6 +267,16 @@ namespace UltimateTruckEmpire.Bootstrap
             go.transform.SetParent(truck, false);
             go.transform.localPosition = localPosition;
             go.transform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+        }
+
+        private static void RestorePlayerPosition(GameObject truck)
+        {
+            var saveManager = FindFirstObjectByType<SaveManager>();
+            if (saveManager == null || truck == null) return;
+            if (!saveManager.TryGetSavedPlayerTransform(out Vector3 position, out Quaternion rotation)) return;
+            truck.transform.SetPositionAndRotation(position, rotation);
+            var body = truck.GetComponent<Rigidbody>();
+            if (body != null) { body.linearVelocity = Vector3.zero; body.angularVelocity = Vector3.zero; }
         }
 
         private static void CreateCamera(GameObject truck)
