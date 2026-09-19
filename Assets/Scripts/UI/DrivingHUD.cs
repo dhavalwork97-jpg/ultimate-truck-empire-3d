@@ -120,9 +120,9 @@ namespace UltimateTruckEmpire.UI
             DeliveryManager delivery = DeliveryManager.Instance;
             bool active = delivery != null && delivery.ContractAccepted;
             if (starterButton != null) starterButton.gameObject.SetActive(!active);
-            if (!active) { jobPanel.text = "No active contract.\nAccept the starter contract below."; return; }
+            if (!active) { jobPanel.text = "No active contract.\nAccept the starter contract below." + (delivery != null && !string.IsNullOrEmpty(delivery.LastAcceptMessage) ? "\n" + delivery.LastAcceptMessage : ""); return; }
             bool loaded = delivery.CargoLoaded; Transform targetPoint = loaded ? destinationPoint : pickupPoint; string targetName = loaded ? delivery.Destination : delivery.Pickup;
-            StringBuilder s = new StringBuilder(220); s.Append("Contract   ").AppendLine(delivery.ContractId); s.Append("Cargo      ").AppendLine(delivery.CargoName); s.Append("Route      ").Append(delivery.Pickup).Append("  →  ").AppendLine(delivery.Destination); s.Append("Status     ").AppendLine(loaded ? "LOADED - deliver to destination" : "EMPTY - drive to pickup"); s.Append("Next stop  ").AppendLine(targetName);
+            StringBuilder s = new StringBuilder(220); s.Append("Contract   ").AppendLine(delivery.ContractId); s.Append("Cargo      ").Append(delivery.CargoName).Append("  [").Append(delivery.Trailer).AppendLine("]"); s.Append("Route      ").Append(delivery.Pickup).Append("  →  ").AppendLine(delivery.Destination); s.Append("Status     ").AppendLine(loaded ? "LOADED - deliver to destination" : "EMPTY - drive to pickup"); s.Append("Next stop  ").AppendLine(targetName); if (loaded && delivery.DockingActive) s.Append("Docking    ").AppendLine(delivery.DockingStatus);
             if (targetPoint != null && truck != null) { Vector3 a = truck.transform.position; Vector3 b = targetPoint.position; a.y = 0f; b.y = 0f; s.Append("Distance   ").Append(Vector3.Distance(a, b).ToString("0")).AppendLine(" m"); }
             s.Append("Reward     ₹").Append(delivery.Reward.ToString("0")).Append("  |  XP ").Append(delivery.RewardXp).Append("  |  Diff ").Append(delivery.ContractDifficulty); jobPanel.text = s.ToString();
         }
