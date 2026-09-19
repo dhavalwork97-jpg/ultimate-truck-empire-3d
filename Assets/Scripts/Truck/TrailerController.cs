@@ -8,7 +8,7 @@ namespace UltimateTruckEmpire.Truck
     public sealed class TrailerController : MonoBehaviour
     {
         public TrailerType Type { get; private set; } = TrailerType.DryVan;
-        public CargoCatalogTrailerType ContractTrailerType { get; private set; } = CargoCatalogTrailerType.Curtainsider;
+        public UltimateTruckEmpire.Gameplay.TrailerType ContractTrailerType { get; private set; } = CargoCatalogTrailerType.Curtainsider;
         public float CargoWeightTons { get; private set; }
         public bool CargoLoaded { get; private set; }
 
