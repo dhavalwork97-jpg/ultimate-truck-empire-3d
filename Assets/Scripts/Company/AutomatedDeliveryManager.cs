@@ -9,7 +9,10 @@ namespace UltimateTruckEmpire.Company
     [Serializable]
     public sealed class AutomatedDelivery
     {
-        public string id; public string truckId; public string driverId; public string cargo; public string origin; public string destination;
+        public string id; public string truckId; public string driverId; public string cargo; public string cargoId; public string origin; public string destination;
+        public TrailerType trailerType = TrailerType.Curtainsider;
+        public ContractModifierRules.Modifier modifier = ContractModifierRules.Modifier.Standard;
+        public float qualityBonus; public float qualityPenalty;
         public float reward; public float distanceKm; public float cargoWeightTons; public float remainingKm; public float elapsedHours; public float etaHours; public bool active; public bool completed;
     }
 
@@ -93,7 +96,7 @@ namespace UltimateTruckEmpire.Company
             if (truck == null || driver == null || offer == null || FleetManager.Instance == null || DriverManager.Instance == null) return null;
             if (truck.capacityTons < offer.weightTons || !truck.available || !DriverManager.Instance.CanDispatch(driver)) return null;
             float speed = 48f + DriverManager.Instance.GetPerformance(driver) * .45f;
-            var delivery = new AutomatedDelivery { id = "JOB-" + nextId++, truckId = truck.id, driverId = driver.id, cargo = offer.cargo, origin = offer.pickup, destination = offer.destination, reward = offer.reward, distanceKm = offer.distanceKm, cargoWeightTons = offer.weightTons, remainingKm = offer.distanceKm, etaHours = Mathf.Max(.25f, offer.distanceKm / speed), active = true };
+            var delivery = new AutomatedDelivery { id = "JOB-" + nextId++, truckId = truck.id, driverId = driver.id, cargo = offer.cargo, cargoId = offer.cargoId, origin = offer.pickup, destination = offer.destination, trailerType = offer.trailerType, modifier = offer.modifier, qualityBonus = offer.qualityBonus, qualityPenalty = offer.qualityPenalty, reward = offer.reward, distanceKm = offer.distanceKm, cargoWeightTons = offer.weightTons, remainingKm = offer.distanceKm, etaHours = Mathf.Max(.25f, offer.distanceKm / speed), active = true };
             if (!FleetManager.Instance.Assign(truck.id, driver.id, delivery.id)) return null;
             if (!DriverManager.Instance.CanDispatch(driver))
             {
@@ -144,7 +147,8 @@ namespace UltimateTruckEmpire.Company
                 FleetManager.Instance?.ApplyTripWear(job.truckId, job.distanceKm, job.cargoWeightTons);
 
             float fuelLitres = Mathf.Max(0f, fuelBefore - (truck?.fuel ?? fuelBefore));
-            float payment = job.reward + bonus;
+            var evaluation = DeliveryEvaluation.EvaluateAutomated(truck, performance, job.distanceKm, fuelLitres, job.modifier, job.reward, job.qualityBonus, job.qualityPenalty);
+            float payment = Mathf.Max(0f, job.reward + bonus + evaluation.payoutAdjustment);
             CompanyManager.Instance?.AddRevenue(payment);
             float fuelCost = FleetManager.Instance == null ? 0f : fuelLitres * FleetManager.Instance.GetFuelPricePerLitre();
             float payrollCost = EconomyConfig.GetAutomatedPayroll(driver?.salary ?? 0f, job.etaHours);
