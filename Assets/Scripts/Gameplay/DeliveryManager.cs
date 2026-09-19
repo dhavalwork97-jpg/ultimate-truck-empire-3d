@@ -62,7 +62,7 @@ namespace UltimateTruckEmpire.Gameplay
             float routeMeters = hasPickupPosition ? Vector3.Distance(pickupWorldPosition, worldPosition) : ContractDistanceKm * 1000f;
             float distanceKm = Mathf.Max(1f, routeMeters / 1000f); float fuelUsed = pickupFuelLitres >= 0f && truck != null ? Mathf.Max(0f, pickupFuelLitres - truck.fuel) : 0f;
             if (truck != null) fleet?.ApplyTripWear(truck.id, distanceKm, ContractWeightTons, false);
-            FinanceManager.Instance?.RecordDelivery(Reward, fuelUsed * (fleet?.GetFuelPricePerLitre() ?? 95f), 0f); CompanyManager.Instance?.AddRevenue(Reward); GameManager.Instance?.AddXp(RewardXp);
+            FinanceManager.Instance?.RecordDelivery(Reward, fuelUsed * (fleet?.GetFuelPricePerLitre() ?? EconomyConfig.FuelPricePerLitre), 0f); CompanyManager.Instance?.AddRevenue(Reward); GameManager.Instance?.AddXp(RewardXp);
             CompletedContracts++; MissionManager.Instance?.NotifyDeliveryComplete(); ContractAccepted = false; CargoLoaded = false; hasPickupPosition = false; pickupFuelLitres = -1f;
             ContractMarket.Instance?.Refresh(); SaveManager.Instance?.Save();
         }
