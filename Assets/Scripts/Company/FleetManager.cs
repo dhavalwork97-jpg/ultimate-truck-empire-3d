@@ -95,6 +95,7 @@ namespace UltimateTruckEmpire.Company
             };
 
             trucks.Add(truck);
+            FinanceManager.Instance?.RecordCapitalExpense(truck.purchasePrice);
             if (ActiveTruck == null) ActiveTruck = truck;
             return truck;
         }
@@ -173,6 +174,7 @@ namespace UltimateTruckEmpire.Company
             if (!game.TrySpendMoney(cost)) return false;
 
             truck.fuel += litres;
+            FinanceManager.Instance?.RecordFuelExpense(cost);
             return true;
         }
 
@@ -190,6 +192,7 @@ namespace UltimateTruckEmpire.Company
             if (!game.TrySpendMoney(cost)) return false;
 
             truck.condition = target;
+            FinanceManager.Instance?.RecordMaintenance(cost);
             return true;
         }
 
@@ -198,10 +201,11 @@ namespace UltimateTruckEmpire.Company
             var truck = Find(truckId);
             if (truck == null || truck.engineUpgradeLevel >= 5) return false;
 
-            float cost = GetUpgradeCost(truck, 85000f, truck.engineUpgradeLevel);
+            float cost = EconomyConfig.GetUpgradeCost(EconomyConfig.EngineUpgradeBaseCost, truck.engineUpgradeLevel);
             if (Core.GameManager.Instance == null || !Core.GameManager.Instance.TrySpendMoney(cost)) return false;
 
             truck.engineUpgradeLevel++;
+            FinanceManager.Instance?.RecordCapitalExpense(cost);
             truck.enginePower += 35f;
             truck.maxSpeedKph += 2f;
             return true;
@@ -212,11 +216,12 @@ namespace UltimateTruckEmpire.Company
             var truck = Find(truckId);
             if (truck == null || truck.fuelUpgradeLevel >= 3) return false;
 
-            float cost = GetUpgradeCost(truck, 60000f, truck.fuelUpgradeLevel);
+            float cost = EconomyConfig.GetUpgradeCost(EconomyConfig.FuelTankUpgradeBaseCost, truck.fuelUpgradeLevel);
             if (Core.GameManager.Instance == null || !Core.GameManager.Instance.TrySpendMoney(cost)) return false;
 
             float oldCapacity = truck.fuelCapacity;
             truck.fuelUpgradeLevel++;
+            FinanceManager.Instance?.RecordCapitalExpense(cost);
             truck.fuelCapacity += 100f;
             truck.fuel += truck.fuelCapacity - oldCapacity;
             return true;
@@ -227,10 +232,11 @@ namespace UltimateTruckEmpire.Company
             var truck = Find(truckId);
             if (truck == null || truck.reliabilityUpgradeLevel >= 3) return false;
 
-            float cost = GetUpgradeCost(truck, 70000f, truck.reliabilityUpgradeLevel);
+            float cost = EconomyConfig.GetUpgradeCost(EconomyConfig.ReliabilityUpgradeBaseCost, truck.reliabilityUpgradeLevel);
             if (Core.GameManager.Instance == null || !Core.GameManager.Instance.TrySpendMoney(cost)) return false;
 
             truck.reliabilityUpgradeLevel++;
+            FinanceManager.Instance?.RecordCapitalExpense(cost);
             truck.reliability = Mathf.Min(100f, truck.reliability + 7.5f);
             truck.maintenanceCostPerKm = Mathf.Max(1f, truck.maintenanceCostPerKm - 0.75f);
             return true;
@@ -239,15 +245,15 @@ namespace UltimateTruckEmpire.Company
         public float GetUpgradeCost(FleetTruckData truck, float baseCost, int currentLevel)
         {
             if (truck == null) return 0f;
-            return baseCost * (currentLevel + 1);
+            return EconomyConfig.GetUpgradeCost(baseCost, currentLevel);
         }
 
         public float GetRepairCostPerConditionPoint(FleetTruckData truck)
         {
-            return truck == null ? 0f : Mathf.Max(50f, truck.maintenanceCostPerKm * 12f);
+            return EconomyConfig.GetRepairCostPerConditionPoint(truck?.maintenanceCostPerKm ?? 0f);
         }
 
-        public float GetFuelPricePerLitre() => 95f;
+        public float GetFuelPricePerLitre() => EconomyConfig.FuelPricePerLitre;
 
         public void ApplyTripWear(string truckId, float distanceKm, float cargoWeightTons, bool consumeFuel = true)
         {
