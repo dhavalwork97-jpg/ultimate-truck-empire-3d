@@ -40,6 +40,17 @@ namespace UltimateTruckEmpire.Truck
         {
             Transform visual = transform.Find("Dry Van Trailer");
             if (visual == null) visual = transform.Find("Trailer Visual");
+            if (visual == null)
+            {
+                foreach (var child in GetComponentsInChildren<Transform>())
+                {
+                    if (child != transform && child.name.EndsWith(" Trailer"))
+                    {
+                        visual = child;
+                        break;
+                    }
+                }
+            }
             if (visual == null) return;
             visual.name = Type.ToString() + " Trailer";
             switch (Type)
