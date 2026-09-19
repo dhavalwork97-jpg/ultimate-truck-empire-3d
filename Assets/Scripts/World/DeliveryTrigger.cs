@@ -8,9 +8,15 @@ namespace UltimateTruckEmpire.World
     {
         public enum TriggerType { Pickup, Destination }
         [SerializeField] private TriggerType triggerType;
+        [SerializeField] private Transform dockTransform;
 
         public TriggerType Type => triggerType;
         public void Configure(TriggerType type) => triggerType = type;
+
+        private Collider zone;
+        private TruckController playerTruck;
+
+        private void Awake() { zone = GetComponent<Collider>(); }
 
         private static bool IsPlayerTruck(Collider other)
         {
@@ -21,28 +27,31 @@ namespace UltimateTruckEmpire.World
             catch (UnityException) { return false; }
         }
 
-        private void TryProcess(Collider other)
+        private void OnTriggerEnter(Collider other)
         {
+            if (triggerType != TriggerType.Pickup) return;
             var delivery = DeliveryManager.Instance;
             if (delivery == null || !IsPlayerTruck(other)) return;
-
-            var truck = other.transform.root.GetComponent<TruckController>();
-            if (truck == null) return;
-
-            if (triggerType == TriggerType.Pickup)
-            {
-                delivery.LoadCargo(transform.position);
-                return;
-            }
-
-            // Destination zones stay active until the player is actually docked.
-            // OnTriggerStay is used so entering the yard at speed does not silently
-            // complete a delivery; Unity documents it as the physics-timed callback
-            // for colliders that remain inside a trigger.
-            delivery.TryCompleteDockedDelivery(truck, transform.position);
+            delivery.LoadCargo(transform.position);
         }
 
-        private void OnTriggerEnter(Collider other) => TryProcess(other);
-        private void OnTriggerStay(Collider other) => TryProcess(other);
+        private void FixedUpdate()
+        {
+            if (triggerType != TriggerType.Destination) return;
+            var delivery = DeliveryManager.Instance;
+            if (delivery == null || !delivery.ContractAccepted || !delivery.CargoLoaded) return;
+            if (zone == null) zone = GetComponent<Collider>();
+            if (playerTruck == null) playerTruck = FindFirstObjectByType<TruckController>();
+            if (playerTruck == null || zone == null) return;
+
+            var trailer = playerTruck.GetComponent<TrailerController>();
+            Vector3 reference = trailer != null && trailer.DockingPoint != null ? trailer.DockingPoint.position : playerTruck.transform.position;
+            Bounds bounds = zone.bounds;
+            reference.y = bounds.center.y;
+            if (!bounds.Contains(reference)) { delivery.ResetDocking(); return; }
+
+            Vector3 dockingAxis = dockTransform != null ? dockTransform.forward : transform.forward;
+            delivery.TryCompleteDockedDelivery(playerTruck, transform.position, dockingAxis);
+        }
     }
 }
