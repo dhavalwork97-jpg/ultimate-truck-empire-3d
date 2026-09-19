@@ -22,7 +22,7 @@ namespace UltimateTruckEmpire.Gameplay
     public static class DeliveryEvaluation
     {
         public static DeliveryEvaluationResult EvaluatePlayer(FleetTruckData truck, float distanceKm, float fuelUsed,
-            ContractModifierRules.Modifier modifier)
+            ContractModifierRules.Modifier modifier, float baseReward, float qualityBonus, float qualityPenalty)
         {
             float score = 100f;
             if (truck != null)
@@ -34,11 +34,12 @@ namespace UltimateTruckEmpire.Gameplay
             }
 
             score = ApplyModifierQuality(score, modifier);
-            return Build(score, modifier);
+            return Build(score, modifier, baseReward, qualityBonus, qualityPenalty);
         }
 
         public static DeliveryEvaluationResult EvaluateAutomated(FleetTruckData truck, float driverPerformance,
-            float distanceKm, float fuelUsed, ContractModifierRules.Modifier modifier)
+            float distanceKm, float fuelUsed, ContractModifierRules.Modifier modifier, float baseReward,
+            float qualityBonus, float qualityPenalty)
         {
             float score = Mathf.Clamp(driverPerformance, 0f, 100f);
             if (truck != null)
@@ -50,7 +51,7 @@ namespace UltimateTruckEmpire.Gameplay
             }
 
             score = ApplyModifierQuality(score, modifier);
-            return Build(score, modifier);
+            return Build(score, modifier, baseReward, qualityBonus, qualityPenalty);
         }
 
         private static float ApplyModifierQuality(float score, ContractModifierRules.Modifier modifier)
@@ -73,32 +74,20 @@ namespace UltimateTruckEmpire.Gameplay
             return Mathf.Clamp(score, 0f, 100f);
         }
 
-        private static DeliveryEvaluationResult Build(float score, ContractModifierRules.Modifier modifier)
+        private static DeliveryEvaluationResult Build(float score, ContractModifierRules.Modifier modifier,
+            float baseReward, float qualityBonus, float qualityPenalty)
         {
             string rating = score >= 95f ? "EXCELLENT" :
                 score >= 85f ? "GREAT" :
                 score >= 70f ? "GOOD" :
                 score >= 50f ? "FAIR" : "POOR";
 
-            float adjustment = 0f;
-            float bonus = ContractModifierRules.GetBonusMultiplier(modifier);
-            float penalty = ContractModifierRules.GetPenaltyMultiplier(modifier);
-            if (score >= 85f)
-                adjustment = Mathf.Max(0f, bonus) * 1f;
-            else if (score < 60f)
-                adjustment = -Mathf.Max(0f, penalty) * 1f;
+            float adjustment = score >= 85f
+                ? Mathf.Max(0f, qualityBonus)
+                : score < 60f ? -Mathf.Max(0f, qualityPenalty) : 0f;
 
             int bonusXp = score >= 95f ? 35 : score >= 85f ? 20 : score < 60f ? 0 : 5;
-            return new DeliveryEvaluationResult(score, rating, adjustment, bonusXp);
-        }
-
-        public static float ResolvePayout(float baseReward, DeliveryEvaluationResult result, float qualityBonus, float qualityPenalty)
-        {
-            if (result.score >= 85f)
-                return Mathf.Max(0f, baseReward + qualityBonus);
-            if (result.score < 60f)
-                return Mathf.Max(0f, baseReward - qualityPenalty);
-            return Mathf.Max(0f, baseReward);
+            return new DeliveryEvaluationResult(Mathf.Clamp(score, 0f, 100f), rating, adjustment, bonusXp);
         }
     }
 }
