@@ -14,6 +14,8 @@ namespace UltimateTruckEmpire.Gameplay
         public string CargoId { get; private set; } = "machinery";
         public TrailerType Trailer { get; private set; } = TrailerType.Flatbed;
         public ContractModifierRules.Modifier ContractModifier { get; private set; } = ContractModifierRules.Modifier.Standard;
+        public float ContractQualityBonus { get; private set; }
+        public float ContractQualityPenalty { get; private set; }
         public float Reward { get; private set; } = 145000f; public int RewardXp { get; private set; } = 350;
         public float ContractDistanceKm { get; private set; } = 180f; public float ContractWeightTons { get; private set; } = 18f;
         public int ContractDifficulty { get; private set; } = 2; public int CompletedContracts { get; private set; }
@@ -40,6 +42,8 @@ namespace UltimateTruckEmpire.Gameplay
             CargoId = string.IsNullOrWhiteSpace(offer.cargoId) ? "legacy-general" : offer.cargoId;
             Trailer = offer.trailerType;
             ContractModifier = offer.modifier;
+            ContractQualityBonus = Mathf.Max(0f, offer.qualityBonus);
+            ContractQualityPenalty = Mathf.Max(0f, offer.qualityPenalty);
             Pickup = offer.pickup; Destination = offer.destination; Reward = Mathf.Max(0f, offer.reward);
             RewardXp = Mathf.Max(1, offer.xp); ContractDistanceKm = Mathf.Max(1f, offer.distanceKm); ContractWeightTons = Mathf.Max(0f, offer.weightTons); ContractDifficulty = Mathf.Clamp(offer.difficulty, 1, 5);
             ContractAccepted = true; CargoLoaded = false; hasPickupPosition = false; pickupFuelLitres = -1f; SaveManager.Instance?.Save(); return true;
@@ -56,6 +60,8 @@ namespace UltimateTruckEmpire.Gameplay
             ContractId = offer.id; CargoName = string.IsNullOrWhiteSpace(offer.cargo) ? "General Freight" : offer.cargo;
             CargoId = string.IsNullOrWhiteSpace(offer.cargoId) ? "legacy-general" : offer.cargoId;
             Trailer = offer.trailerType; ContractModifier = offer.modifier;
+            ContractQualityBonus = Mathf.Max(0f, offer.qualityBonus);
+            ContractQualityPenalty = Mathf.Max(0f, offer.qualityPenalty);
             Pickup = offer.pickup; Destination = offer.destination; Reward = Mathf.Max(0f, offer.reward); RewardXp = Mathf.Max(1, offer.xp);
             ContractDistanceKm = Mathf.Max(1f, offer.distanceKm); ContractWeightTons = Mathf.Max(0f, offer.weightTons); ContractDifficulty = Mathf.Clamp(offer.difficulty, 1, 5); ContractAccepted = true;
         }
@@ -76,12 +82,12 @@ namespace UltimateTruckEmpire.Gameplay
             float distanceKm = Mathf.Max(1f, routeMeters / 1000f); float fuelUsed = pickupFuelLitres >= 0f && truck != null ? Mathf.Max(0f, pickupFuelLitres - truck.fuel) : 0f;
             if (truck != null) fleet?.ApplyTripWear(truck.id, distanceKm, ContractWeightTons, false);
 
-            var evaluation = DeliveryEvaluation.EvaluatePlayer(truck, distanceKm, fuelUsed, ContractModifier);
+            var evaluation = DeliveryEvaluation.EvaluatePlayer(truck, distanceKm, fuelUsed, ContractModifier, Reward, ContractQualityBonus, ContractQualityPenalty);
             LastDeliveryScore = evaluation.score; LastDeliveryRating = evaluation.rating; LastDeliveryBonus = evaluation.payoutAdjustment;
             float payment = Mathf.Max(0f, Reward + evaluation.payoutAdjustment);
             FinanceManager.Instance?.RecordDelivery(payment, fuelUsed * (fleet?.GetFuelPricePerLitre() ?? EconomyConfig.FuelPricePerLitre), 0f);
             CompanyManager.Instance?.AddRevenue(payment); GameManager.Instance?.AddXp(RewardXp + evaluation.bonusXp);
-            CompletedContracts++; MissionManager.Instance?.NotifyDeliveryComplete(); ContractAccepted = false; CargoLoaded = false; hasPickupPosition = false; pickupFuelLitres = -1f;
+            CompletedContracts++; ContractQualityBonus = 0f; ContractQualityPenalty = 0f; MissionManager.Instance?.NotifyDeliveryComplete(); ContractAccepted = false; CargoLoaded = false; hasPickupPosition = false; pickupFuelLitres = -1f;
             ContractMarket.Instance?.Refresh(); SaveManager.Instance?.Save();
         }
         public void CompleteDelivery() => CompleteDelivery(Vector3.zero);
