@@ -26,8 +26,8 @@ namespace UltimateTruckEmpire.Bootstrap
         {
             if (GameManager.Instance == null) new GameObject("GameManager").AddComponent<GameManager>();
             if (DeliveryManager.Instance == null) new GameObject("DeliveryManager").AddComponent<DeliveryManager>();
-            if (ContractMarket.Instance == null) new GameObject("ContractMarket").AddComponent<ContractMarket>();
             if (SupplyChainManager.Instance == null) new GameObject("Supply Chain Manager").AddComponent<SupplyChainManager>();
+            if (ContractMarket.Instance == null) new GameObject("ContractMarket").AddComponent<ContractMarket>();
             if (MapManager.Instance == null) new GameObject("MapManager").AddComponent<MapManager>();
             if (MissionManager.Instance == null) new GameObject("MissionManager").AddComponent<MissionManager>();
             if (TimeWeatherManager.Instance == null) new GameObject("Time Weather Manager").AddComponent<TimeWeatherManager>();
