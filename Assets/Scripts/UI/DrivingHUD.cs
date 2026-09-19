@@ -4,7 +4,6 @@ using UnityEngine.UI;
 using UltimateTruckEmpire.Gameplay;
 using UltimateTruckEmpire.Truck;
 using UltimateTruckEmpire.World;
-using UltimateTruckEmpire.Save;
 
 namespace UltimateTruckEmpire.UI
 {
@@ -21,7 +20,7 @@ namespace UltimateTruckEmpire.UI
         private Text speedValue, gearValue, statusLine, jobPanel, hint;
         private RectTransform fuelFill;
         private Text leftArrow, rightArrow;
-        private Button starterButton, saveButton;
+        private Button starterButton;
         private Transform pickupPoint, destinationPoint;
         private float nextJobRefresh;
         private Font font;
@@ -56,7 +55,7 @@ namespace UltimateTruckEmpire.UI
             GameObject canvasGo = new GameObject("Driving HUD Canvas"); canvasGo.transform.SetParent(transform, false);
             Canvas canvas = canvasGo.AddComponent<Canvas>(); canvas.renderMode = RenderMode.ScreenSpaceOverlay; canvas.sortingOrder = -10;
             CanvasScaler scaler = canvasGo.AddComponent<CanvasScaler>(); scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize; scaler.referenceResolution = new Vector2(1920f, 1080f); scaler.matchWidthOrHeight = 0.5f;
-            BuildSpeedPanel(canvasGo.transform); BuildJobPanel(canvasGo.transform); BuildIndicators(canvasGo.transform); BuildHint(canvasGo.transform); BuildSaveButton(canvasGo.transform);
+            BuildSpeedPanel(canvasGo.transform); BuildJobPanel(canvasGo.transform); BuildIndicators(canvasGo.transform); BuildHint(canvasGo.transform);
         }
 
         private void BuildSpeedPanel(Transform parent)
@@ -78,17 +77,6 @@ namespace UltimateTruckEmpire.UI
             jobPanel = MakeText(panel, "Job Text", "", 17, TextAnchor.UpperLeft, Color.white); Place(jobPanel.rectTransform, Vector2.zero, Vector2.one, new Vector2(18f, 14f), new Vector2(-18f, -34f), true);
             starterButton = MakeButton(panel, "ACCEPT STARTER CONTRACT", AcceptStarterContract);
             Place(starterButton.GetComponent<RectTransform>(), new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(18f, 8f), new Vector2(-18f, 46f), true);
-        }
-
-        private void BuildSaveButton(Transform parent)
-        {
-            saveButton = MakeButton(parent, "SAVE GAME", SaveGame);
-            Place(saveButton.GetComponent<RectTransform>(), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(-90f, 24f), new Vector2(180f, 52f));
-        }
-
-        private void SaveGame()
-        {
-            SaveManager.Instance?.SaveManual();
         }
 
         private void BuildIndicators(Transform parent)
