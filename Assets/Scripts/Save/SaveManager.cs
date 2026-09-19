@@ -184,7 +184,10 @@ namespace UltimateTruckEmpire.Save
                 }
                 if (FinanceManager.Instance != null && data.finance != null) FinanceManager.Instance.Restore(data.finance);
                 if (TrailerFleetManager.Instance != null)
+                {
                     TrailerFleetManager.Instance.Restore(data.trailers);
+                    TrailerFleetManager.Instance.ApplyToPlayerTruck(FindFirstObjectByType<TruckController>());
+                }
                 DeliveryManager.Instance?.Restore(data.contractAccepted, data.cargoLoaded, data.activeContract, data.completedContracts);
                 AutomatedDeliveryManager.Instance?.RestoreState(data.automatedDeliveries);
             }
