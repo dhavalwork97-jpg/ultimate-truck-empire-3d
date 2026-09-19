@@ -56,6 +56,18 @@ namespace UltimateTruckEmpire.Save
                     finance = FinanceManager.Instance?.Data,
                     contractAccepted = DeliveryManager.Instance != null && DeliveryManager.Instance.ContractAccepted,
                     cargoLoaded = DeliveryManager.Instance != null && DeliveryManager.Instance.CargoLoaded,
+                    activeContract = DeliveryManager.Instance != null && DeliveryManager.Instance.ContractAccepted ? new ContractOffer {
+                        id = DeliveryManager.Instance.ContractId,
+                        cargo = DeliveryManager.Instance.CargoName,
+                        pickup = DeliveryManager.Instance.Pickup,
+                        destination = DeliveryManager.Instance.Destination,
+                        weightTons = DeliveryManager.Instance.ContractWeightTons,
+                        reward = DeliveryManager.Instance.Reward,
+                        xp = DeliveryManager.Instance.RewardXp,
+                        distanceKm = DeliveryManager.Instance.ContractDistanceKm,
+                        difficulty = DeliveryManager.Instance.ContractDifficulty
+                    } : null,
+                    completedContracts = DeliveryManager.Instance?.CompletedContracts ?? 0,
                     activeTruckId = FleetManager.Instance?.ActiveTruck?.id ?? "",
                     hasPlayerTransform = TryGetPlayerTransform(out Vector3 playerPosition, out Quaternion playerRotation),
                     playerPosition = playerPosition,
