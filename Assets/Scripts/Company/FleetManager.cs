@@ -200,6 +200,7 @@ namespace UltimateTruckEmpire.Company
         {
             var truck = Find(truckId);
             if (truck == null || truck.engineUpgradeLevel >= 5) return false;
+            if (CompanyManager.Instance?.Data == null || CompanyManager.Instance.Data.level < 2) return false;
 
             float cost = EconomyConfig.GetUpgradeCost(EconomyConfig.EngineUpgradeBaseCost, truck.engineUpgradeLevel);
             if (Core.GameManager.Instance == null || !Core.GameManager.Instance.TrySpendMoney(cost)) return false;
@@ -215,6 +216,7 @@ namespace UltimateTruckEmpire.Company
         {
             var truck = Find(truckId);
             if (truck == null || truck.fuelUpgradeLevel >= 3) return false;
+            if (CompanyManager.Instance?.Data == null || CompanyManager.Instance.Data.level < 2) return false;
 
             float cost = EconomyConfig.GetUpgradeCost(EconomyConfig.FuelTankUpgradeBaseCost, truck.fuelUpgradeLevel);
             if (Core.GameManager.Instance == null || !Core.GameManager.Instance.TrySpendMoney(cost)) return false;
@@ -231,6 +233,7 @@ namespace UltimateTruckEmpire.Company
         {
             var truck = Find(truckId);
             if (truck == null || truck.reliabilityUpgradeLevel >= 3) return false;
+            if (CompanyManager.Instance?.Data == null || CompanyManager.Instance.Data.level < 3) return false;
 
             float cost = EconomyConfig.GetUpgradeCost(EconomyConfig.ReliabilityUpgradeBaseCost, truck.reliabilityUpgradeLevel);
             if (Core.GameManager.Instance == null || !Core.GameManager.Instance.TrySpendMoney(cost)) return false;
