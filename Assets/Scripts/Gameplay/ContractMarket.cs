@@ -7,14 +7,8 @@ namespace UltimateTruckEmpire.Gameplay
     [Serializable]
     public sealed class ContractOffer
     {
-        public string cargo;
-        public string pickup;
-        public string destination;
-        public float weightTons;
-        public float reward;
-        public int xp;
-        public float distanceKm;
-        public int difficulty;
+        public string id; public string cargo; public string pickup; public string destination;
+        public float weightTons; public float reward; public int xp; public float distanceKm; public int difficulty;
     }
 
     public sealed class ContractMarket : MonoBehaviour
@@ -38,19 +32,29 @@ namespace UltimateTruckEmpire.Gameplay
             var rng = new System.Random(seed++);
             for (int i = 0; i < 8; i++)
             {
-                var from = Cities[rng.Next(Cities.Length)];
-                var to = Cities[rng.Next(Cities.Length)];
+                var from = Cities[rng.Next(Cities.Length)]; var to = Cities[rng.Next(Cities.Length)];
                 if (to == from) to = Cities[(Array.IndexOf(Cities, from) + 1) % Cities.Length];
-                var distance = 80f + rng.Next(40, 650);
-                var weight = 4f + (float)rng.NextDouble() * 24f;
+                var distance = 80f + rng.Next(40, 650); var weight = 4f + (float)rng.NextDouble() * 24f;
                 var difficulty = Mathf.Clamp(Mathf.CeilToInt(weight / 8f), 1, 5);
-                offers.Add(new ContractOffer { cargo = Cargo[rng.Next(Cargo.Length)], pickup = from, destination = to, weightTons = weight, distanceKm = distance, difficulty = difficulty, reward = 18000f + distance * 95f + weight * 850f, xp = 80 + difficulty * 55 });
+                offers.Add(new ContractOffer { id = "MKT-" + seed + "-" + i, cargo = Cargo[rng.Next(Cargo.Length)], pickup = from, destination = to, weightTons = weight, distanceKm = distance, difficulty = difficulty, reward = 18000f + distance * 95f + weight * 850f, xp = 80 + difficulty * 55 });
             }
         }
 
-        public bool Remove(ContractOffer offer)
+        public ContractOffer CreateNextPlayerContract(int progression)
         {
-            return offer != null && offers.Remove(offer);
+            int level = Mathf.Max(1, progression + 1);
+            float weight = Mathf.Clamp(10f + level * 1.5f, 8f, 28f);
+            float distance = 140f + level * 35f;
+            int difficulty = Mathf.Clamp(1 + (level - 1) / 2, 1, 5);
+            return new ContractOffer {
+                id = "PLAYER-" + level.ToString("000"), cargo = Cargo[(level - 1) % Cargo.Length],
+                pickup = "Ahmedabad Logistics Depot", destination = "Vadodara Factory Warehouse",
+                weightTons = weight, distanceKm = distance, difficulty = difficulty,
+                reward = 42000f + distance * 110f + weight * 900f + difficulty * 2500f,
+                xp = 120 + difficulty * 70
+            };
         }
+
+        public bool Remove(ContractOffer offer) => offer != null && offers.Remove(offer);
     }
 }
