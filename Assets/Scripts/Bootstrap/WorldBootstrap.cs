@@ -14,7 +14,13 @@ namespace UltimateTruckEmpire.Bootstrap
 {
     public sealed class WorldBootstrap : MonoBehaviour
     {
-        private void Start() { EnsureSystems(); BuildWorld(); EnsureManagementUI(); }
+        private void Start() { EnsureMobilePerformance(); EnsureSystems(); BuildWorld(); EnsureManagementUI(); }
+
+        private static void EnsureMobilePerformance()
+        {
+            if (FindFirstObjectByType<MobilePerformanceSettings>() == null)
+                new GameObject("Mobile Performance").AddComponent<MobilePerformanceSettings>();
+        }
 
         private static void EnsureSystems()
         {
