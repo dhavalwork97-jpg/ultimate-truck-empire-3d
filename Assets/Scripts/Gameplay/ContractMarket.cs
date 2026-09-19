@@ -77,36 +77,36 @@ namespace UltimateTruckEmpire.Gameplay
                     continue;
                 }
 
-                var route = routes[rng.Next(routes.Count)];
-                float distance = Mathf.Lerp(route.minDistanceKm, route.maxDistanceKm, (float)rng.NextDouble());
-                var cargo = CargoCatalog.PickFor(i + seed, route.baseDifficulty);
-                float weight = Mathf.Lerp(Mathf.Max(route.minCargoTons, cargo.minWeightTons),
-                    Mathf.Min(route.maxCargoTons, cargo.maxWeightTons), (float)rng.NextDouble());
-                if (weight <= 0f) weight = Mathf.Lerp(route.minCargoTons, route.maxCargoTons, (float)rng.NextDouble());
-                int difficulty = Mathf.Clamp(route.baseDifficulty + Mathf.CeilToInt(weight / 12f) - 1, 1, 5);
-                var modifier = ContractModifierRules.GetModifier(cargo, difficulty, seed + i);
-                float baseReward = EconomyConfig.MarketBaseReward + distance * EconomyConfig.MarketRewardPerKm + weight * EconomyConfig.MarketRewardPerTon;
-                float bonus = baseReward * ContractModifierRules.GetBonusMultiplier(modifier);
-                float penalty = baseReward * ContractModifierRules.GetPenaltyMultiplier(modifier);
+                var legacyRoute = routes[rng.Next(routes.Count)];
+                float legacyDistance = Mathf.Lerp(legacyRoute.minDistanceKm, legacyRoute.maxDistanceKm, (float)rng.NextDouble());
+                var legacyCargo = CargoCatalog.PickFor(i + seed, legacyRoute.baseDifficulty);
+                float legacyWeight = Mathf.Lerp(Mathf.Max(legacyRoute.minCargoTons, legacyCargo.minWeightTons),
+                    Mathf.Min(legacyRoute.maxCargoTons, legacyCargo.maxWeightTons), (float)rng.NextDouble());
+                if (legacyWeight <= 0f) legacyWeight = Mathf.Lerp(legacyRoute.minCargoTons, legacyRoute.maxCargoTons, (float)rng.NextDouble());
+                int legacyDifficulty = Mathf.Clamp(legacyRoute.baseDifficulty + Mathf.CeilToInt(legacyWeight / 12f) - 1, 1, 5);
+                var legacyModifier = ContractModifierRules.GetModifier(legacyCargo, legacyDifficulty, seed + i);
+                float legacyBaseReward = EconomyConfig.MarketBaseReward + legacyDistance * EconomyConfig.MarketRewardPerKm + legacyWeight * EconomyConfig.MarketRewardPerTon;
+                float legacyBonus = legacyBaseReward * ContractModifierRules.GetBonusMultiplier(legacyModifier);
+                float legacyPenalty = legacyBaseReward * ContractModifierRules.GetPenaltyMultiplier(legacyModifier);
 
                 offers.Add(new ContractOffer
                 {
                     id = "MKT-" + seed + "-" + i,
-                    cargo = cargo.displayName,
-                    cargoId = cargo.id,
-                    pickup = route.origin,
-                    destination = route.destination,
-                    weightTons = weight,
-                    distanceKm = distance,
-                    difficulty = difficulty,
-                    routeId = route.id,
-                    routeTier = route.tier,
-                    trailerType = cargo.trailer,
-                    modifier = modifier,
-                    qualityBonus = bonus,
-                    qualityPenalty = penalty,
-                    reward = baseReward,
-                    xp = EconomyConfig.MarketBaseXp + difficulty * EconomyConfig.MarketXpPerDifficulty,
+                    cargo = legacyCargo.displayName,
+                    cargoId = legacyCargo.id,
+                    pickup = legacyRoute.origin,
+                    destination = legacyRoute.destination,
+                    weightTons = legacyWeight,
+                    distanceKm = legacyDistance,
+                    difficulty = legacyDifficulty,
+                    routeId = legacyRoute.id,
+                    routeTier = legacyRoute.tier,
+                    trailerType = legacyCargo.trailer,
+                    modifier = legacyModifier,
+                    qualityBonus = legacyBonus,
+                    qualityPenalty = legacyPenalty,
+                    reward = legacyBaseReward,
+                    xp = EconomyConfig.MarketBaseXp + legacyDifficulty * EconomyConfig.MarketXpPerDifficulty,
                     originIndustryId = "", destinationIndustryId = "", customerName = "Open Market", supplyChainRouteId = ""
                 });
             }
