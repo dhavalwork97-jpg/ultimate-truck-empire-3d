@@ -33,10 +33,16 @@ namespace UltimateTruckEmpire.Company
         public AutomatedDelivery StartDelivery(FleetTruckData truck, DriverData driver, ContractOffer offer)
         {
             if (truck == null || driver == null || offer == null || FleetManager.Instance == null || DriverManager.Instance == null) return null;
-            if (truck.capacityTons < offer.weightTons || !truck.available || !driver.available) return null;
+            if (truck.capacityTons < offer.weightTons || !truck.available || !DriverManager.Instance.CanDispatch(driver)) return null;
             float speed = 48f + DriverManager.Instance.GetPerformance(driver) * .45f;
             var delivery = new AutomatedDelivery { id = "JOB-" + nextId++, truckId = truck.id, driverId = driver.id, cargo = offer.cargo, origin = offer.pickup, destination = offer.destination, reward = offer.reward, distanceKm = offer.distanceKm, remainingKm = offer.distanceKm, etaHours = Mathf.Max(.25f, offer.distanceKm / speed), active = true };
             if (!FleetManager.Instance.Assign(truck.id, driver.id, delivery.id)) return null;
+            if (!DriverManager.Instance.CanDispatch(driver))
+            {
+                FleetManager.Instance.Release(truck.id);
+                return null;
+            }
+            DriverManager.Instance.BeginDelivery(driver);
             deliveries.Add(delivery); return delivery;
         }
 
@@ -68,7 +74,8 @@ namespace UltimateTruckEmpire.Company
             float fuelLitres = Mathf.Max(0f, fuelBefore - (truck?.fuel ?? fuelBefore));
             float payment = job.reward + bonus;
             CompanyManager.Instance?.AddRevenue(payment);
-            FinanceManager.Instance?.RecordDelivery(payment, fuelLitres * FleetManager.Instance.GetFuelPricePerLitre(), driver?.salary ?? 0f);
+            float fuelCost = FleetManager.Instance == null ? 0f : fuelLitres * FleetManager.Instance.GetFuelPricePerLitre();
+            FinanceManager.Instance?.RecordDelivery(payment, fuelCost, driver?.salary ?? 0f);
 
             FleetManager.Instance?.Release(job.truckId);
             DriverManager.Instance?.CompleteDelivery(driver, job.distanceKm, Mathf.RoundToInt(xp));
