@@ -32,6 +32,8 @@ namespace UltimateTruckEmpire.Save
             public FinanceData finance;
             public bool contractAccepted;
             public bool cargoLoaded;
+            public ContractOffer activeContract;
+            public int completedContracts;
             public string activeTruckId;
             public AutomatedDelivery[] automatedDeliveries;
             public bool hasPlayerTransform;
