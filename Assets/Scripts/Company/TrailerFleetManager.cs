@@ -43,11 +43,16 @@ namespace UltimateTruckEmpire.Company
 
         public FleetTrailerData Find(string id) => trailers.Find(t => t != null && t.id == id);
 
-        public FleetTrailerData FindAvailableFor(UltimateTruckEmpire.Gameplay.TrailerType type)
+        public FleetTrailerData FindAvailableFor(UltimateTruckEmpire.Gameplay.TrailerType type, string forTruckId = null)
         {
             foreach (var trailer in trailers)
-                if (trailer != null && trailer.available && trailer.type == type)
-                    return trailer;
+            {
+                if (trailer == null || !trailer.available || trailer.type != type) continue;
+                if (!string.IsNullOrWhiteSpace(trailer.assignedTruckId) &&
+                    !string.Equals(trailer.assignedTruckId, forTruckId, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                return trailer;
+            }
             return null;
         }
 
@@ -117,7 +122,7 @@ namespace UltimateTruckEmpire.Company
             if (current != null && !string.IsNullOrWhiteSpace(current.assignedContractId))
                 return false;
 
-            var trailer = FindAvailableFor(type);
+            var trailer = FindAvailableFor(type, truckId);
             if (trailer == null) return false;
 
             if (current != null)
@@ -157,6 +162,14 @@ namespace UltimateTruckEmpire.Company
         }
 
         public FleetTrailerData GetAssigned(string truckId) => FindAssignedToTruck(truckId);
+        public void ReleaseContract(string truckId)
+        {
+            var trailer = FindAssignedToTruck(truckId);
+            if (trailer == null) return;
+            trailer.assignedContractId = "";
+            trailer.available = true;
+        }
+
 
         public void Release(string truckId)
         {
