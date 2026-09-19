@@ -74,11 +74,6 @@ namespace UltimateTruckEmpire.Save
             }
         }
 
-        public void SaveManual()
-        {
-            Save();
-        }
-
         public bool TryGetSavedPlayerTransform(out Vector3 position, out Quaternion rotation)
         {
             position = default;
