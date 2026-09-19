@@ -19,6 +19,7 @@ namespace UltimateTruckEmpire.Gameplay
 
         private Vector3 pickupWorldPosition;
         private bool hasPickupPosition;
+        private float pickupFuelLitres;
 
         private void Awake()
         {
@@ -33,6 +34,8 @@ namespace UltimateTruckEmpire.Gameplay
             ContractAccepted = true;
             CargoLoaded = false;
             hasPickupPosition = false;
+            pickupFuelLitres = -1f;
+            SaveManager.Instance?.Save();
         }
 
         public void Restore(bool contractAccepted, bool cargoLoaded)
@@ -48,6 +51,8 @@ namespace UltimateTruckEmpire.Gameplay
             CargoLoaded = true;
             pickupWorldPosition = worldPosition;
             hasPickupPosition = true;
+            var activeTruck = FleetManager.Instance?.ActiveTruck;
+            pickupFuelLitres = activeTruck != null ? activeTruck.fuel : -1f;
             SaveManager.Instance?.Save();
         }
 
@@ -75,10 +80,14 @@ namespace UltimateTruckEmpire.Gameplay
                 ? Vector3.Distance(pickupWorldPosition, worldPosition)
                 : 1000f;
             float distanceKm = Mathf.Max(1f, routeMeters / 1000f);
+            float fuelUsed = pickupFuelLitres >= 0f && truck != null
+                ? Mathf.Max(0f, pickupFuelLitres - truck.fuel)
+                : 0f;
             if (truck != null)
                 fleet?.ApplyTripWear(truck.id, distanceKm, 18f, false);
 
-            GameManager.Instance?.AddMoney(Reward);
+            FinanceManager.Instance?.RecordDelivery(Reward, fuelUsed * (fleet?.GetFuelPricePerLitre() ?? 95f), 0f);
+            CompanyManager.Instance?.AddRevenue(Reward);
             GameManager.Instance?.AddXp(RewardXp);
 
             ContractAccepted = false;
