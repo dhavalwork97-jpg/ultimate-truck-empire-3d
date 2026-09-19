@@ -75,7 +75,6 @@ namespace UltimateTruckEmpire.UI
                 return;
             }
             if (selectedTruck.capacityTons < selectedContract.weightTons) { details.text += "\nSelected truck is too small for this cargo."; return; }
-            DriverManager.Instance.BeginDelivery(selectedDriver);
             var job = AutomatedDeliveryManager.Instance?.StartDelivery(selectedTruck, selectedDriver, selectedContract);
             if (job == null)
             {
