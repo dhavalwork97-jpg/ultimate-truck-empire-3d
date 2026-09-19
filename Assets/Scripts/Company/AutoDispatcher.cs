@@ -41,7 +41,7 @@ namespace UltimateTruckEmpire.Company
                 if (driver == null) continue;
                 var offer = market.Offers
                     .Where(o => o.weightTons <= truck.capacityTons)
-                    .Where(o => TrailerFleetManager.Instance != null && TrailerFleetManager.Instance.FindAvailableFor(o.trailerType) != null)
+                    .Where(o => TrailerFleetManager.Instance != null && TrailerFleetManager.Instance.FindAvailableFor(o.trailerType, truck.id) != null)
                     .Where(o => HasTripReadiness(truck, o))
                     .OrderByDescending(o => Score(o, driver, truck))
                     .FirstOrDefault();
