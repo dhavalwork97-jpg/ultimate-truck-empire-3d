@@ -53,17 +53,8 @@ namespace UltimateTruckEmpire.Company
             if (definition != null)
                 return BuyTruck(definition.id);
 
-            return BuyTruckInternal(
-                string.Empty,
-                string.IsNullOrWhiteSpace(model) ? "UTE Hauler" : model.Trim(),
-                price,
-                capacityTons,
-                350f,
-                300f,
-                90f,
-                3.2f,
-                70f,
-                5.5f);
+            return BuyTruckInternal(string.Empty, string.IsNullOrWhiteSpace(model) ? "UTE Hauler" : model.Trim(),
+                price, capacityTons, 350f, 300f, 90f, 3.2f, 70f, 5.5f);
         }
 
         public FleetTruckData BuyTruck(string definitionId)
@@ -71,30 +62,14 @@ namespace UltimateTruckEmpire.Company
             var definition = TruckCatalog.Find(definitionId);
             if (definition == null) return null;
 
-            return BuyTruckInternal(
-                definition.id,
-                definition.displayName,
-                definition.purchasePrice,
-                definition.capacityTons,
-                definition.fuelCapacity,
-                definition.enginePower,
-                definition.maxSpeedKph,
-                definition.fuelEfficiency,
-                definition.reliability,
-                definition.maintenanceCostPerKm);
+            return BuyTruckInternal(definition.id, definition.displayName, definition.purchasePrice,
+                definition.capacityTons, definition.fuelCapacity, definition.enginePower, definition.maxSpeedKph,
+                definition.fuelEfficiency, definition.reliability, definition.maintenanceCostPerKm);
         }
 
-        private FleetTruckData BuyTruckInternal(
-            string definitionId,
-            string model,
-            float price,
-            float capacityTons,
-            float fuelCapacity,
-            float enginePower,
-            float maxSpeedKph,
-            float fuelEfficiency,
-            float reliability,
-            float maintenanceCostPerKm)
+        private FleetTruckData BuyTruckInternal(string definitionId, string model, float price, float capacityTons,
+            float fuelCapacity, float enginePower, float maxSpeedKph, float fuelEfficiency,
+            float reliability, float maintenanceCostPerKm)
         {
             var company = CompanyManager.Instance;
             var game = Core.GameManager.Instance;
@@ -120,8 +95,7 @@ namespace UltimateTruckEmpire.Company
             };
 
             trucks.Add(truck);
-            if (ActiveTruck == null)
-                ActiveTruck = truck;
+            if (ActiveTruck == null) ActiveTruck = truck;
             return truck;
         }
 
@@ -275,14 +249,17 @@ namespace UltimateTruckEmpire.Company
 
         public float GetFuelPricePerLitre() => 95f;
 
-        public void ApplyTripWear(string truckId, float distanceKm, float cargoWeightTons)
+        public void ApplyTripWear(string truckId, float distanceKm, float cargoWeightTons, bool consumeFuel = true)
         {
             var truck = Find(truckId);
             if (truck == null || distanceKm <= 0f) return;
 
             float weightFactor = 1f + Mathf.Clamp(cargoWeightTons, 0f, 60f) / 100f;
-            float fuelUsed = distanceKm / Mathf.Max(0.1f, truck.fuelEfficiency) * weightFactor;
-            truck.fuel = Mathf.Max(0f, truck.fuel - fuelUsed);
+            if (consumeFuel)
+            {
+                float fuelUsed = distanceKm / Mathf.Max(0.1f, truck.fuelEfficiency) * weightFactor;
+                truck.fuel = Mathf.Max(0f, truck.fuel - fuelUsed);
+            }
 
             float wear = distanceKm * (0.006f + weightFactor * 0.002f);
             truck.condition = Mathf.Max(0f, truck.condition - wear);
