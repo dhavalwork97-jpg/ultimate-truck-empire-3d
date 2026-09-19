@@ -26,6 +26,7 @@ namespace UltimateTruckEmpire.Save
         [System.Serializable]
         private sealed class SaveData
         {
+            public int saveVersion = 1;
             public float money;
             public int xp;
             public CompanyData company;
