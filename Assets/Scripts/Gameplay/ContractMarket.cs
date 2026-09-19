@@ -8,9 +8,13 @@ namespace UltimateTruckEmpire.Gameplay
     [Serializable]
     public sealed class ContractOffer
     {
-        public string id; public string cargo; public string pickup; public string destination;
+        public string id; public string cargo; public string cargoId; public string pickup; public string destination;
         public float weightTons; public float reward; public int xp; public float distanceKm; public int difficulty;
         public string routeId; public RouteTier routeTier;
+        public TrailerType trailerType = TrailerType.Curtainsider;
+        public ContractModifierRules.Modifier modifier = ContractModifierRules.Modifier.Standard;
+        public float qualityBonus;
+        public float qualityPenalty;
     }
 
     public sealed class ContractMarket : MonoBehaviour
@@ -19,7 +23,6 @@ namespace UltimateTruckEmpire.Gameplay
         public IReadOnlyList<ContractOffer> Offers => offers;
         private readonly List<ContractOffer> offers = new();
         private int seed = 42;
-        private static readonly string[] Cargo = { "Electronics", "Refrigerated Food", "Steel Coils", "Furniture", "Machinery", "Agricultural Goods" };
 
         private void Awake()
         {
@@ -39,13 +42,21 @@ namespace UltimateTruckEmpire.Gameplay
             {
                 var route = routes[rng.Next(routes.Count)];
                 float distance = Mathf.Lerp(route.minDistanceKm, route.maxDistanceKm, (float)rng.NextDouble());
-                float weight = Mathf.Lerp(route.minCargoTons, route.maxCargoTons, (float)rng.NextDouble());
+                var cargo = CargoCatalog.PickFor(i + seed, route.baseDifficulty);
+                float weight = Mathf.Lerp(Mathf.Max(route.minCargoTons, cargo.minWeightTons),
+                    Mathf.Min(route.maxCargoTons, cargo.maxWeightTons), (float)rng.NextDouble());
+                if (weight <= 0f) weight = Mathf.Lerp(route.minCargoTons, route.maxCargoTons, (float)rng.NextDouble());
                 int difficulty = Mathf.Clamp(route.baseDifficulty + Mathf.CeilToInt(weight / 12f) - 1, 1, 5);
+                var modifier = ContractModifierRules.GetModifier(cargo, difficulty, seed + i);
+                float baseReward = EconomyConfig.MarketBaseReward + distance * EconomyConfig.MarketRewardPerKm + weight * EconomyConfig.MarketRewardPerTon;
+                float bonus = baseReward * ContractModifierRules.GetBonusMultiplier(modifier);
+                float penalty = baseReward * ContractModifierRules.GetPenaltyMultiplier(modifier);
 
                 offers.Add(new ContractOffer
                 {
                     id = "MKT-" + seed + "-" + i,
-                    cargo = Cargo[rng.Next(Cargo.Length)],
+                    cargo = cargo.displayName,
+                    cargoId = cargo.id,
                     pickup = route.origin,
                     destination = route.destination,
                     weightTons = weight,
@@ -53,7 +64,11 @@ namespace UltimateTruckEmpire.Gameplay
                     difficulty = difficulty,
                     routeId = route.id,
                     routeTier = route.tier,
-                    reward = EconomyConfig.MarketBaseReward + distance * EconomyConfig.MarketRewardPerKm + weight * EconomyConfig.MarketRewardPerTon,
+                    trailerType = cargo.trailer,
+                    modifier = modifier,
+                    qualityBonus = bonus,
+                    qualityPenalty = penalty,
+                    reward = baseReward,
                     xp = EconomyConfig.MarketBaseXp + difficulty * EconomyConfig.MarketXpPerDifficulty
                 });
             }
@@ -62,15 +77,30 @@ namespace UltimateTruckEmpire.Gameplay
         public ContractOffer CreateNextPlayerContract(int progression)
         {
             int level = Mathf.Max(1, progression + 1);
-            float weight = Mathf.Clamp(10f + level * 1.5f, 8f, 28f);
+            var cargo = CargoCatalog.Get((level - 1) % CargoCatalog.Count);
+            float weight = Mathf.Clamp(10f + level * 1.5f, Mathf.Max(8f, cargo.minWeightTons), Mathf.Min(28f, cargo.maxWeightTons));
             float distance = 140f + level * 35f;
             int difficulty = Mathf.Clamp(1 + (level - 1) / 2, 1, 5);
-            return new ContractOffer {
-                id = "PLAYER-" + level.ToString("000"), cargo = Cargo[(level - 1) % Cargo.Length],
-                pickup = "Ahmedabad Logistics Depot", destination = "Vadodara Factory Warehouse",
-                weightTons = weight, distanceKm = distance, difficulty = difficulty,
-                routeId = "PLAYER-AHM-VAD", routeTier = RouteTier.Local,
-                reward = EconomyConfig.PlayerBaseReward + distance * EconomyConfig.PlayerRewardPerKm + weight * EconomyConfig.PlayerRewardPerTon + difficulty * EconomyConfig.PlayerRewardPerDifficulty,
+            var modifier = ContractModifierRules.GetModifier(cargo, difficulty, level);
+            float baseReward = EconomyConfig.PlayerBaseReward + distance * EconomyConfig.PlayerRewardPerKm + weight * EconomyConfig.PlayerRewardPerTon + difficulty * EconomyConfig.PlayerRewardPerDifficulty;
+
+            return new ContractOffer
+            {
+                id = "PLAYER-" + level.ToString("000"),
+                cargo = cargo.displayName,
+                cargoId = cargo.id,
+                pickup = "Ahmedabad Logistics Depot",
+                destination = "Vadodara Factory Warehouse",
+                weightTons = weight,
+                distanceKm = distance,
+                difficulty = difficulty,
+                routeId = "PLAYER-AHM-VAD",
+                routeTier = RouteTier.Local,
+                trailerType = cargo.trailer,
+                modifier = modifier,
+                qualityBonus = baseReward * ContractModifierRules.GetBonusMultiplier(modifier),
+                qualityPenalty = baseReward * ContractModifierRules.GetPenaltyMultiplier(modifier),
+                reward = baseReward,
                 xp = EconomyConfig.PlayerBaseXp + difficulty * EconomyConfig.PlayerXpPerDifficulty
             };
         }

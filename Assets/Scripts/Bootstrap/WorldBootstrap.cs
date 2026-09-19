@@ -39,8 +39,6 @@ namespace UltimateTruckEmpire.Bootstrap
             if (FinanceManager.Instance == null) new GameObject("FinanceManager").AddComponent<FinanceManager>();
             if (AutoDispatcher.Instance == null) new GameObject("AutoDispatcher").AddComponent<AutoDispatcher>();
 
-            // Restore the persistent game before creating starter data, otherwise a
-            // fresh company/truck would overwrite the player's saved fleet on boot.
             var saveManager = FindFirstObjectByType<SaveManager>();
             if (saveManager == null)
                 saveManager = new GameObject("SaveManager").AddComponent<SaveManager>();
@@ -56,8 +54,6 @@ namespace UltimateTruckEmpire.Bootstrap
             EnsureEventSystem();
         }
 
-        /// UI Buttons and InputFields do nothing without an EventSystem in the
-        /// scene, and the bootstrap scene is empty, so one is created here.
         private static void EnsureEventSystem()
         {
             if (FindFirstObjectByType<EventSystem>() != null) return;
@@ -79,9 +75,6 @@ namespace UltimateTruckEmpire.Bootstrap
         private static void BuildWorld()
         {
             CreateLight();
-
-            // Roads, sites, city, skyline, vegetation and furniture are all built
-            // by the world builder now, so there is one place that owns layout.
             WorldVisualBuilder.Build();
 
             CreateDeliveryZone(new Vector3(-55, 0, 16), "Ahmedabad Logistics Depot", DeliveryTrigger.TriggerType.Pickup,
@@ -94,8 +87,6 @@ namespace UltimateTruckEmpire.Bootstrap
             CreateCamera(truck);
             CreateHud(truck);
 
-            // Give the scene its correct look on frame one; TimeWeatherManager
-            // drives it from then on.
             var weather = TimeWeatherManager.Instance;
             EnvironmentAtmosphere.Ensure().Apply(weather != null ? weather.timeOfDay : 8f,
                                                  weather != null ? weather.Weather : WeatherState.Clear);
@@ -103,8 +94,6 @@ namespace UltimateTruckEmpire.Bootstrap
 
         private static void CreateLight()
         {
-            // Exactly one directional light in the scene; the atmosphere system
-            // owns its angle, colour and intensity from here on.
             var existing = FindFirstObjectByType<EnvironmentAtmosphere>();
             if (existing != null && existing.sun != null) return;
 
@@ -118,8 +107,6 @@ namespace UltimateTruckEmpire.Bootstrap
             RenderSettings.sun = light;
         }
 
-        /// The load and unload zones now sit inside the yards rather than on the
-        /// carriageway, so the player actually pulls into the site.
         private static void CreateDeliveryZone(Vector3 position, string zoneName, DeliveryTrigger.TriggerType type,
                                                Vector3 markerOffset)
         {
@@ -130,7 +117,6 @@ namespace UltimateTruckEmpire.Bootstrap
             box.size = new Vector3(30, 4, 16);
             zone.AddComponent<DeliveryTrigger>().Configure(type);
 
-            // Slim lit marker beside the gate, off the driving surface.
             var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
             marker.name = zoneName + " Marker";
             marker.transform.position = new Vector3(position.x, 6f, 0f) + markerOffset;
@@ -158,8 +144,6 @@ namespace UltimateTruckEmpire.Bootstrap
             collider.center = new Vector3(0, 1.2f, 0);
             collider.size = new Vector3(3, 2.4f, 7);
 
-            // Placeholder blocks. The procedural visual pass below hides these and
-            // builds proper bodywork; they remain as a fallback if it is removed.
             var visual = GameObject.CreatePrimitive(PrimitiveType.Cube);
             visual.name = "TruckCab";
             visual.transform.SetParent(truck.transform);
@@ -174,7 +158,10 @@ namespace UltimateTruckEmpire.Bootstrap
             trailer.transform.localScale = new Vector3(2.75f, 2.8f, 4.2f);
             Object.Destroy(trailer.GetComponent<Collider>());
 
-            truck.AddComponent<TrailerController>().Configure(TrailerType.DryVan);
+            // There are two TrailerType enums in the project: the gameplay contract
+            // catalog type and the physical truck trailer type. This bootstrap creates
+            // a physical dry-van trailer, so explicitly select the truck namespace.
+            truck.AddComponent<TrailerController>().Configure(UltimateTruckEmpire.Truck.TrailerType.DryVan);
             var controller = truck.AddComponent<TruckController>();
             truck.AddComponent<PlayerTruckFleetBinding>();
             truck.AddComponent<TruckPhysics>();
@@ -194,21 +181,13 @@ namespace UltimateTruckEmpire.Bootstrap
 
         private static void SetPlayerTruckTag(GameObject truck)
         {
-            // The "PlayerTruck" tag only exists once it has been added in the Tag
-            // Manager; assigning an undefined tag throws. Delivery triggers also
-            // identify the truck by component, so this is best effort.
             try { truck.tag = "PlayerTruck"; }
             catch (UnityException) { Debug.LogWarning("[WorldBootstrap] Add a 'PlayerTruck' tag in Project Settings > Tags and Layers to enable tag based checks."); }
         }
 
-        /// Builds the procedural cab, trailer, wheels and lamps, then hands the
-        /// generated wheel meshes to the existing wheel rig so there is exactly one
-        /// system moving them.
         private static void ApplyTruckVisuals(GameObject truck, TruckWheelRig wheelRig)
         {
             var spec = TruckVisualPresets.Resolve("nomad-aero");
-            // Match the spec to this truck's actual chassis: 4.1 m wheelbase,
-            // 0.62 m wheels, single drive axle.
             spec.frameFrontZ = 3.30f;
             spec.frameRearZ = -3.40f;
             spec.frameTopY = 1.05f;
@@ -221,23 +200,17 @@ namespace UltimateTruckEmpire.Bootstrap
             spec.cabLength = 2.35f;
             spec.sleeperLength = 1.40f;
             spec.fifthWheelZ = -1.90f;
-            // Screen bottom lands at ~2.29 m, which is what the cockpit geometry
-            // and the driver eye point are aligned to.
             spec.windscreenRake = 0.47f;
 
             var visuals = TruckVisualAssembler.Apply(truck, spec, true);
             if (visuals == null) return;
 
-            // TruckWheelRig already syncs wheels, so the assembler's own sync stays
-            // disabled; instead the rig drives the new meshes.
             if (wheelRig != null && visuals.wheelVisuals != null)
                 wheelRig.ReplaceVisuals(visuals.wheelVisuals);
         }
 
         private static void BuildLamps(Transform truck, TruckLights lights)
         {
-            // Two realtime headlight spots only. Everything else is handled by the
-            // emissive lamp lenses built by the visual pass.
             var left = CreateSpot(truck, "Headlight Left", new Vector3(-1.0f, 1.15f, 3.25f));
             var right = CreateSpot(truck, "Headlight Right", new Vector3(1.0f, 1.15f, 3.25f));
             lights.Configure(new[] { left, right }, new Light[0], new Light[0], new Light[0], new Light[0]);
@@ -262,7 +235,6 @@ namespace UltimateTruckEmpire.Bootstrap
 
         private static void CreateCameraAnchors(Transform truck)
         {
-            // Just clear of the nose, so neither view looks into the bodywork.
             CreateAnchor(truck, "HoodCameraAnchor", new Vector3(0f, 2.95f, 3.34f), -4f);
             CreateAnchor(truck, "BumperCameraAnchor", new Vector3(0f, 1.05f, 3.62f), -1f);
         }
@@ -287,8 +259,6 @@ namespace UltimateTruckEmpire.Bootstrap
 
         private static void CreateCamera(GameObject truck)
         {
-            // One camera for every view. Re-uses an existing MainCamera if the scene
-            // already has one so nothing ends up with two.
             var existing = Camera.main;
             GameObject camGo = existing != null ? existing.gameObject : new GameObject("Main Camera");
             if (existing == null) camGo.tag = "MainCamera";
