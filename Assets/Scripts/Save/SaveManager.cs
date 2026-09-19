@@ -21,7 +21,7 @@ namespace UltimateTruckEmpire.Save
 
         private const string FileName = "ute_save.json";
         private const string BackupFileName = "ute_save.json.bak";
-        private const int CurrentSaveVersion = 2;
+        private const int CurrentSaveVersion = 3;
 
         [System.Serializable]
         private sealed class SaveData
