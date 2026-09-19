@@ -223,13 +223,4 @@ namespace UltimateTruckEmpire.UI
         }
     }
 
-    internal static class GarageRectExtensions
-    {
-        public static void SetAnchors(this RectTransform rt, Vector2 min, Vector2 max)
-        {
-            rt.anchorMin = min;
-            rt.anchorMax = max;
-            rt.offsetMin = rt.offsetMax = Vector2.zero;
-        }
-    }
 }
