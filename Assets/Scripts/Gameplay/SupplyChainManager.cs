@@ -104,7 +104,7 @@ namespace UltimateTruckEmpire.Gameplay
             industries.Add(new IndustryNode("IND-SUR-TEXTILE", "Surat Textile Mill", "Surat", IndustryType.TextileMill,
                 "furniture", 80f, 220f, 75f));
             industries.Add(new IndustryNode("IND-BHR-CHEM", "Bharuch Industrial Plant", "Bharuch", IndustryType.Factory,
-                "chemicals", 120f, 300f, 90f));
+                "machinery", 120f, 300f, 90f));
             industries.Add(new IndustryNode("IND-AHM-WH", "Ahmedabad Freight Warehouse", "Ahmedabad", IndustryType.Warehouse,
                 "electronics", 100f, 300f, 80f));
             industries.Add(new IndustryNode("IND-VAD-DIST", "Vadodara Distribution Hub", "Vadodara", IndustryType.Distribution,
