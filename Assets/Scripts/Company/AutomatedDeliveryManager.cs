@@ -57,14 +57,23 @@ namespace UltimateTruckEmpire.Company
         private static void Complete(AutomatedDelivery job)
         {
             var driver = DriverManager.Instance?.Find(job.driverId); var truck = FleetManager.Instance?.Find(job.truckId);
-            float performance = DriverManager.Instance?.GetPerformance(driver) ?? 50f;
+            float performance = DriverManager.Instance?.GetEffectivePerformance(driver) ?? 50f;
             float bonus = job.reward * Mathf.Clamp((performance - 50f) / 1000f, 0f, .12f);
-            float fuelLitres = Mathf.Max(0f, job.distanceKm * .38f);
-            if (truck != null) { truck.fuel = Mathf.Max(0f, truck.fuel - fuelLitres); truck.condition = Mathf.Max(0f, truck.condition - job.distanceKm * .012f); }
+            float xp = Mathf.Max(20, Mathf.RoundToInt(job.distanceKm * .6f));
+            float fuelBefore = truck?.fuel ?? 0f;
+
+            if (truck != null)
+                FleetManager.Instance?.ApplyTripWear(job.truckId, job.distanceKm, 0f);
+
+            float fuelLitres = Mathf.Max(0f, fuelBefore - (truck?.fuel ?? fuelBefore));
             float payment = job.reward + bonus;
-            CompanyManager.Instance?.AddRevenue(payment); FinanceManager.Instance?.RecordDelivery(payment, fuelLitres * 105f, driver?.salary ?? 0f);
-            DriverManager.Instance?.AddExperience(driver, Mathf.Max(20, Mathf.RoundToInt(job.distanceKm * .6f)));
-            FleetManager.Instance?.Release(job.truckId); MissionManager.Instance?.NotifyDeliveryComplete(); ContractMarket.Instance?.Refresh();
+            CompanyManager.Instance?.AddRevenue(payment);
+            FinanceManager.Instance?.RecordDelivery(payment, fuelLitres * FleetManager.Instance.GetFuelPricePerLitre(), driver?.salary ?? 0f);
+
+            FleetManager.Instance?.Release(job.truckId);
+            DriverManager.Instance?.CompleteDelivery(driver, job.distanceKm, Mathf.RoundToInt(xp));
+            MissionManager.Instance?.NotifyDeliveryComplete();
+            ContractMarket.Instance?.Refresh();
             job.completed = true; job.active = false;
         }
     }
