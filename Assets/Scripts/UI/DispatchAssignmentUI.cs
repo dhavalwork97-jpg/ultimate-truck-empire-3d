@@ -79,7 +79,6 @@ namespace UltimateTruckEmpire.UI
             var job = AutomatedDeliveryManager.Instance?.StartDelivery(selectedTruck, selectedDriver, selectedContract);
             if (job == null)
             {
-                selectedDriver.available = true;
                 details.text += "\nDispatch failed.";
                 return;
             }
