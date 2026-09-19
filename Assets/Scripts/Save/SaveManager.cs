@@ -65,7 +65,9 @@ namespace UltimateTruckEmpire.Save
                         reward = DeliveryManager.Instance.Reward,
                         xp = DeliveryManager.Instance.RewardXp,
                         distanceKm = DeliveryManager.Instance.ContractDistanceKm,
-                        difficulty = DeliveryManager.Instance.ContractDifficulty
+                        difficulty = DeliveryManager.Instance.ContractDifficulty,
+                        routeId = "PLAYER-AHM-VAD",
+                        routeTier = RouteTier.Local
                     } : null,
                     completedContracts = DeliveryManager.Instance?.CompletedContracts ?? 0,
                     activeTruckId = FleetManager.Instance?.ActiveTruck?.id ?? "",

@@ -10,6 +10,7 @@ namespace UltimateTruckEmpire.Gameplay
     {
         public string id; public string cargo; public string pickup; public string destination;
         public float weightTons; public float reward; public int xp; public float distanceKm; public int difficulty;
+        public string routeId; public RouteTier routeTier;
     }
 
     public sealed class ContractMarket : MonoBehaviour
@@ -19,7 +20,6 @@ namespace UltimateTruckEmpire.Gameplay
         private readonly List<ContractOffer> offers = new();
         private int seed = 42;
         private static readonly string[] Cargo = { "Electronics", "Refrigerated Food", "Steel Coils", "Furniture", "Machinery", "Agricultural Goods" };
-        private static readonly string[] Cities = { "Ahmedabad", "Vadodara", "Surat", "Rajkot", "Gandhinagar", "Udaipur" };
 
         private void Awake()
         {
@@ -31,13 +31,31 @@ namespace UltimateTruckEmpire.Gameplay
         {
             offers.Clear();
             var rng = new System.Random(seed++);
+            int completedContracts = DeliveryManager.Instance?.CompletedContracts ?? 0;
+            var routes = RouteProgression.GetUnlockedRoutes(completedContracts);
+            if (routes.Count == 0) return;
+
             for (int i = 0; i < 8; i++)
             {
-                var from = Cities[rng.Next(Cities.Length)]; var to = Cities[rng.Next(Cities.Length)];
-                if (to == from) to = Cities[(Array.IndexOf(Cities, from) + 1) % Cities.Length];
-                var distance = 80f + rng.Next(40, 650); var weight = 4f + (float)rng.NextDouble() * 24f;
-                var difficulty = Mathf.Clamp(Mathf.CeilToInt(weight / 8f), 1, 5);
-                offers.Add(new ContractOffer { id = "MKT-" + seed + "-" + i, cargo = Cargo[rng.Next(Cargo.Length)], pickup = from, destination = to, weightTons = weight, distanceKm = distance, difficulty = difficulty, reward = EconomyConfig.MarketBaseReward + distance * EconomyConfig.MarketRewardPerKm + weight * EconomyConfig.MarketRewardPerTon, xp = EconomyConfig.MarketBaseXp + difficulty * EconomyConfig.MarketXpPerDifficulty });
+                var route = routes[rng.Next(routes.Count)];
+                float distance = Mathf.Lerp(route.minDistanceKm, route.maxDistanceKm, (float)rng.NextDouble());
+                float weight = Mathf.Lerp(route.minCargoTons, route.maxCargoTons, (float)rng.NextDouble());
+                int difficulty = Mathf.Clamp(route.baseDifficulty + Mathf.CeilToInt(weight / 12f) - 1, 1, 5);
+
+                offers.Add(new ContractOffer
+                {
+                    id = "MKT-" + seed + "-" + i,
+                    cargo = Cargo[rng.Next(Cargo.Length)],
+                    pickup = route.origin,
+                    destination = route.destination,
+                    weightTons = weight,
+                    distanceKm = distance,
+                    difficulty = difficulty,
+                    routeId = route.id,
+                    routeTier = route.tier,
+                    reward = EconomyConfig.MarketBaseReward + distance * EconomyConfig.MarketRewardPerKm + weight * EconomyConfig.MarketRewardPerTon,
+                    xp = EconomyConfig.MarketBaseXp + difficulty * EconomyConfig.MarketXpPerDifficulty
+                });
             }
         }
 
@@ -51,6 +69,7 @@ namespace UltimateTruckEmpire.Gameplay
                 id = "PLAYER-" + level.ToString("000"), cargo = Cargo[(level - 1) % Cargo.Length],
                 pickup = "Ahmedabad Logistics Depot", destination = "Vadodara Factory Warehouse",
                 weightTons = weight, distanceKm = distance, difficulty = difficulty,
+                routeId = "PLAYER-AHM-VAD", routeTier = RouteTier.Local,
                 reward = EconomyConfig.PlayerBaseReward + distance * EconomyConfig.PlayerRewardPerKm + weight * EconomyConfig.PlayerRewardPerTon + difficulty * EconomyConfig.PlayerRewardPerDifficulty,
                 xp = EconomyConfig.PlayerBaseXp + difficulty * EconomyConfig.PlayerXpPerDifficulty
             };
