@@ -23,6 +23,10 @@ namespace UltimateTruckEmpire.Gameplay
         public float LastDeliveryScore { get; private set; } public string LastDeliveryRating { get; private set; } = "N/A";
         public float LastDeliveryBonus { get; private set; }
         public float LastDockingScore { get; private set; }
+        public float LastCargoDamagePercent { get; private set; }
+        public string LastCargoDamageStatus { get; private set; } = "Intact";
+        public bool UnloadingActive { get; private set; }
+        public string UnloadingStatus { get; private set; } = "";
         public bool DockingActive { get; private set; }
         public string DockingStatus { get; private set; } = "";
         public string LastAcceptMessage { get; private set; } = "";
@@ -131,12 +135,14 @@ namespace UltimateTruckEmpire.Gameplay
             return ScoreDocking(d, h, v);
         }
 
-        public void ResetDocking() { DockingActive = false; DockingStatus = ""; dockingHoldStart = -1f; }
+        public void ResetDocking() { DockingActive = false; DockingStatus = ""; UnloadingActive = false; UnloadingStatus = ""; dockingHoldStart = -1f; }
 
         public bool TryCompleteDockedDelivery(TruckController truck, Vector3 zonePosition, Vector3 dockingAxis)
         {
             if (!ContractAccepted || !CargoLoaded || truck == null) { ResetDocking(); return false; }
             DockingActive = true;
+            UnloadingActive = true;
+            UnloadingStatus = "Docking cargo...";
             MeasureDocking(truck, zonePosition, dockingAxis, out float distance, out float headingError, out float speedKph, out bool trailerOk);
 
             string problem = null;
@@ -144,13 +150,14 @@ namespace UltimateTruckEmpire.Gameplay
             else if (distance > DockingMaxDistanceM) problem = "Move the trailer closer to the bay";
             else if (headingError > DockingMaxHeadingErrorDeg) problem = "Straighten up - align with the yard";
             else if (speedKph > DockingMaxSpeedKph) problem = "Stop the truck";
-            if (problem != null) { dockingHoldStart = -1f; DockingStatus = problem; return false; }
+            if (problem != null) { dockingHoldStart = -1f; UnloadingActive = false; UnloadingStatus = ""; DockingStatus = problem; return false; }
 
             if (dockingHoldStart < 0f) dockingHoldStart = Time.time;
             float held = Time.time - dockingHoldStart;
             if (held < DockingHoldSeconds)
             {
                 DockingStatus = "Hold still... " + (DockingHoldSeconds - held).ToString("0.0") + "s";
+                UnloadingStatus = "Positioning for unload...";
                 return false;
             }
 
@@ -171,8 +178,13 @@ namespace UltimateTruckEmpire.Gameplay
             if (truck != null) fleet?.ApplyTripWear(truck.id, distanceKm, ContractWeightTons, false);
 
             var evaluation = DeliveryEvaluation.EvaluatePlayer(truck, distanceKm, fuelUsed, LastDockingScore, ContractModifier, Reward, ContractQualityBonus, ContractQualityPenalty);
-            LastDeliveryScore = evaluation.score; LastDeliveryRating = evaluation.rating; LastDeliveryBonus = evaluation.payoutAdjustment;
-            float payment = Mathf.Max(0f, Reward + evaluation.payoutAdjustment);
+            LastDeliveryScore = evaluation.score; LastDeliveryRating = evaluation.rating;
+            var cargo = CargoCatalog.Find(CargoId);
+            LastCargoDamagePercent = CargoDamageSystem.CalculateDamagePercent(cargo, evaluation.score, LastDockingScore);
+            LastCargoDamageStatus = CargoDamageSystem.GetStatus(LastCargoDamagePercent);
+            float cargoDamagePenalty = CargoDamageSystem.GetPayoutPenalty(Reward, LastCargoDamagePercent);
+            LastDeliveryBonus = evaluation.payoutAdjustment - cargoDamagePenalty;
+            float payment = Mathf.Max(0f, Reward + LastDeliveryBonus);
             FinanceManager.Instance?.RecordDelivery(payment, fuelUsed * (fleet?.GetFuelPricePerLitre() ?? EconomyConfig.FuelPricePerLitre), 0f);
             CompanyManager.Instance?.AddRevenue(payment); GameManager.Instance?.AddXp(RewardXp + evaluation.bonusXp);
             CompletedContracts++; TrailerFleetManager.Instance?.ReleaseContract(truck?.id ?? ""); ContractQualityBonus = 0f; ContractQualityPenalty = 0f; MissionManager.Instance?.NotifyDeliveryComplete(); ContractAccepted = false; CargoLoaded = false; hasPickupPosition = false; pickupFuelLitres = -1f;
