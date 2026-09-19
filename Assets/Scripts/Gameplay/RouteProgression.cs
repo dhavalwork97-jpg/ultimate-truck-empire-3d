@@ -46,7 +46,7 @@ namespace UltimateTruckEmpire.Gameplay
             new RouteDefinition { id = "GJ-AHM-RAJ", origin = "Ahmedabad", destination = "Rajkot", tier = RouteTier.Regional, requiredContracts = 2, minDistanceKm = 210f, maxDistanceKm = 330f, minCargoTons = 8f, maxCargoTons = 24f, baseDifficulty = 2 },
 
             new RouteDefinition { id = "GJ-SUR-RAJ", origin = "Surat", destination = "Rajkot", tier = RouteTier.Interstate, requiredContracts = 5, minDistanceKm = 350f, maxDistanceKm = 470f, minCargoTons = 10f, maxCargoTons = 28f, baseDifficulty = 3 },
-            new RouteDefinition { id = "GJ-AHM-UDR", origin = "Ahmedabad", destination = "Udaipur", tier = RouteTier.National, requiredContracts = 5, minDistanceKm = 300f, maxDistanceKm = 430f, minCargoTons = 10f, maxCargoTons = 28f, baseDifficulty = 3 },
+            new RouteDefinition { id = "GJ-AHM-UDR", origin = "Ahmedabad", destination = "Udaipur", tier = RouteTier.Interstate, requiredContracts = 5, minDistanceKm = 300f, maxDistanceKm = 430f, minCargoTons = 10f, maxCargoTons = 28f, baseDifficulty = 3 },
 
             new RouteDefinition { id = "GJ-RAJ-UDR", origin = "Rajkot", destination = "Udaipur", tier = RouteTier.LongHaul, requiredContracts = 8, minDistanceKm = 500f, maxDistanceKm = 650f, minCargoTons = 14f, maxCargoTons = 42f, baseDifficulty = 4 },
             new RouteDefinition { id = "GJ-SUR-UDR", origin = "Surat", destination = "Udaipur", tier = RouteTier.LongHaul, requiredContracts = 8, minDistanceKm = 520f, maxDistanceKm = 680f, minCargoTons = 14f, maxCargoTons = 42f, baseDifficulty = 4 }
@@ -55,7 +55,7 @@ namespace UltimateTruckEmpire.Gameplay
         public static RouteTier CurrentTier(int completedContracts)
         {
             if (completedContracts >= 8) return RouteTier.LongHaul;
-            if (completedContracts >= 5) return RouteTier.National;
+            if (completedContracts >= 5) return RouteTier.Interstate;
             if (completedContracts >= 2) return RouteTier.Regional;
             return RouteTier.Local;
         }
