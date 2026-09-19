@@ -23,6 +23,9 @@ namespace UltimateTruckEmpire.Gameplay
         public float LastDeliveryScore { get; private set; } public string LastDeliveryRating { get; private set; } = "N/A";
         public float LastDeliveryBonus { get; private set; }
         public float LastDockingScore { get; private set; }
+        public bool DockingActive { get; private set; }
+        public string DockingStatus { get; private set; } = "";
+        public string LastAcceptMessage { get; private set; } = "";
 
         private Vector3 pickupWorldPosition; private bool hasPickupPosition; private float pickupFuelLitres;
 
@@ -49,7 +52,12 @@ namespace UltimateTruckEmpire.Gameplay
             RewardXp = Mathf.Max(1, offer.xp); ContractDistanceKm = Mathf.Max(1f, offer.distanceKm); ContractWeightTons = Mathf.Max(0f, offer.weightTons); ContractDifficulty = Mathf.Clamp(offer.difficulty, 1, 5);
             var activeTruck = FleetManager.Instance?.EnsureActiveTruck();
             if (activeTruck == null || TrailerFleetManager.Instance == null || !TrailerFleetManager.Instance.AssignForContract(activeTruck.id, ContractId, Trailer))
+            {
+                LastAcceptMessage = "No free " + Trailer + " trailer available for this contract.";
                 return false;
+            }
+            LastAcceptMessage = "";
+            ResetDocking();
             var trailerController = activeTruck == FleetManager.Instance?.ActiveTruck ? FindFirstObjectByType<TruckController>()?.GetComponent<TrailerController>() : null;
             trailerController?.ConfigureGameplay(Trailer, ContractWeightTons);
             ContractAccepted = true; CargoLoaded = false; hasPickupPosition = false; pickupFuelLitres = -1f; SaveManager.Instance?.Save(); return true;
@@ -57,7 +65,7 @@ namespace UltimateTruckEmpire.Gameplay
 
         public void Restore(bool contractAccepted, bool cargoLoaded, ContractOffer savedContract, int completedContracts)
         {
-            CompletedContracts = Mathf.Max(0, completedContracts); ContractAccepted = false; CargoLoaded = false; hasPickupPosition = false;
+            CompletedContracts = Mathf.Max(0, completedContracts); ContractAccepted = false; CargoLoaded = false; hasPickupPosition = false; ResetDocking();
             if (contractAccepted && savedContract != null) { AcceptContractInternal(savedContract); CargoLoaded = cargoLoaded; }
         }
 
@@ -86,33 +94,69 @@ namespace UltimateTruckEmpire.Gameplay
         }
         public void LoadCargo() => LoadCargo(Vector3.zero);
 
-        public float EvaluateDocking(TruckController truck, Vector3 zonePosition)
-        {
-            if (truck == null || TrailerFleetManager.Instance == null) return 0f;
-            var trailer = truck.GetComponent<TrailerController>();
-            if (trailer == null || trailer.ContractTrailerType != Trailer) return 0f;
+        public const float DockingMaxDistanceM = 7f;
+        public const float DockingMaxHeadingErrorDeg = 20f;
+        public const float DockingMaxSpeedKph = 2f;
+        public const float DockingHoldSeconds = 1f;
+        private float dockingHoldStart = -1f;
 
-            Vector3 dockingPosition = trailer.DockingPoint != null ? trailer.DockingPoint.position : truck.transform.position;
-            float distance = Vector3.Distance(new Vector3(dockingPosition.x, 0f, dockingPosition.z), new Vector3(zonePosition.x, 0f, zonePosition.z));
+        private bool MeasureDocking(TruckController truck, Vector3 zonePosition, Vector3 dockingAxis,
+            out float distance, out float headingError, out float speedKph, out bool trailerOk)
+        {
+            distance = float.MaxValue; headingError = 180f; speedKph = 0f; trailerOk = false;
+            if (truck == null) return false;
+            var trailer = truck.GetComponent<TrailerController>();
+            trailerOk = trailer != null && trailer.ContractTrailerType == Trailer;
+            Vector3 reference = trailer != null && trailer.DockingPoint != null ? trailer.DockingPoint.position : truck.transform.position;
+            distance = Vector3.Distance(new Vector3(reference.x, 0f, reference.z), new Vector3(zonePosition.x, 0f, zonePosition.z));
+            Vector3 axis = new Vector3(dockingAxis.x, 0f, dockingAxis.z);
+            if (axis.sqrMagnitude < 0.0001f) axis = Vector3.right;
+            Vector3 heading = new Vector3(truck.transform.forward.x, 0f, truck.transform.forward.z);
+            headingError = Mathf.Min(Vector3.Angle(heading, axis), Vector3.Angle(heading, -axis));
+            speedKph = truck.SpeedKph;
+            return true;
+        }
+
+        private static float ScoreDocking(float distance, float headingError, float speedKph)
+        {
             float distanceScore = Mathf.InverseLerp(12f, 2.5f, distance) * 100f;
-            float angle = Quaternion.Angle(truck.transform.rotation, Quaternion.LookRotation(Vector3.forward, Vector3.up));
-            angle = Mathf.Min(angle, 360f - angle);
-            // The generated road is aligned on the X axis, so compare against both
-            // forward directions; this also permits a reverse docking approach.
-            float forwardAngle = Vector3.Angle(truck.transform.forward, Vector3.right);
-            float reverseAngle = Vector3.Angle(-truck.transform.forward, Vector3.right);
-            float headingError = Mathf.Min(forwardAngle, reverseAngle);
             float headingScore = Mathf.InverseLerp(35f, 5f, headingError) * 100f;
-            float speedScore = Mathf.InverseLerp(7f, 0.5f, truck.SpeedKph) * 100f;
+            float speedScore = Mathf.InverseLerp(7f, 0.5f, speedKph) * 100f;
             return Mathf.Clamp(0.45f * distanceScore + 0.35f * headingScore + 0.20f * speedScore, 0f, 100f);
         }
 
-        public bool TryCompleteDockedDelivery(TruckController truck, Vector3 zonePosition)
+        public float EvaluateDocking(TruckController truck, Vector3 zonePosition, Vector3 dockingAxis)
         {
-            if (!ContractAccepted || !CargoLoaded || truck == null) return false;
-            float dockingScore = EvaluateDocking(truck, zonePosition);
-            if (dockingScore < 50f) return false;
-            CompleteDelivery(zonePosition, dockingScore);
+            if (!MeasureDocking(truck, zonePosition, dockingAxis, out float d, out float h, out float v, out bool ok) || !ok) return 0f;
+            return ScoreDocking(d, h, v);
+        }
+
+        public void ResetDocking() { DockingActive = false; DockingStatus = ""; dockingHoldStart = -1f; }
+
+        public bool TryCompleteDockedDelivery(TruckController truck, Vector3 zonePosition, Vector3 dockingAxis)
+        {
+            if (!ContractAccepted || !CargoLoaded || truck == null) { ResetDocking(); return false; }
+            DockingActive = true;
+            MeasureDocking(truck, zonePosition, dockingAxis, out float distance, out float headingError, out float speedKph, out bool trailerOk);
+
+            string problem = null;
+            if (!trailerOk) problem = "Wrong trailer - this job needs " + Trailer;
+            else if (distance > DockingMaxDistanceM) problem = "Move the trailer closer to the bay";
+            else if (headingError > DockingMaxHeadingErrorDeg) problem = "Straighten up - align with the yard";
+            else if (speedKph > DockingMaxSpeedKph) problem = "Stop the truck";
+            if (problem != null) { dockingHoldStart = -1f; DockingStatus = problem; return false; }
+
+            if (dockingHoldStart < 0f) dockingHoldStart = Time.time;
+            float held = Time.time - dockingHoldStart;
+            if (held < DockingHoldSeconds)
+            {
+                DockingStatus = "Hold still... " + (DockingHoldSeconds - held).ToString("0.0") + "s";
+                return false;
+            }
+
+            float score = ScoreDocking(distance, headingError, speedKph);
+            ResetDocking();
+            CompleteDelivery(zonePosition, score);
             return true;
         }
 
@@ -131,9 +175,10 @@ namespace UltimateTruckEmpire.Gameplay
             float payment = Mathf.Max(0f, Reward + evaluation.payoutAdjustment);
             FinanceManager.Instance?.RecordDelivery(payment, fuelUsed * (fleet?.GetFuelPricePerLitre() ?? EconomyConfig.FuelPricePerLitre), 0f);
             CompanyManager.Instance?.AddRevenue(payment); GameManager.Instance?.AddXp(RewardXp + evaluation.bonusXp);
-            CompletedContracts++; TrailerFleetManager.Instance?.Release(truck?.id ?? ""); ContractQualityBonus = 0f; ContractQualityPenalty = 0f; MissionManager.Instance?.NotifyDeliveryComplete(); ContractAccepted = false; CargoLoaded = false; hasPickupPosition = false; pickupFuelLitres = -1f;
+            CompletedContracts++; TrailerFleetManager.Instance?.ReleaseContract(truck?.id ?? ""); ContractQualityBonus = 0f; ContractQualityPenalty = 0f; MissionManager.Instance?.NotifyDeliveryComplete(); ContractAccepted = false; CargoLoaded = false; hasPickupPosition = false; pickupFuelLitres = -1f;
             ContractMarket.Instance?.Refresh(); SaveManager.Instance?.Save();
         }
+        public void CompleteDelivery(Vector3 worldPosition) => CompleteDelivery(worldPosition, 100f);
         public void CompleteDelivery() => CompleteDelivery(Vector3.zero);
     }
 }
