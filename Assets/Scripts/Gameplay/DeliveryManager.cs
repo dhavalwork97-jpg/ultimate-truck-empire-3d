@@ -82,6 +82,9 @@ namespace UltimateTruckEmpire.Gameplay
         private void AcceptContractInternal(ContractOffer offer)
         {
             ContractId = offer.id; CargoName = string.IsNullOrWhiteSpace(offer.cargo) ? "General Freight" : offer.cargo;
+            ActiveOriginIndustryId = offer.originIndustryId ?? "";
+            ActiveDestinationIndustryId = offer.destinationIndustryId ?? "";
+            ActiveCustomerName = offer.customerName ?? "";
             CargoId = string.IsNullOrWhiteSpace(offer.cargoId) ? "legacy-general" : offer.cargoId;
             Trailer = offer.trailerType; ContractModifier = offer.modifier;
             ContractQualityBonus = Mathf.Max(0f, offer.qualityBonus);
