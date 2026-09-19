@@ -11,7 +11,7 @@ namespace UltimateTruckEmpire.Company
     {
         public string id;
         public string model;
-        public TrailerType type = TrailerType.Curtainsider;
+        public UltimateTruckEmpire.Gameplay.TrailerType type = UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider;
         public float purchasePrice;
         public float condition = 100f;
         public bool available = true;
@@ -24,7 +24,7 @@ namespace UltimateTruckEmpire.Company
     /// <summary>
     /// Persistent trailer ownership and assignment. Contract trailer types use the
     /// Gameplay catalogue; this manager is the single mapping point to physical
-    /// Truck.TrailerType values, avoiding the project's two TrailerType enums.
+    /// Truck.UltimateTruckEmpire.Gameplay.TrailerType values, avoiding the project's two UltimateTruckEmpire.Gameplay.TrailerType enums.
     /// </summary>
     public sealed class TrailerFleetManager : MonoBehaviour
     {
@@ -43,7 +43,7 @@ namespace UltimateTruckEmpire.Company
 
         public FleetTrailerData Find(string id) => trailers.Find(t => t != null && t.id == id);
 
-        public FleetTrailerData FindAvailableFor(TrailerType type)
+        public FleetTrailerData FindAvailableFor(UltimateTruckEmpire.Gameplay.TrailerType type)
         {
             foreach (var trailer in trailers)
                 if (trailer != null && trailer.available && trailer.type == type)
@@ -63,7 +63,7 @@ namespace UltimateTruckEmpire.Company
         public FleetTrailerData EnsureStarterTrailer()
         {
             if (trailers.Count > 0) return trailers[0];
-            return AddTrailer("TRL-" + nextId++, "UTE Curtainsider 30T", TrailerType.Curtainsider, 95000f);
+            return AddTrailer("TRL-" + nextId++, "UTE Curtainsider 30T", UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider, 95000f);
         }
 
         public void EnsureStarterFleet()
@@ -71,27 +71,27 @@ namespace UltimateTruckEmpire.Company
             EnsureStarterTrailer();
             // Provide a small, useful starting fleet so the contract system can
             // actually exercise trailer compatibility from the first session.
-            EnsureOwnedType(TrailerType.Box, "UTE Box 30T", 110000f);
-            EnsureOwnedType(TrailerType.Refrigerated, "UTE Reefer 28T", 165000f);
-            EnsureOwnedType(TrailerType.Flatbed, "UTE Flatbed 32T", 125000f);
-            EnsureOwnedType(TrailerType.Tanker, "UTE Tanker 30T", 180000f);
-            EnsureOwnedType(TrailerType.Lowboy, "UTE Lowboy 40T", 210000f);
+            EnsureOwnedType(UltimateTruckEmpire.Gameplay.TrailerType.Box, "UTE Box 30T", 110000f);
+            EnsureOwnedType(UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated, "UTE Reefer 28T", 165000f);
+            EnsureOwnedType(UltimateTruckEmpire.Gameplay.TrailerType.Flatbed, "UTE Flatbed 32T", 125000f);
+            EnsureOwnedType(UltimateTruckEmpire.Gameplay.TrailerType.Tanker, "UTE Tanker 30T", 180000f);
+            EnsureOwnedType(UltimateTruckEmpire.Gameplay.TrailerType.Lowboy, "UTE Lowboy 40T", 210000f);
         }
 
-        private void EnsureOwnedType(TrailerType type, string model, float price)
+        private void EnsureOwnedType(UltimateTruckEmpire.Gameplay.TrailerType type, string model, float price)
         {
             if (FindAny(type) != null) return;
             AddTrailer("TRL-" + nextId++, model, type, price);
         }
 
-        private FleetTrailerData FindAny(TrailerType type)
+        private FleetTrailerData FindAny(UltimateTruckEmpire.Gameplay.TrailerType type)
         {
             foreach (var trailer in trailers)
                 if (trailer != null && trailer.type == type) return trailer;
             return null;
         }
 
-        private FleetTrailerData AddTrailer(string id, string model, TrailerType type, float price)
+        private FleetTrailerData AddTrailer(string id, string model, UltimateTruckEmpire.Gameplay.TrailerType type, float price)
         {
             var trailer = new FleetTrailerData {
                 id = id, model = model, type = type, purchasePrice = Mathf.Max(0f, price),
@@ -101,7 +101,7 @@ namespace UltimateTruckEmpire.Company
             return trailer;
         }
 
-        public bool AssignForContract(string truckId, string contractId, TrailerType type)
+        public bool AssignForContract(string truckId, string contractId, UltimateTruckEmpire.Gameplay.TrailerType type)
         {
             var truck = FleetManager.Instance?.Find(truckId);
             if (truck == null) return false;
@@ -133,7 +133,7 @@ namespace UltimateTruckEmpire.Company
             return true;
         }
 
-        public bool BindPlayerTrailer(string truckId, TrailerType type)
+        public bool BindPlayerTrailer(string truckId, UltimateTruckEmpire.Gameplay.TrailerType type)
         {
             if (string.IsNullOrWhiteSpace(truckId)) return false;
             var current = FindAssignedToTruck(truckId);
@@ -150,7 +150,7 @@ namespace UltimateTruckEmpire.Company
             return true;
         }
 
-        public bool IsCompatible(string truckId, TrailerType type)
+        public bool IsCompatible(string truckId, UltimateTruckEmpire.Gameplay.TrailerType type)
         {
             var assigned = FindAssignedToTruck(truckId);
             return assigned != null && assigned.type == type;
@@ -194,17 +194,17 @@ namespace UltimateTruckEmpire.Company
             return controller;
         }
 
-        public static UltimateTruckEmpire.Truck.TrailerType ToPhysicalType(TrailerType type)
+        public static UltimateTruckEmpire.Truck.UltimateTruckEmpire.Gameplay.TrailerType ToPhysicalType(UltimateTruckEmpire.Gameplay.TrailerType type)
         {
             switch (type)
             {
-                case TrailerType.Refrigerated: return UltimateTruckEmpire.Truck.TrailerType.Refrigerated;
-                case TrailerType.Flatbed: return UltimateTruckEmpire.Truck.TrailerType.Flatbed;
-                case TrailerType.Tanker: return UltimateTruckEmpire.Truck.TrailerType.Tanker;
-                case TrailerType.Lowboy: return UltimateTruckEmpire.Truck.TrailerType.HeavyHaul;
-                case TrailerType.Box:
-                case TrailerType.Curtainsider:
-                default: return UltimateTruckEmpire.Truck.TrailerType.DryVan;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated: return UltimateTruckEmpire.Truck.UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Flatbed: return UltimateTruckEmpire.Truck.UltimateTruckEmpire.Gameplay.TrailerType.Flatbed;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Tanker: return UltimateTruckEmpire.Truck.UltimateTruckEmpire.Gameplay.TrailerType.Tanker;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Lowboy: return UltimateTruckEmpire.Truck.UltimateTruckEmpire.Gameplay.TrailerType.HeavyHaul;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Box:
+                case UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider:
+                default: return UltimateTruckEmpire.Truck.UltimateTruckEmpire.Gameplay.TrailerType.DryVan;
             }
         }
     }
