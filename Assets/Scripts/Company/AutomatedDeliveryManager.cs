@@ -97,10 +97,16 @@ namespace UltimateTruckEmpire.Company
             if (truck.capacityTons < offer.weightTons || !truck.available || !DriverManager.Instance.CanDispatch(driver)) return null;
             float speed = 48f + DriverManager.Instance.GetPerformance(driver) * .45f;
             var delivery = new AutomatedDelivery { id = "JOB-" + nextId++, truckId = truck.id, driverId = driver.id, cargo = offer.cargo, cargoId = offer.cargoId, origin = offer.pickup, destination = offer.destination, trailerType = offer.trailerType, modifier = offer.modifier, qualityBonus = offer.qualityBonus, qualityPenalty = offer.qualityPenalty, reward = offer.reward, distanceKm = offer.distanceKm, cargoWeightTons = offer.weightTons, remainingKm = offer.distanceKm, etaHours = Mathf.Max(.25f, offer.distanceKm / speed), active = true };
-            if (!FleetManager.Instance.Assign(truck.id, driver.id, delivery.id)) return null;
+            if (TrailerFleetManager.Instance == null || !TrailerFleetManager.Instance.AssignForContract(truck.id, delivery.id, offer.trailerType)) return null;
+            if (!FleetManager.Instance.Assign(truck.id, driver.id, delivery.id))
+            {
+                TrailerFleetManager.Instance.Release(truck.id);
+                return null;
+            }
             if (!DriverManager.Instance.CanDispatch(driver))
             {
                 FleetManager.Instance.Release(truck.id);
+                TrailerFleetManager.Instance.Release(truck.id);
                 return null;
             }
             DriverManager.Instance.BeginDelivery(driver);
@@ -155,6 +161,7 @@ namespace UltimateTruckEmpire.Company
             FinanceManager.Instance?.RecordDelivery(payment, fuelCost, payrollCost);
 
             FleetManager.Instance?.Release(job.truckId);
+            TrailerFleetManager.Instance?.Release(job.truckId);
             DriverManager.Instance?.CompleteDelivery(driver, job.distanceKm, Mathf.RoundToInt(xp));
             MissionManager.Instance?.NotifyDeliveryComplete();
             ContractMarket.Instance?.Refresh();
