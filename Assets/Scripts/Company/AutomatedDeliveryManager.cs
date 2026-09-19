@@ -9,7 +9,7 @@ namespace UltimateTruckEmpire.Company
     public sealed class AutomatedDelivery
     {
         public string id; public string truckId; public string driverId; public string cargo; public string origin; public string destination;
-        public float reward; public float distanceKm; public float remainingKm; public float elapsedHours; public float etaHours; public bool active; public bool completed;
+        public float reward; public float distanceKm; public float cargoWeightTons; public float remainingKm; public float elapsedHours; public float etaHours; public bool active; public bool completed;
     }
 
     public sealed class AutomatedDeliveryManager : MonoBehaviour
@@ -35,7 +35,7 @@ namespace UltimateTruckEmpire.Company
             if (truck == null || driver == null || offer == null || FleetManager.Instance == null || DriverManager.Instance == null) return null;
             if (truck.capacityTons < offer.weightTons || !truck.available || !DriverManager.Instance.CanDispatch(driver)) return null;
             float speed = 48f + DriverManager.Instance.GetPerformance(driver) * .45f;
-            var delivery = new AutomatedDelivery { id = "JOB-" + nextId++, truckId = truck.id, driverId = driver.id, cargo = offer.cargo, origin = offer.pickup, destination = offer.destination, reward = offer.reward, distanceKm = offer.distanceKm, remainingKm = offer.distanceKm, etaHours = Mathf.Max(.25f, offer.distanceKm / speed), active = true };
+            var delivery = new AutomatedDelivery { id = "JOB-" + nextId++, truckId = truck.id, driverId = driver.id, cargo = offer.cargo, origin = offer.pickup, destination = offer.destination, reward = offer.reward, distanceKm = offer.distanceKm, cargoWeightTons = offer.weightTons, remainingKm = offer.distanceKm, etaHours = Mathf.Max(.25f, offer.distanceKm / speed), active = true };
             if (!FleetManager.Instance.Assign(truck.id, driver.id, delivery.id)) return null;
             if (!DriverManager.Instance.CanDispatch(driver))
             {
@@ -69,7 +69,7 @@ namespace UltimateTruckEmpire.Company
             float fuelBefore = truck?.fuel ?? 0f;
 
             if (truck != null)
-                FleetManager.Instance?.ApplyTripWear(job.truckId, job.distanceKm, 0f);
+                FleetManager.Instance?.ApplyTripWear(job.truckId, job.distanceKm, job.cargoWeightTons);
 
             float fuelLitres = Mathf.Max(0f, fuelBefore - (truck?.fuel ?? fuelBefore));
             float payment = job.reward + bonus;
