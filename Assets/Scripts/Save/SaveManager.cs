@@ -49,7 +49,8 @@ namespace UltimateTruckEmpire.Save
             if (game == null) return;
             try
             {
-                var data = new SaveData {\n                    saveVersion = CurrentSaveVersion,
+                var data = new SaveData {
+                    saveVersion = CurrentSaveVersion,
                     money = game.Money,
                     xp = game.PlayerXp,
                     company = CompanyManager.Instance?.Data,
