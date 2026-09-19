@@ -40,6 +40,7 @@ namespace UltimateTruckEmpire.Save
             public int completedContracts;
             public string activeTruckId;
             public AutomatedDelivery[] automatedDeliveries;
+            public SupplyChainSaveState[] supplyChain;
             public bool hasPlayerTransform;
             public Vector3 playerPosition;
             public Quaternion playerRotation;
@@ -78,14 +79,19 @@ namespace UltimateTruckEmpire.Save
                         trailerType = DeliveryManager.Instance.Trailer,
                         modifier = DeliveryManager.Instance.ContractModifier,
                         qualityBonus = DeliveryManager.Instance.ContractQualityBonus,
-                        qualityPenalty = DeliveryManager.Instance.ContractQualityPenalty
+                        qualityPenalty = DeliveryManager.Instance.ContractQualityPenalty,
+                        originIndustryId = DeliveryManager.Instance.ActiveOriginIndustryId,
+                        destinationIndustryId = DeliveryManager.Instance.ActiveDestinationIndustryId,
+                        customerName = DeliveryManager.Instance.ActiveCustomerName,
+                        supplyChainRouteId = ""
                     } : null,
                     completedContracts = DeliveryManager.Instance?.CompletedContracts ?? 0,
                     activeTruckId = FleetManager.Instance?.ActiveTruck?.id ?? "",
                     hasPlayerTransform = TryGetPlayerTransform(out Vector3 playerPosition, out Quaternion playerRotation),
                     playerPosition = playerPosition,
                     playerRotation = playerRotation,
-                    automatedDeliveries = AutomatedDeliveryManager.Instance?.CaptureState()
+                    automatedDeliveries = AutomatedDeliveryManager.Instance?.CaptureState(),
+                    supplyChain = SupplyChainManager.Instance?.CaptureState()
                 };
                 string directory = Application.persistentDataPath;
                 Directory.CreateDirectory(directory);
@@ -190,6 +196,7 @@ namespace UltimateTruckEmpire.Save
                 }
                 DeliveryManager.Instance?.Restore(data.contractAccepted, data.cargoLoaded, data.activeContract, data.completedContracts);
                 AutomatedDeliveryManager.Instance?.RestoreState(data.automatedDeliveries);
+                SupplyChainManager.Instance?.RestoreState(data.supplyChain);
             }
             catch (System.Exception ex)
             {
