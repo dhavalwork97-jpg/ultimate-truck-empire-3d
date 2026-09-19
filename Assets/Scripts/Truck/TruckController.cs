@@ -1,4 +1,5 @@
 using UnityEngine;
+using UltimateTruckEmpire.Company;
 
 namespace UltimateTruckEmpire.Truck
 {
@@ -47,6 +48,32 @@ namespace UltimateTruckEmpire.Truck
         public float CruiseSpeedKph => cruiseSpeedKph;
         public bool LimiterActive { get; private set; }
         public bool Reversing => Gear == GearState.Reverse;
+        public float FuelCapacity { get; private set; } = 100f;
+        public float FuelEfficiency { get; private set; } = 3.2f;
+        public float Condition { get; private set; } = 100f;
+        public string FleetTruckId { get; private set; } = "";
+
+        public void ApplyFleetConfiguration(FleetTruckData truck)
+        {
+            if (truck == null) return;
+
+            FleetTruckId = truck.id ?? "";
+            FuelCapacity = Mathf.Max(1f, truck.fuelCapacity);
+            Fuel = Mathf.Clamp(truck.fuel, 0f, FuelCapacity);
+            FuelEfficiency = Mathf.Max(0.1f, truck.fuelEfficiency);
+            Condition = Mathf.Clamp(truck.condition, 0f, 100f);
+
+            // 300 HP is the baseline for the existing chassis tuning.
+            motorTorque = Mathf.Max(800f, 2200f * (truck.enginePower / 300f));
+            maxForwardKph = Mathf.Max(30f, truck.maxSpeedKph);
+        }
+
+        public float GetFuelLitres() => Fuel;
+
+        public void SetFleetFuel(float litres)
+        {
+            Fuel = Mathf.Clamp(litres, 0f, FuelCapacity);
+        }
 
         public string GearLabel
         {
@@ -223,7 +250,7 @@ namespace UltimateTruckEmpire.Truck
         {
             if (!engineRunning) return;
             if (Mathf.Abs(throttleInput) > 0.1f || CruiseActive)
-                Fuel = Mathf.Max(0f, Fuel - dt * (0.0015f + SpeedKph * 0.00002f));
+                Fuel = Mathf.Max(0f, Fuel - dt * (0.0015f + SpeedKph * 0.00002f) * (3.2f / FuelEfficiency));
             if (Fuel <= 0f) { engineRunning = false; CruiseActive = false; }
         }
 

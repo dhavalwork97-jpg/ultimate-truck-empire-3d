@@ -35,6 +35,7 @@ namespace UltimateTruckEmpire.Company
     {
         public static FleetManager Instance { get; private set; }
         public IReadOnlyList<FleetTruckData> Trucks => trucks;
+        public FleetTruckData ActiveTruck { get; private set; }
 
         private readonly List<FleetTruckData> trucks = new();
         private int nextId = 1;
@@ -119,10 +120,38 @@ namespace UltimateTruckEmpire.Company
             };
 
             trucks.Add(truck);
+            if (ActiveTruck == null)
+                ActiveTruck = truck;
             return truck;
         }
 
         public FleetTruckData Find(string id) => trucks.Find(t => t != null && t.id == id);
+
+        public bool SetActiveTruck(string truckId)
+        {
+            var truck = Find(truckId);
+            if (truck == null || !truck.available) return false;
+            ActiveTruck = truck;
+            return true;
+        }
+
+        public FleetTruckData EnsureActiveTruck()
+        {
+            if (ActiveTruck != null && trucks.Contains(ActiveTruck) && ActiveTruck.available)
+                return ActiveTruck;
+
+            foreach (var truck in trucks)
+            {
+                if (truck != null && truck.available)
+                {
+                    ActiveTruck = truck;
+                    return truck;
+                }
+            }
+
+            ActiveTruck = null;
+            return null;
+        }
 
         public bool Assign(string truckId, string driverId, string contractId)
         {
@@ -265,6 +294,7 @@ namespace UltimateTruckEmpire.Company
             if (saved == null) return;
 
             trucks.AddRange(saved);
+            ActiveTruck = null;
             nextId = 1;
 
             foreach (var truck in trucks)
@@ -291,6 +321,8 @@ namespace UltimateTruckEmpire.Company
                 if (int.TryParse(truck.id?.Replace("TRK-", ""), out int n))
                     nextId = Mathf.Max(nextId, n + 1);
             }
+
+            EnsureActiveTruck();
         }
     }
 }
