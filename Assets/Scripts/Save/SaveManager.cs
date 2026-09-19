@@ -21,7 +21,7 @@ namespace UltimateTruckEmpire.Save
 
         private const string FileName = "ute_save.json";
         private const string BackupFileName = "ute_save.json.bak";
-        private const int CurrentSaveVersion = 2;
+        private const int CurrentSaveVersion = 3;
 
         [System.Serializable]
         private sealed class SaveData
@@ -41,6 +41,7 @@ namespace UltimateTruckEmpire.Save
             public string activeTruckId;
             public AutomatedDelivery[] automatedDeliveries;
             public SupplyChainSaveState[] supplyChain;
+            public FuelPriceRegionState[] fuelPrices;
             public bool hasPlayerTransform;
             public Vector3 playerPosition;
             public Quaternion playerRotation;
@@ -91,7 +92,8 @@ namespace UltimateTruckEmpire.Save
                     playerPosition = playerPosition,
                     playerRotation = playerRotation,
                     automatedDeliveries = AutomatedDeliveryManager.Instance?.CaptureState(),
-                    supplyChain = SupplyChainManager.Instance?.CaptureState()
+                    supplyChain = SupplyChainManager.Instance?.CaptureState(),
+                    fuelPrices = FuelPriceManager.Instance?.CaptureState()
                 };
                 string directory = Application.persistentDataPath;
                 Directory.CreateDirectory(directory);
@@ -197,6 +199,7 @@ namespace UltimateTruckEmpire.Save
                 DeliveryManager.Instance?.Restore(data.contractAccepted, data.cargoLoaded, data.activeContract, data.completedContracts);
                 AutomatedDeliveryManager.Instance?.RestoreState(data.automatedDeliveries);
                 SupplyChainManager.Instance?.RestoreState(data.supplyChain);
+                FuelPriceManager.Instance?.RestoreState(data.fuelPrices);
             }
             catch (System.Exception ex)
             {

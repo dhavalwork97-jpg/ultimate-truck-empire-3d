@@ -256,7 +256,23 @@ namespace UltimateTruckEmpire.Company
             return EconomyConfig.GetRepairCostPerConditionPoint(truck?.maintenanceCostPerKm ?? 0f);
         }
 
-        public float GetFuelPricePerLitre() => EconomyConfig.FuelPricePerLitre;
+        public float GetFuelPricePerLitre() => FuelPriceManager.Instance != null ? FuelPriceManager.Instance.GetPricePerLitre("Ahmedabad") : EconomyConfig.FuelPricePerLitre;
+
+        public float GetFuelPricePerLitre(string region) => FuelPriceManager.Instance != null ? FuelPriceManager.Instance.GetPricePerLitre(region) : EconomyConfig.FuelPricePerLitre;
+
+        public bool RefuelAtRegion(string truckId, string region, float amount)
+        {
+            var truck = Find(truckId);
+            var game = Core.GameManager.Instance;
+            if (truck == null || game == null || amount <= 0f) return false;
+            float litres = Mathf.Min(amount, Mathf.Max(0f, truck.fuelCapacity - truck.fuel));
+            if (litres <= 0f) return false;
+            float cost = litres * GetFuelPricePerLitre(region);
+            if (!game.TrySpendMoney(cost)) return false;
+            truck.fuel += litres;
+            FinanceManager.Instance?.RecordFuelExpense(cost);
+            return true;
+        }
 
         public void ApplyTripWear(string truckId, float distanceKm, float cargoWeightTons, bool consumeFuel = true)
         {
