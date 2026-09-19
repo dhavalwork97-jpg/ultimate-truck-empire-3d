@@ -71,7 +71,12 @@ namespace UltimateTruckEmpire.Save
                         distanceKm = DeliveryManager.Instance.ContractDistanceKm,
                         difficulty = DeliveryManager.Instance.ContractDifficulty,
                         routeId = "PLAYER-AHM-VAD",
-                        routeTier = RouteTier.Local
+                        routeTier = RouteTier.Local,
+                        cargoId = DeliveryManager.Instance.CargoId,
+                        trailerType = DeliveryManager.Instance.Trailer,
+                        modifier = DeliveryManager.Instance.ContractModifier,
+                        qualityBonus = DeliveryManager.Instance.ContractQualityBonus,
+                        qualityPenalty = DeliveryManager.Instance.ContractQualityPenalty
                     } : null,
                     completedContracts = DeliveryManager.Instance?.CompletedContracts ?? 0,
                     activeTruckId = FleetManager.Instance?.ActiveTruck?.id ?? "",
