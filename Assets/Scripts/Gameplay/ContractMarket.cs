@@ -36,7 +36,7 @@ namespace UltimateTruckEmpire.Gameplay
                 if (to == from) to = Cities[(Array.IndexOf(Cities, from) + 1) % Cities.Length];
                 var distance = 80f + rng.Next(40, 650); var weight = 4f + (float)rng.NextDouble() * 24f;
                 var difficulty = Mathf.Clamp(Mathf.CeilToInt(weight / 8f), 1, 5);
-                offers.Add(new ContractOffer { id = "MKT-" + seed + "-" + i, cargo = Cargo[rng.Next(Cargo.Length)], pickup = from, destination = to, weightTons = weight, distanceKm = distance, difficulty = difficulty, reward = 18000f + distance * 95f + weight * 850f, xp = 80 + difficulty * 55 });
+                offers.Add(new ContractOffer { id = "MKT-" + seed + "-" + i, cargo = Cargo[rng.Next(Cargo.Length)], pickup = from, destination = to, weightTons = weight, distanceKm = distance, difficulty = difficulty, reward = EconomyConfig.MarketBaseReward + distance * EconomyConfig.MarketRewardPerKm + weight * EconomyConfig.MarketRewardPerTon, xp = EconomyConfig.MarketBaseXp + difficulty * EconomyConfig.MarketXpPerDifficulty });
             }
         }
 
@@ -50,8 +50,8 @@ namespace UltimateTruckEmpire.Gameplay
                 id = "PLAYER-" + level.ToString("000"), cargo = Cargo[(level - 1) % Cargo.Length],
                 pickup = "Ahmedabad Logistics Depot", destination = "Vadodara Factory Warehouse",
                 weightTons = weight, distanceKm = distance, difficulty = difficulty,
-                reward = 42000f + distance * 110f + weight * 900f + difficulty * 2500f,
-                xp = 120 + difficulty * 70
+                reward = EconomyConfig.PlayerBaseReward + distance * EconomyConfig.PlayerRewardPerKm + weight * EconomyConfig.PlayerRewardPerTon + difficulty * EconomyConfig.PlayerRewardPerDifficulty,
+                xp = EconomyConfig.PlayerBaseXp + difficulty * EconomyConfig.PlayerXpPerDifficulty
             };
         }
 
