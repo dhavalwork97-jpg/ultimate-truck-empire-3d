@@ -122,9 +122,9 @@ namespace UltimateTruckEmpire.UI
             if (starterButton != null) starterButton.gameObject.SetActive(!active);
             if (!active) { jobPanel.text = "No active contract.\nAccept the starter contract below."; return; }
             bool loaded = delivery.CargoLoaded; Transform targetPoint = loaded ? destinationPoint : pickupPoint; string targetName = loaded ? delivery.Destination : delivery.Pickup;
-            StringBuilder s = new StringBuilder(220); s.Append("Cargo      ").AppendLine(delivery.CargoName); s.Append("Route      ").Append(delivery.Pickup).Append("  →  ").AppendLine(delivery.Destination); s.Append("Status     ").AppendLine(loaded ? "LOADED - deliver to destination" : "EMPTY - drive to pickup"); s.Append("Next stop  ").AppendLine(targetName);
+            StringBuilder s = new StringBuilder(220); s.Append("Contract   ").AppendLine(delivery.ContractId); s.Append("Cargo      ").AppendLine(delivery.CargoName); s.Append("Route      ").Append(delivery.Pickup).Append("  →  ").AppendLine(delivery.Destination); s.Append("Status     ").AppendLine(loaded ? "LOADED - deliver to destination" : "EMPTY - drive to pickup"); s.Append("Next stop  ").AppendLine(targetName);
             if (targetPoint != null && truck != null) { Vector3 a = truck.transform.position; Vector3 b = targetPoint.position; a.y = 0f; b.y = 0f; s.Append("Distance   ").Append(Vector3.Distance(a, b).ToString("0")).AppendLine(" m"); }
-            s.Append("Reward     ₹").Append(delivery.Reward.ToString("0")); jobPanel.text = s.ToString();
+            s.Append("Reward     ₹").Append(delivery.Reward.ToString("0")).Append("  |  XP ").Append(delivery.RewardXp).Append("  |  Diff ").Append(delivery.ContractDifficulty); jobPanel.text = s.ToString();
         }
 
         private static RectTransform MakeBox(Transform parent, string boxName, Color color) { GameObject go = new GameObject(boxName); go.transform.SetParent(parent, false); Image image = go.AddComponent<Image>(); image.color = color; image.raycastTarget = false; return image.rectTransform; }
