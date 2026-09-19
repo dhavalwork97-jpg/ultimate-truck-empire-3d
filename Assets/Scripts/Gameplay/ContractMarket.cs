@@ -15,6 +15,10 @@ namespace UltimateTruckEmpire.Gameplay
         public ContractModifierRules.Modifier modifier = ContractModifierRules.Modifier.Standard;
         public float qualityBonus;
         public float qualityPenalty;
+        public string originIndustryId;
+        public string destinationIndustryId;
+        public string customerName;
+        public string supplyChainRouteId;
     }
 
     public sealed class ContractMarket : MonoBehaviour
@@ -35,11 +39,44 @@ namespace UltimateTruckEmpire.Gameplay
             offers.Clear();
             var rng = new System.Random(seed++);
             int completedContracts = DeliveryManager.Instance?.CompletedContracts ?? 0;
+            var supplyRoutes = SupplyChainManager.Instance?.GetUnlockedRoutes(completedContracts);
             var routes = RouteProgression.GetUnlockedRoutes(completedContracts);
-            if (routes.Count == 0) return;
+            if ((supplyRoutes == null || supplyRoutes.Count == 0) && routes.Count == 0) return;
 
             for (int i = 0; i < 8; i++)
             {
+                if (supplyRoutes != null && supplyRoutes.Count > 0)
+                {
+                    var supplyRoute = supplyRoutes[rng.Next(supplyRoutes.Count)];
+                    var origin = SupplyChainManager.Instance.GetIndustry(supplyRoute.originIndustryId);
+                    var destination = SupplyChainManager.Instance.GetIndustry(supplyRoute.destinationIndustryId);
+                    var cargo = CargoCatalog.Find(origin != null ? origin.cargoId : null) ?? CargoCatalog.PickFor(i + seed, supplyRoute.baseDifficulty);
+                    float distance = Mathf.Lerp(supplyRoute.minDistanceKm, supplyRoute.maxDistanceKm, (float)rng.NextDouble());
+                    float maxWeight = Mathf.Min(30f, Mathf.Min(cargo.maxWeightTons, SupplyChainManager.Instance.GetAvailableStock(supplyRoute)));
+                    float minWeight = Mathf.Min(Mathf.Max(cargo.minWeightTons, 4f), maxWeight);
+                    float weight = maxWeight > 0f ? Mathf.Lerp(minWeight, maxWeight, (float)rng.NextDouble()) : cargo.minWeightTons;
+                    int difficulty = Mathf.Clamp(supplyRoute.baseDifficulty + Mathf.CeilToInt(weight / 12f) - 1, 1, 5);
+                    var modifier = ContractModifierRules.GetModifier(cargo, difficulty, seed + i);
+                    float baseReward = (EconomyConfig.MarketBaseReward + distance * EconomyConfig.MarketRewardPerKm + weight * EconomyConfig.MarketRewardPerTon)
+                        * supplyRoute.baseRewardMultiplier * SupplyChainManager.Instance.GetRouteDemandMultiplier(supplyRoute);
+                    float bonus = baseReward * ContractModifierRules.GetBonusMultiplier(modifier);
+                    float penalty = baseReward * ContractModifierRules.GetPenaltyMultiplier(modifier);
+                    offers.Add(new ContractOffer
+                    {
+                        id = "SC-" + seed + "-" + i, cargo = cargo.displayName, cargoId = cargo.id,
+                        pickup = origin != null ? origin.name : supplyRoute.originIndustryId,
+                        destination = destination != null ? destination.name : supplyRoute.destinationIndustryId,
+                        weightTons = weight, distanceKm = distance, difficulty = difficulty,
+                        routeId = supplyRoute.id, routeTier = supplyRoute.tier, trailerType = cargo.trailer,
+                        modifier = modifier, qualityBonus = bonus * 0.10f, qualityPenalty = penalty,
+                        reward = baseReward, xp = EconomyConfig.MarketBaseXp + difficulty * EconomyConfig.MarketXpPerDifficulty,
+                        originIndustryId = supplyRoute.originIndustryId, destinationIndustryId = supplyRoute.destinationIndustryId,
+                        customerName = (destination != null ? destination.city : "Regional") + " Logistics",
+                        supplyChainRouteId = supplyRoute.id
+                    });
+                    continue;
+                }
+
                 var route = routes[rng.Next(routes.Count)];
                 float distance = Mathf.Lerp(route.minDistanceKm, route.maxDistanceKm, (float)rng.NextDouble());
                 var cargo = CargoCatalog.PickFor(i + seed, route.baseDifficulty);
@@ -69,7 +106,8 @@ namespace UltimateTruckEmpire.Gameplay
                     qualityBonus = bonus,
                     qualityPenalty = penalty,
                     reward = baseReward,
-                    xp = EconomyConfig.MarketBaseXp + difficulty * EconomyConfig.MarketXpPerDifficulty
+                    xp = EconomyConfig.MarketBaseXp + difficulty * EconomyConfig.MarketXpPerDifficulty,
+                    originIndustryId = "", destinationIndustryId = "", customerName = "Open Market", supplyChainRouteId = ""
                 });
             }
         }

@@ -12,6 +12,9 @@ namespace UltimateTruckEmpire.Gameplay
         public bool ContractAccepted { get; private set; } public bool CargoLoaded { get; private set; }
         public string ContractId { get; private set; } = "PLAYER-001"; public string CargoName { get; private set; } = "Industrial Machinery";
         public string CargoId { get; private set; } = "machinery";
+        public string ActiveOriginIndustryId { get; private set; } = "";
+        public string ActiveDestinationIndustryId { get; private set; } = "";
+        public string ActiveCustomerName { get; private set; } = "";
         public TrailerType Trailer { get; private set; } = TrailerType.Flatbed;
         public ContractModifierRules.Modifier ContractModifier { get; private set; } = ContractModifierRules.Modifier.Standard;
         public float ContractQualityBonus { get; private set; }
@@ -49,6 +52,9 @@ namespace UltimateTruckEmpire.Gameplay
             CargoName = string.IsNullOrWhiteSpace(offer.cargo) ? "General Freight" : offer.cargo;
             CargoId = string.IsNullOrWhiteSpace(offer.cargoId) ? "legacy-general" : offer.cargoId;
             Trailer = offer.trailerType;
+            ActiveOriginIndustryId = offer.originIndustryId ?? "";
+            ActiveDestinationIndustryId = offer.destinationIndustryId ?? "";
+            ActiveCustomerName = offer.customerName ?? "";
             ContractModifier = offer.modifier;
             ContractQualityBonus = Mathf.Max(0f, offer.qualityBonus);
             ContractQualityPenalty = Mathf.Max(0f, offer.qualityPenalty);
@@ -76,6 +82,9 @@ namespace UltimateTruckEmpire.Gameplay
         private void AcceptContractInternal(ContractOffer offer)
         {
             ContractId = offer.id; CargoName = string.IsNullOrWhiteSpace(offer.cargo) ? "General Freight" : offer.cargo;
+            ActiveOriginIndustryId = offer.originIndustryId ?? "";
+            ActiveDestinationIndustryId = offer.destinationIndustryId ?? "";
+            ActiveCustomerName = offer.customerName ?? "";
             CargoId = string.IsNullOrWhiteSpace(offer.cargoId) ? "legacy-general" : offer.cargoId;
             Trailer = offer.trailerType; ContractModifier = offer.modifier;
             ContractQualityBonus = Mathf.Max(0f, offer.qualityBonus);
@@ -187,6 +196,8 @@ namespace UltimateTruckEmpire.Gameplay
             float payment = Mathf.Max(0f, Reward + LastDeliveryBonus);
             FinanceManager.Instance?.RecordDelivery(payment, fuelUsed * (fleet?.GetFuelPricePerLitre() ?? EconomyConfig.FuelPricePerLitre), 0f);
             CompanyManager.Instance?.AddRevenue(payment); GameManager.Instance?.AddXp(RewardXp + evaluation.bonusXp);
+            SupplyChainManager.Instance?.RecordShipment(
+                ActiveOriginIndustryId, ActiveDestinationIndustryId, CargoId, ContractWeightTons);
             CompletedContracts++; TrailerFleetManager.Instance?.ReleaseContract(truck?.id ?? ""); ContractQualityBonus = 0f; ContractQualityPenalty = 0f; MissionManager.Instance?.NotifyDeliveryComplete(); ContractAccepted = false; CargoLoaded = false; hasPickupPosition = false; pickupFuelLitres = -1f;
             ContractMarket.Instance?.Refresh(); SaveManager.Instance?.Save();
         }
