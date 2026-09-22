@@ -4,7 +4,8 @@ using UnityEngine;
 using UltimateTruckEmpire.Core;
 using UltimateTruckEmpire.Company;
 using UltimateTruckEmpire.Gameplay;
-using UltimateTruckEmpire.Truck;\nusing UltimateTruckEmpire.Save;
+using UltimateTruckEmpire.Truck;
+using UltimateTruckEmpire.Save;
 
 namespace UltimateTruckEmpire.Gameplay.Toll
 {
