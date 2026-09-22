@@ -7,7 +7,7 @@ namespace UltimateTruckEmpire.Company
     [Serializable]
     public sealed class FinanceData
     {
-        public float revenue, fuelExpense, payrollExpense, maintenanceExpense, otherExpense, capitalExpense, debt;
+        public float revenue, fuelExpense, payrollExpense, maintenanceExpense, otherExpense, capitalExpense, tollExpense, debt;
         public float loanInterestRate = .08f;
         public float accruedInterest;
         public float lastInterestDay;
@@ -53,7 +53,7 @@ namespace UltimateTruckEmpire.Company
         }
 
         public void RecordFuelExpense(float amount) => Data.fuelExpense += Mathf.Max(0f, amount);
-        public void RecordMaintenance(float amount) => Data.maintenanceExpense += Mathf.Max(0f, amount);
+        public void RecordMaintenance(float amount) => Data.maintenanceExpense += Mathf.Max(0f, amount);\n        public void RecordTollExpense(float amount) => Data.tollExpense += Mathf.Max(0f, amount);
         public void RecordExpense(float amount) => Data.otherExpense += Mathf.Max(0f, amount);
         public void RecordCapitalExpense(float amount) => Data.capitalExpense += Mathf.Max(0f, amount);
 
