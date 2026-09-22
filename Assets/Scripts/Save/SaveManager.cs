@@ -3,6 +3,7 @@ using UnityEngine;
 using UltimateTruckEmpire.Core;
 using UltimateTruckEmpire.Company;
 using UltimateTruckEmpire.Gameplay;
+using UltimateTruckEmpire.Gameplay.Toll;
 using UltimateTruckEmpire.Truck;
 using System.Collections.Generic;
 
@@ -42,6 +43,7 @@ namespace UltimateTruckEmpire.Save
             public AutomatedDelivery[] automatedDeliveries;
             public SupplyChainSaveState[] supplyChain;
             public FuelPriceRegionState[] fuelPrices;
+            public TollSaveState tolls;
             public bool hasPlayerTransform;
             public Vector3 playerPosition;
             public Quaternion playerRotation;
@@ -93,7 +95,8 @@ namespace UltimateTruckEmpire.Save
                     playerRotation = playerRotation,
                     automatedDeliveries = AutomatedDeliveryManager.Instance?.CaptureState(),
                     supplyChain = SupplyChainManager.Instance?.CaptureState(),
-                    fuelPrices = FuelPriceManager.Instance?.CaptureState()
+                    fuelPrices = FuelPriceManager.Instance?.CaptureState(),
+                    tolls = TollPlazaManager.Instance?.CaptureState()
                 };
                 string directory = Application.persistentDataPath;
                 Directory.CreateDirectory(directory);
@@ -200,6 +203,7 @@ namespace UltimateTruckEmpire.Save
                 AutomatedDeliveryManager.Instance?.RestoreState(data.automatedDeliveries);
                 SupplyChainManager.Instance?.RestoreState(data.supplyChain);
                 FuelPriceManager.Instance?.RestoreState(data.fuelPrices);
+                TollPlazaManager.Instance?.RestoreState(data.tolls);
             }
             catch (System.Exception ex)
             {

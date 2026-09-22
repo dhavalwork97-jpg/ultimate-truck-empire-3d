@@ -9,6 +9,7 @@ using UltimateTruckEmpire.World;
 using UltimateTruckEmpire.Company;
 using UltimateTruckEmpire.Save;
 using UltimateTruckEmpire.UI;
+using UltimateTruckEmpire.Gameplay.Toll;
 
 namespace UltimateTruckEmpire.Bootstrap
 {
@@ -40,6 +41,7 @@ namespace UltimateTruckEmpire.Bootstrap
             if (TruckDealer.Instance == null) new GameObject("Truck Dealer").AddComponent<TruckDealer>();
             if (AutomatedDeliveryManager.Instance == null) new GameObject("AutomatedDeliveryManager").AddComponent<AutomatedDeliveryManager>();
             if (FinanceManager.Instance == null) new GameObject("FinanceManager").AddComponent<FinanceManager>();
+            if (TollPlazaManager.Instance == null) new GameObject("Toll Plaza Manager").AddComponent<TollPlazaManager>();
             if (AutoDispatcher.Instance == null) new GameObject("AutoDispatcher").AddComponent<AutoDispatcher>();
 
             var saveManager = FindFirstObjectByType<SaveManager>();
