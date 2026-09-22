@@ -29,6 +29,15 @@ namespace UltimateTruckEmpire.TrailerSystem
             return true;
         }
 
+        private Transform FindSocket(string socketName)
+        {
+            var transforms = GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < transforms.Length; i++)
+                if (transforms[i] != transform && string.Equals(transforms[i].name, socketName, System.StringComparison.OrdinalIgnoreCase))
+                    return transforms[i];
+            return null;
+        }
+
         public void Unload()
         {
             if (loadedInstance != null)
