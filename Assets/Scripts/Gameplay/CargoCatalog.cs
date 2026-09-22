@@ -10,11 +10,19 @@ namespace UltimateTruckEmpire.Gameplay
         Refrigerated = 2,
         Flatbed = 3,
         Tanker = 4,
-        Lowboy = 5
+        Lowboy = 5,
+        Container = 6,
+        GrainHopper = 7,
+        CementTanker = 8,
+        Dump = 9,
+        AgriculturalBulk = 10,
+        HeavyFlatbed = 11
     }
 
+    // Legacy runtime contract record. TrailerSystem.CargoDefinition is the new
+    // authoring asset used for reusable cargo data and trailer compatibility.
     [Serializable]
-    public sealed class CargoDefinition
+    public sealed class ContractCargoDefinition
     {
         public string id;
         public string displayName;
@@ -25,7 +33,7 @@ namespace UltimateTruckEmpire.Gameplay
         public bool temperatureSensitive;
         public bool highValue;
 
-        public CargoDefinition(string id, string displayName, TrailerType trailer, float minWeightTons, float maxWeightTons,
+        public ContractCargoDefinition(string id, string displayName, TrailerType trailer, float minWeightTons, float maxWeightTons,
             bool fragile = false, bool temperatureSensitive = false, bool highValue = false)
         {
             this.id = id;
@@ -39,41 +47,36 @@ namespace UltimateTruckEmpire.Gameplay
         }
     }
 
-    /// <summary>
-    /// Small, deterministic cargo/trailer catalogue used by the freight market.
-    /// It adds delivery choices without requiring a second progression or save system.
-    /// </summary>
     public static class CargoCatalog
     {
-        private static readonly CargoDefinition[] Definitions =
+        private static readonly ContractCargoDefinition[] Definitions =
         {
-            new CargoDefinition("electronics", "Electronics", TrailerType.Box, 6f, 18f, highValue: true),
-            new CargoDefinition("refrigerated-food", "Refrigerated Food", TrailerType.Refrigerated, 8f, 24f, temperatureSensitive: true),
-            new CargoDefinition("steel-coils", "Steel Coils", TrailerType.Flatbed, 12f, 30f),
-            new CargoDefinition("furniture", "Furniture", TrailerType.Curtainsider, 6f, 20f, fragile: true),
-            new CargoDefinition("machinery", "Industrial Machinery", TrailerType.Flatbed, 10f, 34f, highValue: true),
-            new CargoDefinition("agricultural-goods", "Agricultural Goods", TrailerType.Curtainsider, 5f, 22f),
-            new CargoDefinition("fuel-tank", "Fuel & Liquid Freight", TrailerType.Tanker, 14f, 32f, highValue: true),
-            new CargoDefinition("heavy-equipment", "Heavy Equipment", TrailerType.Lowboy, 18f, 42f, highValue: true)
+            new ContractCargoDefinition("electronics", "Electronics", TrailerType.Box, 6f, 18f, highValue: true),
+            new ContractCargoDefinition("refrigerated-food", "Refrigerated Food", TrailerType.Refrigerated, 8f, 24f, temperatureSensitive: true),
+            new ContractCargoDefinition("steel-coils", "Steel Coils", TrailerType.Flatbed, 12f, 30f),
+            new ContractCargoDefinition("furniture", "Furniture", TrailerType.Curtainsider, 6f, 20f, fragile: true),
+            new ContractCargoDefinition("machinery", "Industrial Machinery", TrailerType.Flatbed, 10f, 34f, highValue: true),
+            new ContractCargoDefinition("agricultural-goods", "Agricultural Goods", TrailerType.Curtainsider, 5f, 22f),
+            new ContractCargoDefinition("fuel-tank", "Fuel & Liquid Freight", TrailerType.Tanker, 14f, 32f, highValue: true),
+            new ContractCargoDefinition("heavy-equipment", "Heavy Equipment", TrailerType.Lowboy, 18f, 42f, highValue: true)
         };
 
         public static int Count => Definitions.Length;
 
-        public static CargoDefinition Find(string id)
+        public static ContractCargoDefinition Find(string id)
         {
             foreach (var definition in Definitions)
-                if (string.Equals(definition.id, id, StringComparison.OrdinalIgnoreCase))
-                    return definition;
+                if (string.Equals(definition.id, id, StringComparison.OrdinalIgnoreCase)) return definition;
             return null;
         }
 
-        public static CargoDefinition Get(int index)
+        public static ContractCargoDefinition Get(int index)
         {
             if (Definitions.Length == 0) return null;
             return Definitions[Mathf.Clamp(index, 0, Definitions.Length - 1)];
         }
 
-        public static CargoDefinition PickFor(int index, int difficulty)
+        public static ContractCargoDefinition PickFor(int index, int difficulty)
         {
             int offset = Mathf.Max(0, difficulty - 1) * 2;
             return Get((index + offset) % Definitions.Length);
@@ -82,16 +85,9 @@ namespace UltimateTruckEmpire.Gameplay
 
     public static class ContractModifierRules
     {
-        public enum Modifier
-        {
-            Standard = 0,
-            Fragile = 1,
-            Express = 2,
-            HighValue = 3,
-            TemperatureControlled = 4
-        }
+        public enum Modifier { Standard = 0, Fragile = 1, Express = 2, HighValue = 3, TemperatureControlled = 4 }
 
-        public static Modifier GetModifier(CargoDefinition cargo, int difficulty, int seed)
+        public static Modifier GetModifier(ContractCargoDefinition cargo, int difficulty, int seed)
         {
             if (cargo == null) return Modifier.Standard;
             if (cargo.temperatureSensitive) return Modifier.TemperatureControlled;
