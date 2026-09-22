@@ -1,3 +1,4 @@
+using UltimateTruckEmpire.Truck;
 using System.Collections.Generic;
 using UnityEngine;
 
