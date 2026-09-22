@@ -47,7 +47,7 @@ namespace UltimateTruckEmpire.Company
         {
             catalog.Clear();
             if (dataCatalog == null)
-                dataCatalog = Resources.Load<TrailerCatalogAsset>("TrailerSystem/Catalog/TrailerCatalog");
+                dataCatalog = TrailerCatalogRuntime.Catalog;
 
             if (dataCatalog != null && dataCatalog.trailers != null)
             {
