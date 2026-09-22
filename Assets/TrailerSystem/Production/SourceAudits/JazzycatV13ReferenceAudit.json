@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "sourcePack": {
+    "fileName": "trailers_and_cargo_pack_by_Jazzycat_v1.3_ats.7z",
+    "sourceType": "ATS game mod archive",
+    "intakeDate": "2026-09-22",
+    "technicalInspection": "completed",
+    "commercialClearance": "not-established",
+    "releaseDisposition": "reference-only",
+    "binarySourceImportAllowed": false,
+    "notes": [
+      "The supplied archive contains a base SCS package plus English/Russian definition packs, README files, and preview images.",
+      "The README attributes model/skin work to multiple third parties and identifies the pack as an ATS mod.",
+      "No commercial redistribution permission for this project was established from the supplied archive.",
+      "Texture replacement, retopology, logo removal, or format conversion does not by itself establish commercial rights."
+    ]
+  },
+  "inventory": {
+    "approximateFileCount": 742,
+    "ddsTextures": 169,
+    "materials": 250,
+    "tobjFiles": 172,
+    "pmdModels": 59,
+    "pmgModels": 59,
+    "pmcCollisionFiles": 32,
+    "englishCargoDefinitions": 38,
+    "previewImages": 3
+  },
+  "trailerFamiliesObserved": [
+    {"sourceId":"low_01","candidateCategories":["Lowboy"],"commercialStatus":"reference-only"},
+    {"sourceId":"low_02","candidateCategories":["Lowboy"],"commercialStatus":"reference-only"},
+    {"sourceId":"fontaine_magnitude","candidateCategories":["HeavyFlatbed","Flatbed"],"commercialStatus":"reference-only"},
+    {"sourceId":"fontaine_infinity","candidateCategories":["HeavyFlatbed","Flatbed"],"commercialStatus":"reference-only"},
+    {"sourceId":"cement_j1","candidateCategories":["CementTanker"],"commercialStatus":"reference-only"},
+    {"sourceId":"hopper_j1","candidateCategories":["GrainHopper"],"commercialStatus":"reference-only"},
+    {"sourceId":"foodcist_j1","candidateCategories":["ReferenceOnly"],"commercialStatus":"reference-only"},
+    {"sourceId":"cont_40jb","candidateCategories":["ContainerChassis"],"commercialStatus":"reference-only"},
+    {"sourceId":"cont_53jb","candidateCategories":["ContainerChassis"],"commercialStatus":"reference-only"},
+    {"sourceId":"wilson_grain_j","candidateCategories":["GrainHopper"],"commercialStatus":"reference-only"},
+    {"sourceId":"meridian_seed_express","candidateCategories":["ReferenceOnly"],"commercialStatus":"reference-only"}
+  ],
+  "cargoFamiliesObserved": [
+    "Challenger agricultural machinery",
+    "Case IH 600-series machinery",
+    "Case 9230",
+    "Excavator",
+    "Forklift",
+    "CAT TH514C",
+    "Compactor",
+    "JCB Fastrac",
+    "Wirtgen machinery",
+    "Case 70XT",
+    "New Holland machinery",
+    "Agricultural equipment",
+    "Large industrial cargo"
+  ],
+  "launchCategoryCoverage": {
+    "DryVan": "gap-in-supplied-pack",
+    "Refrigerated": "gap-in-supplied-pack",
+    "Flatbed": "reference-candidate",
+    "HeavyFlatbed": "reference-candidate",
+    "Lowboy": "reference-candidate",
+    "ContainerChassis": "reference-candidate",
+    "GrainHopper": "reference-candidate",
+    "CementTanker": "reference-candidate"
+  },
+  "productionRule": {
+    "allowedCommercialLicenseTypes": ["CC0","CommercialLicense","CustomPermission"],
+    "prohibitedForRelease": ["UnlicensedGameMods","DecompiledAssets","UnknownLicense"],
+    "requiredBeforeShipping": [
+      "verified rights for the exact source asset",
+      "production prefab with authored sockets",
+      "production collision",
+      "three intended LOD levels",
+      "mobile triangle/material/texture budget validation",
+      "catalog and launch-set validation"
+    ]
+  }
+}
