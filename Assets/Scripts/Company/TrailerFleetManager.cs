@@ -330,7 +330,7 @@ namespace UltimateTruckEmpire.Company
             if (definition != null)
             {
                 controller.ConfigureDefinition(definition, null, 0f, skin);
-                ReplaceTrailerVisual(truck.transform, definition);
+                ReplaceTrailerVisual(truck.transform, definition, skin);
             }
             else
             {
@@ -340,7 +340,7 @@ namespace UltimateTruckEmpire.Company
             return controller;
         }
 
-        private static void ReplaceTrailerVisual(Transform truck, TrailerDefinition definition)
+        private static void ReplaceTrailerVisual(Transform truck, TrailerDefinition definition, TrailerSkinDefinition skin)
         {
             if (truck == null || definition == null || definition.prefab == null) return;
 
@@ -359,7 +359,7 @@ namespace UltimateTruckEmpire.Company
 
             var loadedTrailer = instance.GetComponent<UltimateTruckEmpire.TrailerSystem.LoadedTrailer>();
             if (loadedTrailer != null)
-                loadedTrailer.ConfigureEmpty(definition, definition.defaultSkin);
+                loadedTrailer.ConfigureEmpty(definition, skin);
         }
 
     }
