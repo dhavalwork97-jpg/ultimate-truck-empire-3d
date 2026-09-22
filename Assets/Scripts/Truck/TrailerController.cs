@@ -15,6 +15,7 @@ namespace UltimateTruckEmpire.Truck
         public TrailerDefinition Definition { get; private set; }
         public CargoDefinition LoadedCargo { get; private set; }
         public Transform DockingPoint { get; private set; }
+        public TrailerPhysicsAttachment PhysicsAttachment => GetComponent<TrailerPhysicsAttachment>();
 
         public void SetAuthoredDockingPoint(Transform trailerRoot)
         {
@@ -23,13 +24,8 @@ namespace UltimateTruckEmpire.Truck
             if (socket == null)
             {
                 foreach (var child in trailerRoot.GetComponentsInChildren<Transform>(true))
-                {
                     if (child != trailerRoot && string.Equals(child.name, "Kingpin", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        socket = child;
-                        break;
-                    }
-                }
+                    { socket = child; break; }
             }
             DockingPoint = socket != null ? socket : trailerRoot;
         }
@@ -62,7 +58,13 @@ namespace UltimateTruckEmpire.Truck
             ApplyPresentation();
         }
 
-        public void Load(float weightTons) { CargoWeightTons = Mathf.Max(0f, weightTons); CargoLoaded = true; }
+        public void Load(float weightTons)
+        {
+            CargoWeightTons = Mathf.Max(0f, weightTons);
+            CargoLoaded = true;
+            SyncPhysicsMass();
+        }
+
         public void Unload()
         {
             var loadedTrailer = GetComponentInChildren<LoadedTrailer>(true);
@@ -70,6 +72,7 @@ namespace UltimateTruckEmpire.Truck
             CargoWeightTons = 0f;
             CargoLoaded = false;
             LoadedCargo = null;
+            SyncPhysicsMass();
         }
 
         /// <summary>Configures this physical trailer from the ScriptableObject data model.</summary>
@@ -85,14 +88,8 @@ namespace UltimateTruckEmpire.Truck
             }
 
             var loadedTrailer = GetComponentInChildren<LoadedTrailer>(true);
-            if (loadedTrailer == null)
-            {
-                loadedTrailer = gameObject.AddComponent<LoadedTrailer>();
-            }
+            if (loadedTrailer == null) loadedTrailer = gameObject.AddComponent<LoadedTrailer>();
 
-            // Validate and apply the data-driven visual/runtime state before mutating
-            // the controller's public state. A rejected cargo load therefore cannot
-            // leave Definition/CargoLoaded pointing at a configuration that failed.
             bool configured = cargo != null
                 ? loadedTrailer.Configure(definition, cargo, resolvedWeight, skin)
                 : loadedTrailer.ConfigureEmpty(definition, skin);
@@ -106,7 +103,15 @@ namespace UltimateTruckEmpire.Truck
             skinApplier.Initialize(definition, skin);
             ConfigureGameplayState(FromDefinitionType(definition.category), CargoWeightTons);
             Definition = definition;
+            SyncPhysicsMass();
             return true;
+        }
+
+        private void SyncPhysicsMass()
+        {
+            var attachment = PhysicsAttachment;
+            if (attachment == null || Definition == null) return;
+            attachment.SetPayloadWeightTons(CargoWeightTons, Definition.emptyWeightTons);
         }
 
         private static UltimateTruckEmpire.Gameplay.TrailerType FromDefinitionType(TrailerCategory category)
@@ -145,12 +150,10 @@ namespace UltimateTruckEmpire.Truck
             if (Definition != null) return;
             Transform visual = transform.Find("Dry Van Trailer") ?? transform.Find("Trailer Visual");
             if (visual == null)
-            {
                 foreach (var child in GetComponentsInChildren<Transform>())
                     if (child != transform && child.name.EndsWith(" Trailer")) { visual = child; break; }
-            }
             if (visual == null) return;
-            visual.name = Type.ToString() + " Trailer";
+            visual.name = Type + " Trailer";
             switch (Type)
             {
                 case TrailerType.Refrigerated: visual.localScale = new Vector3(2.75f, 2.9f, 4.4f); break;
