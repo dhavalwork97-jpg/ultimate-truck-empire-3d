@@ -310,13 +310,17 @@ namespace UltimateTruckEmpire.Company
                 definition = catalog.FindTrailer(assigned.definitionId);
                 if (definition != null && !string.IsNullOrWhiteSpace(assigned.skinId))
                 {
-                    for (int i = 0; i < definition.availableSkins.Length; i++)
+                    var availableSkins = definition.availableSkins;
+                    if (availableSkins != null)
                     {
-                        var candidate = definition.availableSkins[i];
-                        if (candidate != null && string.Equals(candidate.id, assigned.skinId, StringComparison.OrdinalIgnoreCase))
+                        for (int i = 0; i < availableSkins.Length; i++)
                         {
-                            skin = candidate;
-                            break;
+                            var candidate = availableSkins[i];
+                            if (candidate != null && string.Equals(candidate.id, assigned.skinId, StringComparison.OrdinalIgnoreCase))
+                            {
+                                skin = candidate;
+                                break;
+                            }
                         }
                     }
                 }
@@ -352,6 +356,10 @@ namespace UltimateTruckEmpire.Company
             instance.name = definition.displayName + " Trailer";
             instance.transform.localPosition = localPosition;
             instance.transform.localRotation = localRotation;
+
+            var loadedTrailer = instance.GetComponent<UltimateTruckEmpire.TrailerSystem.LoadedTrailer>();
+            if (loadedTrailer != null)
+                loadedTrailer.ConfigureEmpty(definition, definition.defaultSkin);
         }
 
     }
