@@ -9,7 +9,8 @@ using UltimateTruckEmpire.World;
 using UltimateTruckEmpire.Company;
 using UltimateTruckEmpire.Save;
 using UltimateTruckEmpire.UI;
-using UltimateTruckEmpire.Gameplay.Toll;\nusing UltimateTruckEmpire.Gameplay.RestArea;
+using UltimateTruckEmpire.Gameplay.Toll;
+using UltimateTruckEmpire.Gameplay.RestArea;
 
 namespace UltimateTruckEmpire.Bootstrap
 {
@@ -41,7 +42,8 @@ namespace UltimateTruckEmpire.Bootstrap
             if (TruckDealer.Instance == null) new GameObject("Truck Dealer").AddComponent<TruckDealer>();
             if (AutomatedDeliveryManager.Instance == null) new GameObject("AutomatedDeliveryManager").AddComponent<AutomatedDeliveryManager>();
             if (FinanceManager.Instance == null) new GameObject("FinanceManager").AddComponent<FinanceManager>();
-            if (TollPlazaManager.Instance == null) new GameObject("Toll Plaza Manager").AddComponent<TollPlazaManager>();\n            if (RestAreaManager.Instance == null) new GameObject("Rest Area Manager").AddComponent<RestAreaManager>();
+            if (TollPlazaManager.Instance == null) new GameObject("Toll Plaza Manager").AddComponent<TollPlazaManager>();
+            if (RestAreaManager.Instance == null) new GameObject("Rest Area Manager").AddComponent<RestAreaManager>();
             if (AutoDispatcher.Instance == null) new GameObject("AutoDispatcher").AddComponent<AutoDispatcher>();
 
             var saveManager = FindFirstObjectByType<SaveManager>();
@@ -75,13 +77,15 @@ namespace UltimateTruckEmpire.Bootstrap
             if (FindFirstObjectByType<DispatchAssignmentUI>() == null) new GameObject("Dispatch Assignment UI").AddComponent<DispatchAssignmentUI>();
             if (FindFirstObjectByType<TruckDealerUI>() == null) new GameObject("Truck Dealership UI").AddComponent<TruckDealerUI>();
             if (FindFirstObjectByType<GarageUI>() == null) new GameObject("Garage UI").AddComponent<GarageUI>();
-            if (FindFirstObjectByType<TrafficSpawner>() == null) new GameObject("Traffic Spawner").AddComponent<TrafficSpawner>();\n            if (FindFirstObjectByType<RestAreaUI>() == null) new GameObject("Rest Area UI").AddComponent<RestAreaUI>();
+            if (FindFirstObjectByType<TrafficSpawner>() == null) new GameObject("Traffic Spawner").AddComponent<TrafficSpawner>();
+            if (FindFirstObjectByType<RestAreaUI>() == null) new GameObject("Rest Area UI").AddComponent<RestAreaUI>();
         }
 
         private static void BuildWorld()
         {
             CreateLight();
-            WorldVisualBuilder.Build();\n            RestAreaWorldBuilder.Build();
+            WorldVisualBuilder.Build();
+            RestAreaWorldBuilder.Build();
 
             CreateDeliveryZone(new Vector3(-55, 0, 16), "Ahmedabad Logistics Depot", DeliveryTrigger.TriggerType.Pickup,
                                new Vector3(-13, 0, 9));
