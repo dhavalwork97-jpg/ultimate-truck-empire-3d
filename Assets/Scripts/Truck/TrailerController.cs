@@ -39,7 +39,7 @@ namespace UltimateTruckEmpire.Truck
         public void Load(float weightTons) { CargoWeightTons = Mathf.Max(0f, weightTons); CargoLoaded = true; }
         public void Unload()
         {
-            var loadedTrailer = GetComponent<LoadedTrailer>();
+            var loadedTrailer = GetComponentInChildren<LoadedTrailer>();
             if (loadedTrailer != null) loadedTrailer.Unload();
             CargoWeightTons = 0f;
             CargoLoaded = false;
@@ -65,7 +65,7 @@ namespace UltimateTruckEmpire.Truck
                 CargoLoaded = false;
             }
 
-            var loadedTrailer = GetComponent<LoadedTrailer>() ?? gameObject.AddComponent<LoadedTrailer>();
+            var loadedTrailer = GetComponentInChildren<LoadedTrailer>() ?? gameObject.AddComponent<LoadedTrailer>();
             if (cargo != null && !loadedTrailer.Configure(definition, cargo, CargoWeightTons, skin))
                 return false;
             if (cargo == null && !loadedTrailer.ConfigureEmpty(definition, skin))
@@ -110,6 +110,10 @@ namespace UltimateTruckEmpire.Truck
 
         private void ApplyPresentation()
         {
+            // Authored trailer definitions own their visual dimensions and naming.
+            // The procedural fallback presentation must never rescale those prefabs.
+            if (Definition != null) return;
+
             Transform visual = transform.Find("Dry Van Trailer");
             if (visual == null) visual = transform.Find("Trailer Visual");
             if (visual == null)
