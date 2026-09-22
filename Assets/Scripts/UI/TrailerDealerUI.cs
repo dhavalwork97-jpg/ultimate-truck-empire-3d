@@ -138,12 +138,34 @@ namespace UltimateTruckEmpire.UI
 
         private void Repair()
         {
+            var dealer = TrailerDealer.Instance;
             var fleet = TrailerFleetManager.Instance;
-            if (fleet == null || fleet.Trailers.Count == 0) return;
-            var trailer = fleet.Trailers[Mathf.Clamp(selected, 0, fleet.Trailers.Count - 1)];
+            if (dealer == null || fleet == null || dealer.Catalog.Count == 0) return;
+
+            var entry = dealer.Catalog[Mathf.Clamp(selected, 0, dealer.Catalog.Count - 1)];
+            FleetTrailerData trailer = null;
+
+            if (entry.definition != null)
+                trailer = fleet.FindByDefinitionId(entry.definition.id);
+
+            if (trailer == null)
+            {
+                foreach (var owned in fleet.Trailers)
+                {
+                    if (owned != null && owned.type == entry.type)
+                    {
+                        trailer = owned;
+                        break;
+                    }
+                }
+            }
+
             bool ok = trailer != null && fleet.Repair(trailer.id);
             Refresh();
-            if (details != null) details.text += ok ? "\n\nREPAIR COMPLETE" : "\n\nREPAIR FAILED — trailer may be on contract or cash is insufficient.";
+            if (details != null)
+                details.text += ok
+                    ? "\n\nREPAIR COMPLETE — " + trailer.id
+                    : "\n\nREPAIR FAILED — no matching owned trailer, trailer may be on contract, or cash is insufficient.";
         }
 
         private static Text AddText(Transform parent, string value, int size, TextAnchor anchor)
