@@ -41,6 +41,23 @@ namespace UltimateTruckEmpire.TrailerSystem
             return true;
         }
 
+        public bool ConfigureEmpty(TrailerDefinition trailerDefinition, TrailerSkinDefinition skinDefinition = null)
+        {
+            if (trailerDefinition == null) return false;
+            trailer = trailerDefinition;
+            cargo = null;
+            cargoWeightTons = 0f;
+            skin = skinDefinition != null ? skinDefinition : trailer.defaultSkin;
+
+            cargoModule = GetComponent<TrailerCargoModule>() ?? gameObject.AddComponent<TrailerCargoModule>();
+            cargoModule.Initialize(trailer);
+            cargoModule.Unload();
+
+            var applier = GetComponent<TrailerSkinApplier>() ?? gameObject.AddComponent<TrailerSkinApplier>();
+            applier.Initialize(trailer, skin);
+            return true;
+        }
+
         public void Unload()
         {
             if (cargoModule != null)
