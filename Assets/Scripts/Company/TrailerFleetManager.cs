@@ -305,8 +305,7 @@ namespace UltimateTruckEmpire.Company
             // remains deterministic on mobile and does not require a scene reference.
             TrailerDefinition definition = null;
             TrailerSkinDefinition skin = null;
-            var catalog = Resources.Load<UltimateTruckEmpire.TrailerSystem.TrailerCatalogAsset>(
-                "TrailerSystem/Catalog/TrailerCatalog");
+            var catalog = UltimateTruckEmpire.TrailerSystem.TrailerCatalogRuntime.Catalog;
             if (catalog != null && !string.IsNullOrWhiteSpace(assigned.definitionId))
             {
                 definition = catalog.FindTrailer(assigned.definitionId);
