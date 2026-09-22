@@ -4,7 +4,7 @@ using UltimateTruckEmpire.TrailerSystem;
 
 namespace UltimateTruckEmpire.Truck
 {
-    public enum TrailerType { DryVan, Refrigerated, Flatbed, Tanker, Container, HeavyHaul }
+    public enum TrailerType { DryVan, Refrigerated, Flatbed, HeavyFlatbed, Tanker, Container, HeavyHaul, GrainHopper, CementTanker, Dump, AgriculturalBulk }
 
     public sealed class TrailerController : MonoBehaviour
     {
@@ -138,6 +138,12 @@ namespace UltimateTruckEmpire.Truck
                 case UltimateTruckEmpire.Gameplay.TrailerType.Flatbed: return TrailerType.Flatbed;
                 case UltimateTruckEmpire.Gameplay.TrailerType.Tanker: return TrailerType.Tanker;
                 case UltimateTruckEmpire.Gameplay.TrailerType.Lowboy: return TrailerType.HeavyHaul;
+                case UltimateTruckEmpire.Gameplay.TrailerType.HeavyFlatbed: return TrailerType.HeavyFlatbed;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Container: return TrailerType.Container;
+                case UltimateTruckEmpire.Gameplay.TrailerType.GrainHopper: return TrailerType.GrainHopper;
+                case UltimateTruckEmpire.Gameplay.TrailerType.CementTanker: return TrailerType.CementTanker;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Dump: return TrailerType.Dump;
+                case UltimateTruckEmpire.Gameplay.TrailerType.AgriculturalBulk: return TrailerType.AgriculturalBulk;
                 case UltimateTruckEmpire.Gameplay.TrailerType.Box:
                 case UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider:
                 default: return TrailerType.DryVan;
@@ -152,6 +158,12 @@ namespace UltimateTruckEmpire.Truck
                 case TrailerType.Flatbed: return UltimateTruckEmpire.Gameplay.TrailerType.Flatbed;
                 case TrailerType.Tanker: return UltimateTruckEmpire.Gameplay.TrailerType.Tanker;
                 case TrailerType.HeavyHaul: return UltimateTruckEmpire.Gameplay.TrailerType.Lowboy;
+                case TrailerType.HeavyFlatbed: return UltimateTruckEmpire.Gameplay.TrailerType.HeavyFlatbed;
+                case TrailerType.Container: return UltimateTruckEmpire.Gameplay.TrailerType.Container;
+                case TrailerType.GrainHopper: return UltimateTruckEmpire.Gameplay.TrailerType.GrainHopper;
+                case TrailerType.CementTanker: return UltimateTruckEmpire.Gameplay.TrailerType.CementTanker;
+                case TrailerType.Dump: return UltimateTruckEmpire.Gameplay.TrailerType.Dump;
+                case TrailerType.AgriculturalBulk: return UltimateTruckEmpire.Gameplay.TrailerType.AgriculturalBulk;
                 case TrailerType.Container:
                 case TrailerType.DryVan:
                 default: return UltimateTruckEmpire.Gameplay.TrailerType.Box;
