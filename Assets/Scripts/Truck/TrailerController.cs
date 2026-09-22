@@ -164,7 +164,6 @@ namespace UltimateTruckEmpire.Truck
                 case TrailerType.CementTanker: return UltimateTruckEmpire.Gameplay.TrailerType.CementTanker;
                 case TrailerType.Dump: return UltimateTruckEmpire.Gameplay.TrailerType.Dump;
                 case TrailerType.AgriculturalBulk: return UltimateTruckEmpire.Gameplay.TrailerType.AgriculturalBulk;
-                case TrailerType.Container:
                 case TrailerType.DryVan:
                 default: return UltimateTruckEmpire.Gameplay.TrailerType.Box;
             }
