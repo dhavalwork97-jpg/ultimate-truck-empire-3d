@@ -22,11 +22,9 @@ namespace UltimateTruckEmpire.Truck
             if (trailerRoot == null) { EnsureDockingPoint(); return; }
             Transform socket = trailerRoot.Find("Sockets/Kingpin") ?? trailerRoot.Find("Kingpin");
             if (socket == null)
-            {
                 foreach (var child in trailerRoot.GetComponentsInChildren<Transform>(true))
                     if (child != trailerRoot && string.Equals(child.name, "Kingpin", System.StringComparison.OrdinalIgnoreCase))
                     { socket = child; break; }
-            }
             DockingPoint = socket != null ? socket : trailerRoot;
         }
 
@@ -67,7 +65,7 @@ namespace UltimateTruckEmpire.Truck
 
         public void Unload()
         {
-            var loadedTrailer = GetComponentInChildren<LoadedTrailer>(true);
+            var loadedTrailer = FindLoadedTrailer();
             if (loadedTrailer != null) loadedTrailer.Unload();
             CargoWeightTons = 0f;
             CargoLoaded = false;
@@ -75,7 +73,6 @@ namespace UltimateTruckEmpire.Truck
             SyncPhysicsMass();
         }
 
-        /// <summary>Configures this physical trailer from the ScriptableObject data model.</summary>
         public bool ConfigureDefinition(TrailerDefinition definition, CargoDefinition cargo = null, float weightTons = 0f, TrailerSkinDefinition skin = null)
         {
             if (definition == null) return false;
@@ -87,7 +84,7 @@ namespace UltimateTruckEmpire.Truck
                 resolvedWeight = TrailerCompatibility.GetAllowedWeight(definition, cargo, weightTons);
             }
 
-            var loadedTrailer = GetComponentInChildren<LoadedTrailer>(true);
+            var loadedTrailer = FindLoadedTrailer();
             if (loadedTrailer == null) loadedTrailer = gameObject.AddComponent<LoadedTrailer>();
 
             bool configured = cargo != null
@@ -99,12 +96,29 @@ namespace UltimateTruckEmpire.Truck
             LoadedCargo = cargo;
             CargoWeightTons = resolvedWeight;
             CargoLoaded = cargo != null;
-            var skinApplier = GetComponent<TrailerSkinApplier>() ?? gameObject.AddComponent<TrailerSkinApplier>();
+
+            var skinTarget = PhysicsAttachment?.AttachedTrailer != null
+                ? PhysicsAttachment.AttachedTrailer
+                : gameObject;
+            var skinApplier = skinTarget.GetComponent<TrailerSkinApplier>() ??
+                              skinTarget.AddComponent<TrailerSkinApplier>();
             skinApplier.Initialize(definition, skin);
+
             ConfigureGameplayState(FromDefinitionType(definition.category), CargoWeightTons);
             Definition = definition;
             SyncPhysicsMass();
             return true;
+        }
+
+        private LoadedTrailer FindLoadedTrailer()
+        {
+            var attached = PhysicsAttachment?.AttachedTrailer;
+            if (attached != null)
+            {
+                var loaded = attached.GetComponentInChildren<LoadedTrailer>(true);
+                if (loaded != null) return loaded;
+            }
+            return GetComponentInChildren<LoadedTrailer>(true);
         }
 
         private void SyncPhysicsMass()
