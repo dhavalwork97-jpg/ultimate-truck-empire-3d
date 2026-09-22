@@ -40,6 +40,7 @@ namespace UltimateTruckEmpire.Gameplay.RestArea
         private int bayIndex = -1;
         private Rigidbody playerBody;
         private TruckController playerTruck;
+        private RestAreaSaveState pendingRestore;
 
         private void Awake()
         {
@@ -50,10 +51,14 @@ namespace UltimateTruckEmpire.Gameplay.RestArea
 
         private void Update()
         {
+            if (!active && pendingRestore != null)
+                TryRestorePending();
+
             if (!active) return;
 
+            // TimeWeatherManager.timeScale is expressed as in-game hours per real second.
             float gameHours = Time.deltaTime * (TimeWeatherManager.Instance != null
-                ? Mathf.Max(0f, TimeWeatherManager.Instance.timeScale) : 0.08f) / 60f;
+                ? Mathf.Max(0f, TimeWeatherManager.Instance.timeScale) : 0.08f);
             if (gameHours <= 0f) return;
 
             remainingHours = Mathf.Max(0f, remainingHours - gameHours);
@@ -101,6 +106,7 @@ namespace UltimateTruckEmpire.Gameplay.RestArea
             float requestedHours = hours > 0f ? hours : CurrentArea.DefaultRestHours;
             requestedHours = Mathf.Clamp(requestedHours, CurrentArea.MinRestHours, CurrentArea.MaxRestHours);
             cost = CurrentArea.GetCost(requestedHours);
+
             if (cost > 0f && (GameManager.Instance == null || !GameManager.Instance.TrySpendMoney(cost)))
             {
                 StatusMessage = "Not enough cash for this rest stop.";
@@ -109,6 +115,7 @@ namespace UltimateTruckEmpire.Gameplay.RestArea
 
             if (!CurrentArea.TryReserveBay(out bayIndex))
             {
+                if (cost > 0f) GameManager.Instance?.AddMoney(cost);
                 StatusMessage = "All parking bays are occupied.";
                 return false;
             }
@@ -157,8 +164,9 @@ namespace UltimateTruckEmpire.Gameplay.RestArea
         public void CancelRest()
         {
             if (!active) return;
-            if (remainingHours < totalHours)
-                StatusMessage = "Rest ended early. Driver recovery is partial.";
+            StatusMessage = remainingHours < totalHours
+                ? "Rest ended early. Driver recovery is partial."
+                : "Rest ended.";
             FinishRest();
         }
 
@@ -179,6 +187,15 @@ namespace UltimateTruckEmpire.Gameplay.RestArea
         public void RestoreState(RestAreaSaveState saved)
         {
             if (saved == null || !saved.active) return;
+            pendingRestore = saved;
+            TryRestorePending();
+        }
+
+        private void TryRestorePending()
+        {
+            var saved = pendingRestore;
+            if (saved == null || active) return;
+
             var area = RestAreaZone.Find(saved.areaId);
             var driver = DriverManager.Instance?.Find(saved.driverId);
             if (area == null || driver == null || !area.CanUse) return;
@@ -186,8 +203,8 @@ namespace UltimateTruckEmpire.Gameplay.RestArea
             playerTruck = FindFirstObjectByType<TruckController>();
             playerBody = playerTruck != null ? playerTruck.GetComponent<Rigidbody>() : null;
             if (playerBody == null) return;
-
             if (!area.TryReserveSpecificBay(saved.bayIndex)) return;
+
             CurrentArea = area;
             CurrentDriver = driver;
             bayIndex = saved.bayIndex;
@@ -206,7 +223,9 @@ namespace UltimateTruckEmpire.Gameplay.RestArea
                 playerBody.linearVelocity = Vector3.zero;
                 playerBody.angularVelocity = Vector3.zero;
             }
+
             StatusMessage = active ? "Rest resumed from saved game." : "Rest complete.";
+            pendingRestore = null;
         }
 
         private static DriverData ResolvePlayerDriver()
