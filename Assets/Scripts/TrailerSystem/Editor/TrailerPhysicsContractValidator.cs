@@ -1,14 +1,10 @@
 #if UNITY_EDITOR
-using System.Collections.Generic;
+using System;
 using UnityEditor;
 using UnityEngine;
 
 namespace UltimateTruckEmpire.TrailerSystem.Editor
 {
-    /// <summary>
-    /// Validates the authored prefab contract required by the runtime kingpin
-    /// attachment system. It deliberately warns rather than auto-editing art.
-    /// </summary>
     public static class TrailerPhysicsContractValidator
     {
         [MenuItem("Ultimate Truck Empire/Trailer System/Validate Trailer Physics")]
@@ -40,7 +36,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 {
                     foreach (var child in root.GetComponentsInChildren<Transform>(true))
                     {
-                        if (child != root && string.Equals(child.name, "Kingpin", System.StringComparison.OrdinalIgnoreCase))
+                        if (child != root && string.Equals(child.name, "Kingpin", StringComparison.OrdinalIgnoreCase))
                         {
                             kingpin = child;
                             break;
