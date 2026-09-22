@@ -31,30 +31,28 @@ namespace UltimateTruckEmpire.TrailerSystem
             for (int r = 0; r < renderers.Length; r++)
             {
                 Renderer renderer = renderers[r];
-                var block = new MaterialPropertyBlock();
-                renderer.GetPropertyBlock(block);
+                var materials = renderer.sharedMaterials;
+                if (materials == null || materials.Length == 0) continue;
 
-                if (skin.materialOverride != null)
+                for (int slot = 0; slot < materials.Length; slot++)
                 {
-                    var materials = renderer.sharedMaterials;
-                    var replaced = new Material[materials.Length];
-                    for (int i = 0; i < replaced.Length; i++) replaced[i] = skin.materialOverride;
-                    renderer.sharedMaterials = replaced;
-                }
+                    MaterialPropertyBlock block = new MaterialPropertyBlock();
+                    renderer.GetPropertyBlock(block, slot);
 
-                for (int slot = 0; slot < renderer.sharedMaterials.Length; slot++)
-                {
+                    if (skin.materialOverride != null)
+                        renderer.sharedMaterials[slot] = skin.materialOverride;
+
                     Texture2D texture = skin.GetTexture(slot);
                     if (texture != null)
                     {
                         block.SetTexture("_BaseMap", texture);
                         block.SetTexture("_MainTex", texture);
                     }
+
                     block.SetColor("_BaseColor", skin.GetTint(slot));
                     block.SetColor("_Color", skin.GetTint(slot));
+                    renderer.SetPropertyBlock(block, slot);
                 }
-
-                renderer.SetPropertyBlock(block);
             }
         }
     }
