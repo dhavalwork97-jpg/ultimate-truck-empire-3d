@@ -18,9 +18,9 @@ namespace UltimateTruckEmpire.Company
         public static FinanceManager Instance { get; private set; }
         public FinanceData Data { get; private set; } = new();
 
-        public float OperatingProfit => Data.revenue - Data.fuelExpense - Data.payrollExpense - Data.maintenanceExpense - Data.otherExpense - Data.accruedInterest;
+        public float OperatingProfit => Data.revenue - Data.fuelExpense - Data.payrollExpense - Data.maintenanceExpense - Data.otherExpense - Data.tollExpense - Data.accruedInterest;
         public float NetProfit => OperatingProfit;
-        public float TotalOperatingExpenses => Data.fuelExpense + Data.payrollExpense + Data.maintenanceExpense + Data.otherExpense + Data.accruedInterest;
+        public float TotalOperatingExpenses => Data.fuelExpense + Data.payrollExpense + Data.maintenanceExpense + Data.otherExpense + Data.tollExpense + Data.accruedInterest;
         public float TotalExpenses => TotalOperatingExpenses + Data.capitalExpense;
 
         private void Awake()
