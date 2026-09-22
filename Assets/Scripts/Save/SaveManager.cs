@@ -2,7 +2,8 @@ using System.IO;
 using UnityEngine;
 using UltimateTruckEmpire.Core;
 using UltimateTruckEmpire.Company;
-using UltimateTruckEmpire.Gameplay;\nusing UltimateTruckEmpire.Gameplay.Toll;
+using UltimateTruckEmpire.Gameplay;
+using UltimateTruckEmpire.Gameplay.Toll;
 using UltimateTruckEmpire.Truck;
 using System.Collections.Generic;
 
@@ -41,7 +42,8 @@ namespace UltimateTruckEmpire.Save
             public string activeTruckId;
             public AutomatedDelivery[] automatedDeliveries;
             public SupplyChainSaveState[] supplyChain;
-            public FuelPriceRegionState[] fuelPrices;\n            public TollSaveState tolls;
+            public FuelPriceRegionState[] fuelPrices;
+            public TollSaveState tolls;
             public bool hasPlayerTransform;
             public Vector3 playerPosition;
             public Quaternion playerRotation;
@@ -93,7 +95,8 @@ namespace UltimateTruckEmpire.Save
                     playerRotation = playerRotation,
                     automatedDeliveries = AutomatedDeliveryManager.Instance?.CaptureState(),
                     supplyChain = SupplyChainManager.Instance?.CaptureState(),
-                    fuelPrices = FuelPriceManager.Instance?.CaptureState(),\n                    tolls = Toll.TollPlazaManager.Instance?.CaptureState()
+                    fuelPrices = FuelPriceManager.Instance?.CaptureState(),
+                    tolls = Toll.TollPlazaManager.Instance?.CaptureState()
                 };
                 string directory = Application.persistentDataPath;
                 Directory.CreateDirectory(directory);
@@ -199,7 +202,8 @@ namespace UltimateTruckEmpire.Save
                 DeliveryManager.Instance?.Restore(data.contractAccepted, data.cargoLoaded, data.activeContract, data.completedContracts);
                 AutomatedDeliveryManager.Instance?.RestoreState(data.automatedDeliveries);
                 SupplyChainManager.Instance?.RestoreState(data.supplyChain);
-                FuelPriceManager.Instance?.RestoreState(data.fuelPrices);\n                Toll.TollPlazaManager.Instance?.RestoreState(data.tolls);
+                FuelPriceManager.Instance?.RestoreState(data.fuelPrices);
+                Toll.TollPlazaManager.Instance?.RestoreState(data.tolls);
             }
             catch (System.Exception ex)
             {
