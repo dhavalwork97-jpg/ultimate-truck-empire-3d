@@ -81,6 +81,7 @@ namespace UltimateTruckEmpire.Bootstrap
             if (FindFirstObjectByType<GarageUI>() == null) new GameObject("Garage UI").AddComponent<GarageUI>();
             if (FindFirstObjectByType<TrafficSpawner>() == null) new GameObject("Traffic Spawner").AddComponent<TrafficSpawner>();
             if (FindFirstObjectByType<RestAreaUI>() == null) new GameObject("Rest Area UI").AddComponent<RestAreaUI>();
+            if (FindFirstObjectByType<MainMenuUI>() == null) new GameObject("Main Menu UI").AddComponent<MainMenuUI>();
         }
 
         private static void BuildWorld()
