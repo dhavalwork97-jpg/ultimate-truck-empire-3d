@@ -39,6 +39,7 @@ namespace UltimateTruckEmpire.Bootstrap
             if (DriverManager.Instance == null) new GameObject("DriverManager").AddComponent<DriverManager>();
             if (FleetManager.Instance == null) new GameObject("FleetManager").AddComponent<FleetManager>();
             if (TrailerFleetManager.Instance == null) new GameObject("TrailerFleetManager").AddComponent<TrailerFleetManager>();
+            if (TrailerDealer.Instance == null) new GameObject("Trailer Dealer").AddComponent<TrailerDealer>();
             if (TruckDealer.Instance == null) new GameObject("Truck Dealer").AddComponent<TruckDealer>();
             if (AutomatedDeliveryManager.Instance == null) new GameObject("AutomatedDeliveryManager").AddComponent<AutomatedDeliveryManager>();
             if (FinanceManager.Instance == null) new GameObject("FinanceManager").AddComponent<FinanceManager>();
@@ -76,6 +77,7 @@ namespace UltimateTruckEmpire.Bootstrap
             if (FindFirstObjectByType<ManagementActionUI>() == null) new GameObject("Management Actions").AddComponent<ManagementActionUI>();
             if (FindFirstObjectByType<DispatchAssignmentUI>() == null) new GameObject("Dispatch Assignment UI").AddComponent<DispatchAssignmentUI>();
             if (FindFirstObjectByType<TruckDealerUI>() == null) new GameObject("Truck Dealership UI").AddComponent<TruckDealerUI>();
+            if (FindFirstObjectByType<TrailerDealerUI>() == null) new GameObject("Trailer Dealership UI").AddComponent<TrailerDealerUI>();
             if (FindFirstObjectByType<GarageUI>() == null) new GameObject("Garage UI").AddComponent<GarageUI>();
             if (FindFirstObjectByType<TrafficSpawner>() == null) new GameObject("Traffic Spawner").AddComponent<TrafficSpawner>();
             if (FindFirstObjectByType<RestAreaUI>() == null) new GameObject("Rest Area UI").AddComponent<RestAreaUI>();
