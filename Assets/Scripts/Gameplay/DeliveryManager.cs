@@ -113,10 +113,7 @@ namespace UltimateTruckEmpire.Gameplay
             ContractAccepted = true;
         }
 
-        private TrailerCatalogAsset GetTrailerCatalog()
-        {
-            return Resources.Load<TrailerCatalogAsset>("TrailerSystem/Catalog/TrailerCatalog");
-        }
+        private TrailerCatalogAsset GetTrailerCatalog() => TrailerCatalogRuntime.Catalog;
 
         private bool ConfigureActiveTrailerFromContract(bool loadCargo)
         {
