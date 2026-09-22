@@ -81,7 +81,9 @@ namespace UltimateTruckEmpire.Company
         public FleetTrailerData EnsureStarterTrailer()
         {
             if (trailers.Count > 0) return trailers[0];
-            return AddTrailer("TRL-" + nextId++, "UTE Curtainsider 30T", UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider, 95000f);
+            var starter = AddTrailer("TRL-" + nextId++, "UTE Curtainsider 30T", UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider, 95000f, "dry-van");
+            starter.skinId = "plain-white";
+            return starter;
         }
 
         public void EnsureStarterFleet()
