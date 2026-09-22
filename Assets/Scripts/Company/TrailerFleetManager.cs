@@ -11,6 +11,8 @@ namespace UltimateTruckEmpire.Company
     {
         public string id;
         public string model;
+        public string definitionId = "";
+        public string skinId = "";
         public UltimateTruckEmpire.Gameplay.TrailerType type = UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider;
         public float purchasePrice;
         public float condition = 100f;
@@ -42,6 +44,17 @@ namespace UltimateTruckEmpire.Company
         }
 
         public FleetTrailerData Find(string id) => trailers.Find(t => t != null && t.id == id);
+
+        public FleetTrailerData FindByDefinitionId(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return null;
+            foreach (var trailer in trailers)
+                if (trailer != null && string.Equals(trailer.definitionId, id, StringComparison.OrdinalIgnoreCase))
+                    return trailer;
+            return null;
+        }
+
+        public bool OwnsDefinition(string definitionId) => FindByDefinitionId(definitionId) != null;
 
         public FleetTrailerData FindAvailableFor(UltimateTruckEmpire.Gameplay.TrailerType type, string forTruckId = null)
         {
@@ -91,10 +104,10 @@ namespace UltimateTruckEmpire.Company
             return null;
         }
 
-        private FleetTrailerData AddTrailer(string id, string model, UltimateTruckEmpire.Gameplay.TrailerType type, float price)
+        private FleetTrailerData AddTrailer(string id, string model, UltimateTruckEmpire.Gameplay.TrailerType type, float price, string definitionId = "")
         {
             var trailer = new FleetTrailerData {
-                id = id, model = model, type = type, purchasePrice = Mathf.Max(0f, price),
+                id = id, model = model, definitionId = definitionId ?? "", type = type, purchasePrice = Mathf.Max(0f, price),
                 condition = 100f, available = true
             };
             trailers.Add(trailer);
@@ -211,6 +224,40 @@ namespace UltimateTruckEmpire.Company
             return true;
         }
 
+        /// <summary>Purchase a trailer from the data-driven trailer definition.</summary>
+        public bool Purchase(UltimateTruckEmpire.TrailerSystem.TrailerDefinition definition)
+        {
+            var company = CompanyManager.Instance;
+            var game = Core.GameManager.Instance;
+            if (definition == null || company == null || !company.IsCompanyCreated || game == null) return false;
+            if (company.Data.level < definition.requiredCompanyLevel) return false;
+            if (OwnsDefinition(definition.id)) return false;
+            if (!game.TrySpendMoney(definition.purchasePrice)) return false;
+
+            AddTrailer("TRL-" + nextId++, definition.displayName, FromCategory(definition.category),
+                definition.purchasePrice, definition.id);
+            FinanceManager.Instance?.RecordCapitalExpense(definition.purchasePrice);
+            return true;
+        }
+
+        private static UltimateTruckEmpire.Gameplay.TrailerType FromCategory(
+            UltimateTruckEmpire.TrailerSystem.TrailerCategory category)
+        {
+            switch (category)
+            {
+                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.Refrigerated: return UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated;
+                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.Flatbed: return UltimateTruckEmpire.Gameplay.TrailerType.Flatbed;
+                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.HeavyFlatbed: return UltimateTruckEmpire.Gameplay.TrailerType.HeavyFlatbed;
+                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.Lowboy: return UltimateTruckEmpire.Gameplay.TrailerType.Lowboy;
+                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.ContainerChassis: return UltimateTruckEmpire.Gameplay.TrailerType.Container;
+                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.GrainHopper: return UltimateTruckEmpire.Gameplay.TrailerType.GrainHopper;
+                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.CementTanker: return UltimateTruckEmpire.Gameplay.TrailerType.CementTanker;
+                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.DumpTrailer: return UltimateTruckEmpire.Gameplay.TrailerType.Dump;
+                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.AgriculturalBulk: return UltimateTruckEmpire.Gameplay.TrailerType.AgriculturalBulk;
+                default: return UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider;
+            }
+        }
+
         public bool Purchase(string model, UltimateTruckEmpire.Gameplay.TrailerType type, float price)
         {
             var company = CompanyManager.Instance;
@@ -232,6 +279,8 @@ namespace UltimateTruckEmpire.Company
             {
                 if (trailer == null) continue;
                 trailer.condition = Mathf.Clamp(trailer.condition, 0f, 100f);
+                if (trailer.definitionId == null) trailer.definitionId = "";
+                if (trailer.skinId == null) trailer.skinId = "";
                 trailer.purchasePrice = Mathf.Max(0f, trailer.purchasePrice);
                 if (int.TryParse(trailer.id?.Replace("TRL-", ""), out int n))
                     nextId = Mathf.Max(nextId, n + 1);
