@@ -14,15 +14,12 @@ namespace UltimateTruckEmpire.Truck
         public bool CargoLoaded { get; private set; }
         public TrailerDefinition Definition { get; private set; }
         public CargoDefinition LoadedCargo { get; private set; }
-
-        // Rear axle/docking reference for the current procedural trailer.
         public Transform DockingPoint { get; private set; }
 
         public void SetAuthoredDockingPoint(Transform trailerRoot)
         {
             if (trailerRoot == null) { EnsureDockingPoint(); return; }
-            Transform socket = trailerRoot.Find("Sockets/Kingpin");
-            if (socket == null) socket = trailerRoot.Find("Kingpin");
+            Transform socket = trailerRoot.Find("Sockets/Kingpin") ?? trailerRoot.Find("Kingpin");
             if (socket == null)
             {
                 foreach (var child in trailerRoot.GetComponentsInChildren<Transform>(true))
@@ -39,18 +36,24 @@ namespace UltimateTruckEmpire.Truck
 
         public void Configure(TrailerType type, float weightTons = 0f)
         {
+            Definition = null;
             Type = type;
             ContractTrailerType = FromPhysicalType(type);
             CargoWeightTons = Mathf.Max(0f, weightTons);
+            CargoLoaded = CargoWeightTons > 0f;
+            LoadedCargo = null;
             EnsureDockingPoint();
             ApplyPresentation();
         }
 
         public void ConfigureGameplay(UltimateTruckEmpire.Gameplay.TrailerType type, float weightTons = 0f)
         {
+            Definition = null;
             ContractTrailerType = type;
             Type = ToPhysicalType(type);
             CargoWeightTons = Mathf.Max(0f, weightTons);
+            CargoLoaded = CargoWeightTons > 0f;
+            LoadedCargo = null;
             EnsureDockingPoint();
             ApplyPresentation();
         }
@@ -58,41 +61,47 @@ namespace UltimateTruckEmpire.Truck
         public void Load(float weightTons) { CargoWeightTons = Mathf.Max(0f, weightTons); CargoLoaded = true; }
         public void Unload()
         {
-            var loadedTrailer = GetComponentInChildren<LoadedTrailer>();
+            var loadedTrailer = GetComponentInChildren<LoadedTrailer>(true);
             if (loadedTrailer != null) loadedTrailer.Unload();
             CargoWeightTons = 0f;
             CargoLoaded = false;
             LoadedCargo = null;
         }
 
-        /// <summary>Configures this physical trailer from the new ScriptableObject data model.</summary>
+        /// <summary>Configures this physical trailer from the ScriptableObject data model.</summary>
         public bool ConfigureDefinition(TrailerDefinition definition, CargoDefinition cargo = null, float weightTons = 0f, TrailerSkinDefinition skin = null)
         {
             if (definition == null) return false;
-            Definition = definition;
+
+            float resolvedWeight = 0f;
             if (cargo != null)
             {
                 if (!TrailerCompatibility.CanLoad(definition, cargo, weightTons)) return false;
-                LoadedCargo = cargo;
-                CargoWeightTons = TrailerCompatibility.GetAllowedWeight(definition, cargo, weightTons);
-                CargoLoaded = true;
+                resolvedWeight = TrailerCompatibility.GetAllowedWeight(definition, cargo, weightTons);
             }
-            else
+
+            var loadedTrailer = GetComponentInChildren<LoadedTrailer>(true);
+            if (loadedTrailer == null)
             {
-                LoadedCargo = null;
-                CargoWeightTons = 0f;
-                CargoLoaded = false;
+                loadedTrailer = gameObject.AddComponent<LoadedTrailer>();
             }
 
-            var loadedTrailer = GetComponentInChildren<LoadedTrailer>() ?? gameObject.AddComponent<LoadedTrailer>();
-            if (cargo != null && !loadedTrailer.Configure(definition, cargo, CargoWeightTons, skin))
-                return false;
-            if (cargo == null && !loadedTrailer.ConfigureEmpty(definition, skin))
-                return false;
+            // Validate and apply the data-driven visual/runtime state before mutating
+            // the controller's public state. A rejected cargo load therefore cannot
+            // leave Definition/CargoLoaded pointing at a configuration that failed.
+            bool configured = cargo != null
+                ? loadedTrailer.Configure(definition, cargo, resolvedWeight, skin)
+                : loadedTrailer.ConfigureEmpty(definition, skin);
+            if (!configured) return false;
 
+            Definition = definition;
+            LoadedCargo = cargo;
+            CargoWeightTons = resolvedWeight;
+            CargoLoaded = cargo != null;
             var skinApplier = GetComponent<TrailerSkinApplier>() ?? gameObject.AddComponent<TrailerSkinApplier>();
             skinApplier.Initialize(definition, skin);
             ConfigureGameplay(FromDefinitionType(definition.category), CargoWeightTons);
+            Definition = definition; // ConfigureGameplay clears legacy definition state.
             return true;
         }
 
@@ -129,22 +138,12 @@ namespace UltimateTruckEmpire.Truck
 
         private void ApplyPresentation()
         {
-            // Authored trailer definitions own their visual dimensions and naming.
-            // The procedural fallback presentation must never rescale those prefabs.
             if (Definition != null) return;
-
-            Transform visual = transform.Find("Dry Van Trailer");
-            if (visual == null) visual = transform.Find("Trailer Visual");
+            Transform visual = transform.Find("Dry Van Trailer") ?? transform.Find("Trailer Visual");
             if (visual == null)
             {
                 foreach (var child in GetComponentsInChildren<Transform>())
-                {
-                    if (child != transform && child.name.EndsWith(" Trailer"))
-                    {
-                        visual = child;
-                        break;
-                    }
-                }
+                    if (child != transform && child.name.EndsWith(" Trailer")) { visual = child; break; }
             }
             if (visual == null) return;
             visual.name = Type.ToString() + " Trailer";
@@ -157,6 +156,7 @@ namespace UltimateTruckEmpire.Truck
                 default: visual.localScale = new Vector3(2.75f, 2.8f, 4.2f); break;
             }
         }
+
         private void EnsureDockingPoint()
         {
             if (DockingPoint != null) return;
@@ -205,5 +205,4 @@ namespace UltimateTruckEmpire.Truck
             }
         }
     }
-
 }
