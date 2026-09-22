@@ -18,6 +18,25 @@ namespace UltimateTruckEmpire.Truck
         // Rear axle/docking reference for the current procedural trailer.
         public Transform DockingPoint { get; private set; }
 
+        public void SetAuthoredDockingPoint(Transform trailerRoot)
+        {
+            if (trailerRoot == null) { EnsureDockingPoint(); return; }
+            Transform socket = trailerRoot.Find("Sockets/Kingpin");
+            if (socket == null) socket = trailerRoot.Find("Kingpin");
+            if (socket == null)
+            {
+                foreach (var child in trailerRoot.GetComponentsInChildren<Transform>(true))
+                {
+                    if (child != trailerRoot && string.Equals(child.name, "Kingpin", System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        socket = child;
+                        break;
+                    }
+                }
+            }
+            DockingPoint = socket != null ? socket : trailerRoot;
+        }
+
         public void Configure(TrailerType type, float weightTons = 0f)
         {
             Type = type;
