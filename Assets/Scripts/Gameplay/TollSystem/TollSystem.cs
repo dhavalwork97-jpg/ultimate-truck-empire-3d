@@ -50,7 +50,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
 
     public static class TollPricingEngine
     {
-        public static float Calculate(float baseToll, TruckController truck, UltimateTruckEmpire.Truck.TrailerType trailer, TollPaymentMethod method)
+        public static float Calculate(float baseToll, TruckController truck, TrailerType trailer, TollPaymentMethod method)
         {
             float truckFactor = 1f;
             if (truck != null)
@@ -59,9 +59,9 @@ namespace UltimateTruckEmpire.Gameplay.Toll
                 float tons = fleet != null ? fleet.capacityTons : 18f;
                 truckFactor = tons >= 30f ? 1.45f : tons >= 20f ? 1.15f : tons <= 10f ? .65f : 1f;
             }
-            float trailerFactor = trailer == UltimateTruckEmpire.Truck.TrailerType.Tanker ? 1.25f :
-                                  trailer == UltimateTruckEmpire.Truck.TrailerType.Flatbed ? 1.15f :
-                                  trailer == UltimateTruckEmpire.Truck.TrailerType.Refrigerated ? 1.20f : 1.10f;
+            float trailerFactor = trailer == TrailerType.Tanker ? 1.25f :
+                                  trailer == TrailerType.Flatbed ? 1.15f :
+                                  trailer == TrailerType.Refrigerated ? 1.20f : 1.10f;
             float paymentFactor = method == TollPaymentMethod.FastTag ? .90f : 1f;
             return Mathf.Max(10f, Mathf.Round(baseToll * truckFactor * trailerFactor * paymentFactor));
         }
@@ -112,7 +112,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             string key = plazaId + "|" + (string.IsNullOrEmpty(vehicleKey) ? truck.GetInstanceID().ToString() : vehicleKey);
             if (paidKeys.ContainsKey(key)) return true;
             var trailer = truck.GetComponent<TrailerController>();
-            float amount = TollPricingEngine.Calculate(p.baseToll, truck, trailer != null ? trailer.ContractTrailerType : UltimateTruckEmpire.Truck.TrailerType.DryVan, method);
+            float amount = TollPricingEngine.Calculate(p.baseToll, truck, trailer != null ? trailer.ContractTrailerType : TrailerType.DryVan, method);
             bool charged = method == TollPaymentMethod.FastTag ? FastTagWallet.Instance != null && FastTagWallet.Instance.TryPay(amount)
                                                                : GameManager.Instance != null && GameManager.Instance.TrySpendMoney(amount);
             if (!charged) { PaymentFailed?.Invoke(method == TollPaymentMethod.FastTag ? "FASTag balance too low" : "Insufficient cash"); return false; }
@@ -176,7 +176,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             sign.transform.SetParent(root.transform, false);
             sign.transform.localPosition = new Vector3(0f, 4.2f, 8f);
             sign.transform.localScale = new Vector3(10f, 2.2f, .25f);
-            Object.Destroy(sign.GetComponent<Collider>());
+            UnityEngine.Object.Destroy(sign.GetComponent<Collider>());
             CreateGate(root.transform, "FastTag Gate", new Vector3(0f,0f,0f), TollPaymentMethod.FastTag);
             return root;
         }
