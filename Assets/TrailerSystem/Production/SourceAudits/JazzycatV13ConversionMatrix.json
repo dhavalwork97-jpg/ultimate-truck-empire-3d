@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "policy": "Reference-only until exact commercial redistribution rights are established.",
+  "launchSet": [
+    {
+      "id": "dry-van",
+      "category": "DryVan",
+      "sourceCandidates": [],
+      "status": "gap",
+      "action": "Source independently cleared production geometry."
+    },
+    {
+      "id": "refrigerated",
+      "category": "Refrigerated",
+      "sourceCandidates": [],
+      "status": "gap",
+      "action": "Source independently cleared production geometry."
+    },
+    {
+      "id": "flatbed",
+      "category": "Flatbed",
+      "sourceCandidates": ["fontaine_magnitude", "fontaine_infinity"],
+      "status": "reference-only",
+      "action": "Re-author production geometry or obtain explicit commercial permission for the exact source."
+    },
+    {
+      "id": "heavy-flatbed",
+      "category": "HeavyFlatbed",
+      "sourceCandidates": ["fontaine_magnitude", "fontaine_infinity"],
+      "status": "reference-only",
+      "action": "Re-author production geometry or obtain explicit commercial permission for the exact source."
+    },
+    {
+      "id": "lowboy-rgn",
+      "category": "Lowboy",
+      "sourceCandidates": ["low_01", "low_02"],
+      "status": "reference-only",
+      "action": "Re-author production geometry or obtain explicit commercial permission for the exact source."
+    },
+    {
+      "id": "container-chassis",
+      "category": "ContainerChassis",
+      "sourceCandidates": ["cont_40jb", "cont_53jb"],
+      "status": "reference-only",
+      "action": "Re-author production geometry or obtain explicit commercial permission for the exact source."
+    },
+    {
+      "id": "grain-hopper",
+      "category": "GrainHopper",
+      "sourceCandidates": ["hopper_j1", "wilson_grain_j"],
+      "status": "reference-only",
+      "action": "Re-author production geometry or obtain explicit commercial permission for the exact source."
+    },
+    {
+      "id": "cement-tanker",
+      "category": "CementTanker",
+      "sourceCandidates": ["cement_j1"],
+      "status": "reference-only",
+      "action": "Re-author production geometry or obtain explicit commercial permission for the exact source."
+    }
+  ],
+  "cargoReferenceFamilies": [
+    "Challenger agricultural machinery",
+    "Case IH 600-series machinery",
+    "Case 9230",
+    "Excavator",
+    "Forklift",
+    "CAT TH514C",
+    "Compactor",
+    "JCB Fastrac",
+    "Wirtgen machinery",
+    "Case 70XT",
+    "New Holland machinery",
+    "Agricultural equipment",
+    "Large industrial cargo"
+  ],
+  "productionContract": {
+    "lod0TrianglesMax": 15000,
+    "materialSlotsMax": 3,
+    "maxTextureDimension": 1024,
+    "lodLevels": 3,
+    "requiredSockets": [
+      "Sockets/Kingpin",
+      "Sockets/CargoSocket",
+      "Sockets/Wheel_FL",
+      "Sockets/Wheel_FR",
+      "Sockets/Wheel_RL",
+      "Sockets/Wheel_RR"
+    ],
+    "requiredComponents": [
+      "LoadedTrailer",
+      "TrailerCargoModule",
+      "TrailerSkinApplier",
+      "LODGroup"
+    ]
+  }
+}
