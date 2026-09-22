@@ -39,7 +39,7 @@ namespace UltimateTruckEmpire.Bootstrap
             if (TrailerFleetManager.Instance == null) new GameObject("TrailerFleetManager").AddComponent<TrailerFleetManager>();
             if (TruckDealer.Instance == null) new GameObject("Truck Dealer").AddComponent<TruckDealer>();
             if (AutomatedDeliveryManager.Instance == null) new GameObject("AutomatedDeliveryManager").AddComponent<AutomatedDeliveryManager>();
-            if (FinanceManager.Instance == null) new GameObject("FinanceManager").AddComponent<FinanceManager>();\n            if (TollPlazaManager.Instance == null) new GameObject("Toll Plaza Manager").AddComponent<TollPlazaManager>();
+            if (FinanceManager.Instance == null) new GameObject("FinanceManager").AddComponent<FinanceManager>();\n            if (TollPlazaManager.Instance == null) new GameObject("Toll Plaza Manager").AddComponent<TollPlazaManager>();\n            if (TollPlazaManager.Instance == null) new GameObject("Toll Plaza Manager").AddComponent<TollPlazaManager>();
             if (AutoDispatcher.Instance == null) new GameObject("AutoDispatcher").AddComponent<AutoDispatcher>();
 
             var saveManager = FindFirstObjectByType<SaveManager>();
