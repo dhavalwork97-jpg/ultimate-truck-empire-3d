@@ -27,13 +27,13 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 ModelImporter importer = AssetImporter.GetAtPath(path) as ModelImporter;
                 if (importer == null) continue;
 
-                importer.optimizeMesh = true;
+                importer.optimizeMeshPolygons = true;
+                importer.optimizeMeshVertices = true;
                 importer.importBlendShapes = false;
                 importer.importCameras = false;
                 importer.importLights = false;
                 importer.importVisibility = false;
                 importer.importAnimation = false;
-                importer.importMaterials = true;
                 importer.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
                 importer.SaveAndReimport();
                 models++;
