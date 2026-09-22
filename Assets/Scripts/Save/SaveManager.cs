@@ -4,6 +4,7 @@ using UltimateTruckEmpire.Core;
 using UltimateTruckEmpire.Company;
 using UltimateTruckEmpire.Gameplay;
 using UltimateTruckEmpire.Gameplay.Toll;
+using UltimateTruckEmpire.Gameplay.RestArea;
 using UltimateTruckEmpire.Truck;
 using System.Collections.Generic;
 
@@ -22,7 +23,7 @@ namespace UltimateTruckEmpire.Save
 
         private const string FileName = "ute_save.json";
         private const string BackupFileName = "ute_save.json.bak";
-        private const int CurrentSaveVersion = 3;
+        private const int CurrentSaveVersion = 4;
 
         [System.Serializable]
         private sealed class SaveData
@@ -44,6 +45,7 @@ namespace UltimateTruckEmpire.Save
             public SupplyChainSaveState[] supplyChain;
             public FuelPriceRegionState[] fuelPrices;
             public TollSaveState tolls;
+            public RestAreaSaveState restArea;
             public bool hasPlayerTransform;
             public Vector3 playerPosition;
             public Quaternion playerRotation;
@@ -96,7 +98,8 @@ namespace UltimateTruckEmpire.Save
                     automatedDeliveries = AutomatedDeliveryManager.Instance?.CaptureState(),
                     supplyChain = SupplyChainManager.Instance?.CaptureState(),
                     fuelPrices = FuelPriceManager.Instance?.CaptureState(),
-                    tolls = TollPlazaManager.Instance?.CaptureState()
+                    tolls = TollPlazaManager.Instance?.CaptureState(),
+                    restArea = RestAreaManager.Instance?.CaptureState()
                 };
                 string directory = Application.persistentDataPath;
                 Directory.CreateDirectory(directory);
@@ -204,6 +207,7 @@ namespace UltimateTruckEmpire.Save
                 SupplyChainManager.Instance?.RestoreState(data.supplyChain);
                 FuelPriceManager.Instance?.RestoreState(data.fuelPrices);
                 TollPlazaManager.Instance?.RestoreState(data.tolls);
+                RestAreaManager.Instance?.RestoreState(data.restArea);
             }
             catch (System.Exception ex)
             {
