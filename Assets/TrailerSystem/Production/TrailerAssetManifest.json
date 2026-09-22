@@ -2,24 +2,16 @@
   "schemaVersion": 1,
   "policy": {
     "commercialReleaseRequiresVerifiedLicense": true,
-    "allowedLicenseTypes": [
-      "CC0",
-      "CommercialLicense",
-      "CustomPermission"
-    ],
-    "prohibitedSources": [
-      "UnlicensedGameMods",
-      "DecompiledAssets",
-      "UnknownLicense"
-    ]
+    "allowedLicenseTypes": ["CC0", "CommercialLicense", "CustomPermission"],
+    "prohibitedSources": ["UnlicensedGameMods", "DecompiledAssets", "UnknownLicense"]
   },
   "trailers": [
-    {"id":"dry-van","category":"DryVan","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/dry-van/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
-    {"id":"refrigerated","category":"Refrigerated","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/refrigerated/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
-    {"id":"flatbed","category":"Flatbed","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/flatbed/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
+    {"id":"dry-van","category":"DryVan","status":"verified","assetPath":"Assets/TrailerSystem/Imports/Trailers/dry-van/","licenseType":"CC0","sourceUrl":"https://3dassets.dev/assets/long-haul-trucking-and-truck-stop-dry-van-trailer-b8f9c5d8","creator":"3DAssets.dev asset contributor","licenseTextPath":"Assets/TrailerSystem/Production/Licenses/CC0-1.0-REFERENCE.md","verificationBasis":"Source page states CC0 1.0 Universal and permits commercial use without attribution; checked 2026-09-22."},
+    {"id":"refrigerated","category":"Refrigerated","status":"verified","assetPath":"Assets/TrailerSystem/Imports/Trailers/refrigerated/","licenseType":"CC0","sourceUrl":"https://3dassets.dev/assets/long-haul-trucking-and-truck-stop-refrigerated-trailer-0d33df6d","creator":"3DAssets.dev asset contributor","licenseTextPath":"Assets/TrailerSystem/Production/Licenses/CC0-1.0-REFERENCE.md","verificationBasis":"Source page states CC0 1.0 Universal and permits commercial use without attribution; checked 2026-09-22."},
+    {"id":"flatbed","category":"Flatbed","status":"verified","assetPath":"Assets/TrailerSystem/Imports/Trailers/flatbed/","licenseType":"CC0","sourceUrl":"https://3dassets.dev/assets/long-haul-trucking-and-truck-stop-flatbed-trailer-98aa4380","creator":"3DAssets.dev asset contributor","licenseTextPath":"Assets/TrailerSystem/Production/Licenses/CC0-1.0-REFERENCE.md","verificationBasis":"Source page states CC0 1.0 Universal and permits commercial use without attribution; checked 2026-09-22."},
     {"id":"heavy-flatbed","category":"HeavyFlatbed","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/heavy-flatbed/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
-    {"id":"lowboy-rgn","category":"Lowboy","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/lowboy-rgn/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
-    {"id":"container-chassis","category":"ContainerChassis","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/container-chassis/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
+    {"id":"lowboy-rgn","category":"Lowboy","status":"verified","assetPath":"Assets/TrailerSystem/Imports/Trailers/lowboy-rgn/","licenseType":"CC0","sourceUrl":"https://3dassets.dev/assets/long-haul-trucking-and-truck-stop-lowboy-trailer-19f01360","creator":"3DAssets.dev asset contributor","licenseTextPath":"Assets/TrailerSystem/Production/Licenses/CC0-1.0-REFERENCE.md","verificationBasis":"Source page states CC0 1.0 Universal and permits commercial use without attribution; checked 2026-09-22."},
+    {"id":"container-chassis","category":"ContainerChassis","status":"verified","assetPath":"Assets/TrailerSystem/Imports/Trailers/container-chassis/","licenseType":"CC0","sourceUrl":"https://3dassets.dev/assets/long-haul-trucking-and-truck-stop-container-chassis-tr-1a6d7e81","creator":"3DAssets.dev asset contributor","licenseTextPath":"Assets/TrailerSystem/Production/Licenses/CC0-1.0-REFERENCE.md","verificationBasis":"Source page states CC0 1.0 Universal and permits commercial use without attribution; checked 2026-09-22."},
     {"id":"grain-hopper","category":"GrainHopper","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/grain-hopper/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
     {"id":"cement-tanker","category":"CementTanker","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/cement-tanker/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""}
   ]
