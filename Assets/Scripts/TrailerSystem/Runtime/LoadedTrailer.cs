@@ -29,7 +29,9 @@ namespace UltimateTruckEmpire.TrailerSystem
 
             cargoModule = GetComponent<TrailerCargoModule>() ?? gameObject.AddComponent<TrailerCargoModule>();
             cargoModule.Initialize(trailer);
-            if (!cargoModule.Load(cargo))
+            // Cargo assets are optional at runtime: the definition remains authoritative for
+            // gameplay even before the visual cargo prefab has been authored/imported.
+            if (cargo.cargoPrefab != null && !cargoModule.Load(cargo))
             {
                 cargo = null;
                 cargoWeightTons = 0f;
