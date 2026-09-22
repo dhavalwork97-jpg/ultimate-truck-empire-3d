@@ -112,7 +112,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             string key = plazaId + "|" + (string.IsNullOrEmpty(vehicleKey) ? truck.GetInstanceID().ToString() : vehicleKey);
             if (paidKeys.ContainsKey(key)) return true;
             var trailer = truck.GetComponent<TrailerController>();
-            float amount = TollPricingEngine.Calculate(p.baseToll, truck, trailer != null ? trailer.Type : TrailerType.DryVan, method);
+            float amount = TollPricingEngine.Calculate(p.baseToll, truck, trailer != null ? trailer.Type : default(TrailerType), method);
             bool charged = method == TollPaymentMethod.FastTag ? FastTagWallet.Instance != null && FastTagWallet.Instance.TryPay(amount)
                                                                : GameManager.Instance != null && GameManager.Instance.TrySpendMoney(amount);
             if (!charged) { PaymentFailed?.Invoke(method == TollPaymentMethod.FastTag ? "FASTag balance too low" : "Insufficient cash"); return false; }
