@@ -332,7 +332,7 @@ namespace UltimateTruckEmpire.Company
             if (definition != null)
             {
                 controller.ConfigureDefinition(definition, null, 0f, skin);
-                ReplaceTrailerVisual(truck.transform, definition, skin);
+                ReplaceTrailerVisual(truck.transform, controller, definition, skin);
             }
             else
             {
@@ -342,7 +342,7 @@ namespace UltimateTruckEmpire.Company
             return controller;
         }
 
-        private static void ReplaceTrailerVisual(Transform truck, TrailerDefinition definition, TrailerSkinDefinition skin)
+        private static void ReplaceTrailerVisual(Transform truck, TrailerController controller, TrailerDefinition definition, TrailerSkinDefinition skin)
         {
             if (truck == null || definition == null || definition.prefab == null) return;
 
@@ -354,7 +354,7 @@ namespace UltimateTruckEmpire.Company
             Quaternion localRotation = fallback != null ? fallback.localRotation : Quaternion.identity;
             if (fallback != null) UnityEngine.Object.Destroy(fallback.gameObject);
 
-            var instance = UnityEngine.Object.Instantiate(definition.prefab, truck);
+            // Remove a previously spawned authored trailer so repeated restore/apply calls do not stack visuals.\n            for (int i = truck.childCount - 1; i >= 0; i--)\n            {\n                var child = truck.GetChild(i);\n                if (child != fallback && child.GetComponent<UltimateTruckEmpire.TrailerSystem.LoadedTrailer>() != null)\n                    UnityEngine.Object.Destroy(child.gameObject);\n            }\n\n            var instance = UnityEngine.Object.Instantiate(definition.prefab, truck);
             instance.name = definition.displayName + " Trailer";
             instance.transform.localPosition = localPosition;
             instance.transform.localRotation = localRotation;
