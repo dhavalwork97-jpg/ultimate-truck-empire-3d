@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "policy": {
+    "commercialReleaseRequiresVerifiedLicense": true,
+    "allowedLicenseTypes": [
+      "CC0",
+      "CommercialLicense",
+      "CustomPermission"
+    ],
+    "prohibitedSources": [
+      "UnlicensedGameMods",
+      "DecompiledAssets",
+      "UnknownLicense"
+    ]
+  },
+  "trailers": [
+    {"id":"dry-van","category":"DryVan","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/dry-van/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
+    {"id":"refrigerated","category":"Refrigerated","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/refrigerated/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
+    {"id":"flatbed","category":"Flatbed","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/flatbed/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
+    {"id":"heavy-flatbed","category":"HeavyFlatbed","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/heavy-flatbed/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
+    {"id":"lowboy-rgn","category":"Lowboy","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/lowboy-rgn/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
+    {"id":"container-chassis","category":"ContainerChassis","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/container-chassis/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
+    {"id":"grain-hopper","category":"GrainHopper","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/grain-hopper/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""},
+    {"id":"cement-tanker","category":"CementTanker","status":"pending","assetPath":"Assets/TrailerSystem/Imports/Trailers/cement-tanker/","licenseType":"Pending","sourceUrl":"","creator":"","licenseTextPath":""}
+  ]
+}
