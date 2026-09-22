@@ -11,13 +11,17 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
         private const string TrailerData = Root + "/Data/Trailers";
         private const string CargoData = Root + "/Data/Cargo";
         private const string SkinData = Root + "/Data/Skins";
-        private const string CatalogPath = Root + "/Data/TrailerCatalog.asset";
+        private const string ResourcesRoot = "Assets/Resources";
+        private const string CatalogPath = ResourcesRoot + "/TrailerSystem/Catalog/TrailerCatalog.asset";
 
         [MenuItem("Ultimate Truck Empire/Trailer System/Create Starter Data")]
         public static void CreateStarterData()
         {
             EnsureFolder(Root);
             EnsureFolder(Root + "/Data");
+            EnsureFolder(ResourcesRoot);
+            EnsureFolder(ResourcesRoot + "/TrailerSystem");
+            EnsureFolder(ResourcesRoot + "/TrailerSystem/Catalog");
             EnsureFolder(TrailerData);
             EnsureFolder(CargoData);
             EnsureFolder(SkinData);
