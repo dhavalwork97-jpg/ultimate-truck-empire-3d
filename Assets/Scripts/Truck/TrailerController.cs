@@ -49,11 +49,15 @@ namespace UltimateTruckEmpire.Truck
         public void ConfigureGameplay(UltimateTruckEmpire.Gameplay.TrailerType type, float weightTons = 0f)
         {
             Definition = null;
+            ConfigureGameplayState(type, weightTons);
+        }
+
+        private void ConfigureGameplayState(UltimateTruckEmpire.Gameplay.TrailerType type, float weightTons)
+        {
             ContractTrailerType = type;
             Type = ToPhysicalType(type);
             CargoWeightTons = Mathf.Max(0f, weightTons);
             CargoLoaded = CargoWeightTons > 0f;
-            LoadedCargo = null;
             EnsureDockingPoint();
             ApplyPresentation();
         }
@@ -100,8 +104,8 @@ namespace UltimateTruckEmpire.Truck
             CargoLoaded = cargo != null;
             var skinApplier = GetComponent<TrailerSkinApplier>() ?? gameObject.AddComponent<TrailerSkinApplier>();
             skinApplier.Initialize(definition, skin);
-            ConfigureGameplay(FromDefinitionType(definition.category), CargoWeightTons);
-            Definition = definition; // ConfigureGameplay clears legacy definition state.
+            ConfigureGameplayState(FromDefinitionType(definition.category), CargoWeightTons);
+            Definition = definition;
             return true;
         }
 
