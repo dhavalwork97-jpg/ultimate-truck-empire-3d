@@ -41,7 +41,7 @@ namespace UltimateTruckEmpire.Save
             public string activeTruckId;
             public AutomatedDelivery[] automatedDeliveries;
             public SupplyChainSaveState[] supplyChain;
-            public FuelPriceRegionState[] fuelPrices;
+            public FuelPriceRegionState[] fuelPrices;\n            public TollSaveState tolls;
             public bool hasPlayerTransform;
             public Vector3 playerPosition;
             public Quaternion playerRotation;
@@ -93,7 +93,7 @@ namespace UltimateTruckEmpire.Save
                     playerRotation = playerRotation,
                     automatedDeliveries = AutomatedDeliveryManager.Instance?.CaptureState(),
                     supplyChain = SupplyChainManager.Instance?.CaptureState(),
-                    fuelPrices = FuelPriceManager.Instance?.CaptureState()
+                    fuelPrices = FuelPriceManager.Instance?.CaptureState(),\n                    tolls = Toll.TollPlazaManager.Instance?.CaptureState()
                 };
                 string directory = Application.persistentDataPath;
                 Directory.CreateDirectory(directory);
@@ -199,7 +199,7 @@ namespace UltimateTruckEmpire.Save
                 DeliveryManager.Instance?.Restore(data.contractAccepted, data.cargoLoaded, data.activeContract, data.completedContracts);
                 AutomatedDeliveryManager.Instance?.RestoreState(data.automatedDeliveries);
                 SupplyChainManager.Instance?.RestoreState(data.supplyChain);
-                FuelPriceManager.Instance?.RestoreState(data.fuelPrices);
+                FuelPriceManager.Instance?.RestoreState(data.fuelPrices);\n                Toll.TollPlazaManager.Instance?.RestoreState(data.tolls);
             }
             catch (System.Exception ex)
             {
