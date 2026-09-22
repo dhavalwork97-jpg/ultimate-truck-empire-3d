@@ -2,7 +2,7 @@ using System.IO;
 using UnityEngine;
 using UltimateTruckEmpire.Core;
 using UltimateTruckEmpire.Company;
-using UltimateTruckEmpire.Gameplay;
+using UltimateTruckEmpire.Gameplay;\nusing UltimateTruckEmpire.Gameplay.Toll;
 using UltimateTruckEmpire.Truck;
 using System.Collections.Generic;
 
