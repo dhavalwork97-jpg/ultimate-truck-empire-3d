@@ -291,12 +291,67 @@ namespace UltimateTruckEmpire.Company
         public TrailerController ApplyToPlayerTruck(TruckController truck)
         {
             if (truck == null) return null;
+
             var assigned = FindAssignedToTruck(truck.FleetTruckId);
             if (assigned == null) return null;
+
             var controller = truck.GetComponent<TrailerController>();
             if (controller == null) controller = truck.gameObject.AddComponent<TrailerController>();
-            controller.ConfigureGameplay(assigned.type);
+
+            // Prefer the data-driven trailer definition when the owned record has one.
+            // The catalog is intentionally loaded from one small Resources asset so this
+            // remains deterministic on mobile and does not require a scene reference.
+            TrailerDefinition definition = null;
+            TrailerSkinDefinition skin = null;
+            var catalog = Resources.Load<UltimateTruckEmpire.TrailerSystem.TrailerCatalogAsset>(
+                "TrailerSystem/Catalog/TrailerCatalog");
+            if (catalog != null && !string.IsNullOrWhiteSpace(assigned.definitionId))
+            {
+                definition = catalog.FindTrailer(assigned.definitionId);
+                if (definition != null && !string.IsNullOrWhiteSpace(assigned.skinId))
+                {
+                    for (int i = 0; i < definition.availableSkins.Length; i++)
+                    {
+                        var candidate = definition.availableSkins[i];
+                        if (candidate != null && string.Equals(candidate.id, assigned.skinId, StringComparison.OrdinalIgnoreCase))
+                        {
+                            skin = candidate;
+                            break;
+                        }
+                    }
+                }
+                skin ??= definition.defaultSkin;
+            }
+
+            if (definition != null)
+            {
+                controller.ConfigureDefinition(definition, null, 0f, skin);
+                ReplaceTrailerVisual(truck.transform, definition);
+            }
+            else
+            {
+                controller.ConfigureGameplay(assigned.type);
+            }
+
             return controller;
+        }
+
+        private static void ReplaceTrailerVisual(Transform truck, TrailerDefinition definition)
+        {
+            if (truck == null || definition == null || definition.prefab == null) return;
+
+            // The bootstrap creates a lightweight fallback trailer. Replace only that
+            // generated visual; authored trailer prefabs remain independent children.
+            var fallback = truck.Find("Dry Van Trailer");
+            if (fallback == null) fallback = truck.Find("Trailer Visual");
+            Vector3 localPosition = fallback != null ? fallback.localPosition : new Vector3(0f, 1.35f, -2.35f);
+            Quaternion localRotation = fallback != null ? fallback.localRotation : Quaternion.identity;
+            if (fallback != null) UnityEngine.Object.Destroy(fallback.gameObject);
+
+            var instance = UnityEngine.Object.Instantiate(definition.prefab, truck);
+            instance.name = definition.displayName + " Trailer";
+            instance.transform.localPosition = localPosition;
+            instance.transform.localRotation = localRotation;
         }
 
     }
