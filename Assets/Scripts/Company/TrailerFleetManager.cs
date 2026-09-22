@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UltimateTruckEmpire.Gameplay;
 using UltimateTruckEmpire.Truck;
+using UltimateTruckEmpire.TrailerSystem;
 
 namespace UltimateTruckEmpire.Company
 {
@@ -88,22 +89,7 @@ namespace UltimateTruckEmpire.Company
 
         public void EnsureStarterFleet()
         {
-            // New companies receive only the starter curtainsider. Existing saves are
-            // preserved by Restore(), so previously owned trailers are never removed.
             EnsureStarterTrailer();
-        }
-
-        private void EnsureOwnedType(UltimateTruckEmpire.Gameplay.TrailerType type, string model, float price)
-        {
-            if (FindAny(type) != null) return;
-            AddTrailer("TRL-" + nextId++, model, type, price);
-        }
-
-        private FleetTrailerData FindAny(UltimateTruckEmpire.Gameplay.TrailerType type)
-        {
-            foreach (var trailer in trailers)
-                if (trailer != null && trailer.type == type) return trailer;
-            return null;
         }
 
         private FleetTrailerData AddTrailer(string id, string model, UltimateTruckEmpire.Gameplay.TrailerType type, float price, string definitionId = "")
@@ -180,7 +166,6 @@ namespace UltimateTruckEmpire.Company
             trailer.available = true;
         }
 
-
         public void Release(string truckId)
         {
             var trailer = FindAssignedToTruck(truckId);
@@ -226,8 +211,7 @@ namespace UltimateTruckEmpire.Company
             return true;
         }
 
-        /// <summary>Purchase a trailer from the data-driven trailer definition.</summary>
-        public bool Purchase(UltimateTruckEmpire.TrailerSystem.TrailerDefinition definition)
+        public bool Purchase(TrailerDefinition definition)
         {
             var company = CompanyManager.Instance;
             var game = Core.GameManager.Instance;
@@ -242,20 +226,19 @@ namespace UltimateTruckEmpire.Company
             return true;
         }
 
-        private static UltimateTruckEmpire.Gameplay.TrailerType FromCategory(
-            UltimateTruckEmpire.TrailerSystem.TrailerCategory category)
+        private static UltimateTruckEmpire.Gameplay.TrailerType FromCategory(TrailerCategory category)
         {
             switch (category)
             {
-                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.Refrigerated: return UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated;
-                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.Flatbed: return UltimateTruckEmpire.Gameplay.TrailerType.Flatbed;
-                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.HeavyFlatbed: return UltimateTruckEmpire.Gameplay.TrailerType.HeavyFlatbed;
-                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.Lowboy: return UltimateTruckEmpire.Gameplay.TrailerType.Lowboy;
-                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.ContainerChassis: return UltimateTruckEmpire.Gameplay.TrailerType.Container;
-                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.GrainHopper: return UltimateTruckEmpire.Gameplay.TrailerType.GrainHopper;
-                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.CementTanker: return UltimateTruckEmpire.Gameplay.TrailerType.CementTanker;
-                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.DumpTrailer: return UltimateTruckEmpire.Gameplay.TrailerType.Dump;
-                case UltimateTruckEmpire.TrailerSystem.TrailerCategory.AgriculturalBulk: return UltimateTruckEmpire.Gameplay.TrailerType.AgriculturalBulk;
+                case TrailerCategory.Refrigerated: return UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated;
+                case TrailerCategory.Flatbed: return UltimateTruckEmpire.Gameplay.TrailerType.Flatbed;
+                case TrailerCategory.HeavyFlatbed: return UltimateTruckEmpire.Gameplay.TrailerType.HeavyFlatbed;
+                case TrailerCategory.Lowboy: return UltimateTruckEmpire.Gameplay.TrailerType.Lowboy;
+                case TrailerCategory.ContainerChassis: return UltimateTruckEmpire.Gameplay.TrailerType.Container;
+                case TrailerCategory.GrainHopper: return UltimateTruckEmpire.Gameplay.TrailerType.GrainHopper;
+                case TrailerCategory.CementTanker: return UltimateTruckEmpire.Gameplay.TrailerType.CementTanker;
+                case TrailerCategory.DumpTrailer: return UltimateTruckEmpire.Gameplay.TrailerType.Dump;
+                case TrailerCategory.AgriculturalBulk: return UltimateTruckEmpire.Gameplay.TrailerType.AgriculturalBulk;
                 default: return UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider;
             }
         }
@@ -300,12 +283,9 @@ namespace UltimateTruckEmpire.Company
             var controller = truck.GetComponent<TrailerController>();
             if (controller == null) controller = truck.gameObject.AddComponent<TrailerController>();
 
-            // Prefer the data-driven trailer definition when the owned record has one.
-            // The catalog is intentionally loaded from one small Resources asset so this
-            // remains deterministic on mobile and does not require a scene reference.
             TrailerDefinition definition = null;
             TrailerSkinDefinition skin = null;
-            var catalog = UltimateTruckEmpire.TrailerSystem.TrailerCatalogRuntime.Catalog;
+            var catalog = TrailerCatalogRuntime.Catalog;
             if (catalog != null && !string.IsNullOrWhiteSpace(assigned.definitionId))
             {
                 definition = catalog.FindTrailer(assigned.definitionId);
@@ -345,23 +325,27 @@ namespace UltimateTruckEmpire.Company
         {
             if (truck == null || definition == null || definition.prefab == null) return;
 
-            // The bootstrap creates a lightweight fallback trailer. Replace only that
-            // generated visual; authored trailer prefabs remain independent children.
             var fallback = truck.Find("Dry Van Trailer");
             if (fallback == null) fallback = truck.Find("Trailer Visual");
             Vector3 localPosition = fallback != null ? fallback.localPosition : new Vector3(0f, 1.35f, -2.35f);
             Quaternion localRotation = fallback != null ? fallback.localRotation : Quaternion.identity;
             if (fallback != null) UnityEngine.Object.Destroy(fallback.gameObject);
 
-            // Remove a previously spawned authored trailer so repeated restore/apply calls do not stack visuals.\n            for (int i = truck.childCount - 1; i >= 0; i--)\n            {\n                var child = truck.GetChild(i);\n                if (child != fallback && child.GetComponentInChildren<UltimateTruckEmpire.TrailerSystem.LoadedTrailer>(true) != null)\n                    UnityEngine.Object.Destroy(child.gameObject);\n            }\n\n            var instance = UnityEngine.Object.Instantiate(definition.prefab, truck);
+            for (int i = truck.childCount - 1; i >= 0; i--)
+            {
+                var child = truck.GetChild(i);
+                if (child != fallback && child.GetComponentInChildren<LoadedTrailer>(true) != null)
+                    UnityEngine.Object.Destroy(child.gameObject);
+            }
+
+            var instance = UnityEngine.Object.Instantiate(definition.prefab, truck);
             instance.name = definition.displayName + " Trailer";
             instance.transform.localPosition = localPosition;
             instance.transform.localRotation = localRotation;
 
-            var loadedTrailer = instance.GetComponentInChildren<UltimateTruckEmpire.TrailerSystem.LoadedTrailer>(true);
+            var loadedTrailer = instance.GetComponentInChildren<LoadedTrailer>(true);
             if (loadedTrailer != null)
                 loadedTrailer.ConfigureEmpty(definition, skin);
         }
-
     }
 }
