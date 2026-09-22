@@ -13,7 +13,8 @@ namespace UltimateTruckEmpire.TrailerSystem
         {
             cargoSocket = definition != null && definition.cargoSocket != null
                 ? definition.cargoSocket
-                : transform;
+                : FindSocket("CargoSocket");
+            if (cargoSocket == null) cargoSocket = transform;
         }
 
         public bool Load(CargoDefinition cargo)
@@ -23,6 +24,7 @@ namespace UltimateTruckEmpire.TrailerSystem
 
             Transform socket = cargoSocket != null ? cargoSocket : transform;
             loadedInstance = Object.Instantiate(cargo.cargoPrefab, socket);
+            if (loadedInstance == null) return false;
             loadedInstance.transform.localPosition = cargo.localPosition;
             loadedInstance.transform.localEulerAngles = cargo.localRotation;
             loadedInstance.transform.localScale = cargo.localScale;
