@@ -40,6 +40,38 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                         warnings++;
                     }
 
+                    if (string.IsNullOrWhiteSpace(trailer.id))
+                    {
+                        Debug.LogError("[TrailerSystem] Trailer has no stable id.", trailer);
+                        errors++;
+                    }
+
+                    if (trailer.defaultSkin == null)
+                    {
+                        Debug.LogWarning("[TrailerSystem] Trailer '" + trailer.id + "' has no default skin.", trailer);
+                        warnings++;
+                    }
+
+                    if (trailer.compatibleCargo == null || trailer.compatibleCargo.Length == 0)
+                    {
+                        Debug.LogWarning("[TrailerSystem] Trailer '" + trailer.id + "' has no compatible cargo.", trailer);
+                        warnings++;
+                    }
+                    else
+                    {
+                        for (int cc = 0; cc < trailer.compatibleCargo.Length; cc++)
+                        {
+                            var cargoRef = trailer.compatibleCargo[cc];
+                            if (cargoRef == null) continue;
+                            if (cargoRef.compatibleTrailers == null || System.Array.IndexOf(cargoRef.compatibleTrailers, trailer) < 0)
+                            {
+                                Debug.LogError("[TrailerSystem] Compatibility mismatch: trailer '" + trailer.id +
+                                    "' references cargo '" + cargoRef.id + "' but cargo does not reference the trailer.", trailer);
+                                errors++;
+                            }
+                        }
+                    }
+
                     if (trailer.materialSlotBudget <= 0)
                     {
                         Debug.LogError("[TrailerSystem] Trailer '" + trailer.id + "' has an invalid material budget.", trailer);
@@ -66,10 +98,36 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                     CargoDefinition cargo = catalog.cargo[c];
                     if (cargo == null) continue;
 
+                    if (string.IsNullOrWhiteSpace(cargo.id))
+                    {
+                        Debug.LogError("[TrailerSystem] Cargo has no stable id.", cargo);
+                        errors++;
+                    }
+
                     if (cargo.minWeightTons > cargo.maxWeightTons)
                     {
                         Debug.LogError("[TrailerSystem] Cargo '" + cargo.id + "' has min weight above max weight.", cargo);
                         errors++;
+                    }
+
+                    if (cargo.compatibleTrailers == null || cargo.compatibleTrailers.Length == 0)
+                    {
+                        Debug.LogWarning("[TrailerSystem] Cargo '" + cargo.id + "' has no compatible trailers.", cargo);
+                        warnings++;
+                    }
+                    else
+                    {
+                        for (int ct = 0; ct < cargo.compatibleTrailers.Length; ct++)
+                        {
+                            var trailerRef = cargo.compatibleTrailers[ct];
+                            if (trailerRef == null) continue;
+                            if (trailerRef.compatibleCargo == null || System.Array.IndexOf(trailerRef.compatibleCargo, cargo) < 0)
+                            {
+                                Debug.LogError("[TrailerSystem] Compatibility mismatch: cargo '" + cargo.id +
+                                    "' references trailer '" + trailerRef.id + "' but trailer does not reference the cargo.", cargo);
+                                errors++;
+                            }
+                        }
                     }
                 }
             }
