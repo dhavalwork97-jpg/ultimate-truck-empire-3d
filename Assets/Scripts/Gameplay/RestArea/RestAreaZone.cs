@@ -60,7 +60,7 @@ namespace UltimateTruckEmpire.Gameplay.RestArea
             return parkingBays[index];
         }
 
-        public void SetOpen(bool value) { open = value; }
+        public void SetOpen(bool value) { open = value; }\n\n        public void Configure(string id, string name, Transform[] bays, float restHours = 8f, float ratePerHour = 35f)\n        {\n            areaId = string.IsNullOrWhiteSpace(id) ? areaId : id;\n            displayName = string.IsNullOrWhiteSpace(name) ? displayName : name;\n            parkingBays = bays;\n            bayCount = bays != null && bays.Length > 0 ? bays.Length : bayCount;\n            defaultRestHours = Mathf.Clamp(restHours, minRestHours, maxRestHours);\n            costPerHour = Mathf.Max(0f, ratePerHour);\n        }
 
         public static RestAreaZone Find(string id)
         {
