@@ -1,5 +1,5 @@
 using UnityEngine;
-using UltimateTruckEmpire.Visuals;
+using UltimateTruckEmpire.Visuals;\nusing UltimateTruckEmpire.Gameplay.Toll;
 
 namespace UltimateTruckEmpire.World
 {
@@ -38,7 +38,7 @@ namespace UltimateTruckEmpire.World
             BuildStreetFurniture(root);
 
             EnvironmentAtmosphere.Ensure();
-            StreetLightManager.Ensure();
+            StreetLightManager.Ensure();\n            TollPlazaBuilder.BuildDrivenMapPlaza(root);
         }
 
         private static int S(WorldSurface surface) => WorldPaletteAdapter.Slot(surface);
