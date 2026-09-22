@@ -96,7 +96,7 @@ namespace UltimateTruckEmpire.Save
                     automatedDeliveries = AutomatedDeliveryManager.Instance?.CaptureState(),
                     supplyChain = SupplyChainManager.Instance?.CaptureState(),
                     fuelPrices = FuelPriceManager.Instance?.CaptureState(),
-                    tolls = Toll.TollPlazaManager.Instance?.CaptureState()
+                    tolls = TollPlazaManager.Instance?.CaptureState()
                 };
                 string directory = Application.persistentDataPath;
                 Directory.CreateDirectory(directory);
@@ -203,7 +203,7 @@ namespace UltimateTruckEmpire.Save
                 AutomatedDeliveryManager.Instance?.RestoreState(data.automatedDeliveries);
                 SupplyChainManager.Instance?.RestoreState(data.supplyChain);
                 FuelPriceManager.Instance?.RestoreState(data.fuelPrices);
-                Toll.TollPlazaManager.Instance?.RestoreState(data.tolls);
+                TollPlazaManager.Instance?.RestoreState(data.tolls);
             }
             catch (System.Exception ex)
             {
