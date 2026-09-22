@@ -95,6 +95,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 }
 
                 RegisterOrCreateDefinition(id, prefab);
+                RegisterDefinitionInCatalog(id);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
                 Selection.activeObject = prefab;
@@ -178,6 +179,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
 
             definition.id = id;
             definition.displayName = ToDisplayName(id);
+            definition.category = InferCategory(id);
             definition.manufacturer = "UTE Trailers";
             definition.prefab = prefab;
             definition.payloadCapacityTons = 30f;
@@ -187,7 +189,55 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             definition.materialSlotBudget = 3;
             definition.maxTextureResolution = 1024;
             definition.lodCount = 3;
+            var root = prefab != null ? prefab.transform : null;
+            definition.cargoSocket = FindChild(root, "CargoSocket");
+            definition.kingpinSocket = FindChild(root, "Kingpin");
+            var sockets = FindChild(root, "Sockets");
+            string[] names = { "Wheel_FL", "Wheel_FR", "Wheel_RL", "Wheel_RR" };
+            var wheels = new Transform[names.Length];
+            for (int i = 0; i < names.Length; i++)
+                wheels[i] = FindDirectChild(sockets, names[i]);
+            definition.wheelSockets = wheels;
             EditorUtility.SetDirty(definition);
+        }
+
+        private static void RegisterDefinitionInCatalog(string id)
+        {
+            var definition = AssetDatabase.LoadAssetAtPath<TrailerDefinition>(
+                "Assets/TrailerSystem/Data/Trailers/" + id + ".asset");
+            if (definition == null) return;
+
+            string[] guids = AssetDatabase.FindAssets("t:TrailerCatalogAsset");
+            for (int i = 0; i < guids.Length; i++)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                var catalog = AssetDatabase.LoadAssetAtPath<TrailerCatalogAsset>(path);
+                if (catalog == null) continue;
+                if (catalog.trailers == null)
+                    catalog.trailers = new System.Collections.Generic.List<TrailerDefinition>();
+                if (!catalog.trailers.Contains(definition))
+                {
+                    catalog.trailers.Add(definition);
+                    EditorUtility.SetDirty(catalog);
+                }
+                return;
+            }
+            Debug.LogWarning("[TrailerImport] No TrailerCatalogAsset found; definition was created but not registered.");
+        }
+
+        private static TrailerCategory InferCategory(string id)
+        {
+            string value = id.ToLowerInvariant();
+            if (value.Contains("reefer") || value.Contains("refriger")) return TrailerCategory.Refrigerated;
+            if (value.Contains("lowboy") || value.Contains("rgn")) return TrailerCategory.Lowboy;
+            if (value.Contains("heavy") && value.Contains("flat")) return TrailerCategory.HeavyFlatbed;
+            if (value.Contains("flat")) return TrailerCategory.Flatbed;
+            if (value.Contains("container")) return TrailerCategory.ContainerChassis;
+            if (value.Contains("grain") || value.Contains("hopper")) return TrailerCategory.GrainHopper;
+            if (value.Contains("cement") || value.Contains("tanker")) return TrailerCategory.CementTanker;
+            if (value.Contains("dump")) return TrailerCategory.DumpTrailer;
+            if (value.Contains("agri") || value.Contains("bulk")) return TrailerCategory.AgriculturalBulk;
+            return TrailerCategory.DryVan;
         }
 
         private static string SanitizeId(string value)
@@ -207,6 +257,18 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
 
             return string.Join(" ", id.Split(new[] { '-' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(part => char.ToUpperInvariant(part[0]) + part.Substring(1)));
+        }
+
+        private static Transform FindChild(Transform root, string name)
+        {
+            if (root == null) return null;
+            if (string.Equals(root.name, name, StringComparison.Ordinal)) return root;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                var result = FindChild(root.GetChild(i), name);
+                if (result != null) return result;
+            }
+            return null;
         }
 
         private static Transform EnsureChild(Transform parent, string name)
