@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace UltimateTruckEmpire.TrailerSystem.Editor
 {
@@ -26,8 +27,11 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 if (catalog == null) continue;
 
                 ValidateList("trailer", catalog.trailers, ref errors, ref warnings);
+                ValidateUniqueIds("trailer", catalog.trailers, ref errors);
                 ValidateList("cargo", catalog.cargo, ref errors, ref warnings);
+                ValidateUniqueIds("cargo", catalog.cargo, ref errors);
                 ValidateList("skin", catalog.skins, ref errors, ref warnings);
+                ValidateUniqueIds("skin", catalog.skins, ref errors);
 
                 for (int t = 0; t < catalog.trailers.Count; t++)
                 {
@@ -152,6 +156,34 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 {
                     Debug.LogWarning("[TrailerSystem] Catalog contains a null " + kind + " entry at index " + i + ".");
                     warnings++;
+                }
+            }
+        }
+
+        private static void ValidateUniqueIds<T>(string kind, System.Collections.Generic.List<T> list, ref int errors)
+            where T : ScriptableObject
+        {
+            var ids = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+            if (list == null) return;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                var asset = list[i];
+                if (asset == null) continue;
+
+                string id = null;
+                var trailer = asset as TrailerDefinition;
+                var cargo = asset as CargoDefinition;
+                var skin = asset as TrailerSkinDefinition;
+                if (trailer != null) id = trailer.id;
+                else if (cargo != null) id = cargo.id;
+                else if (skin != null) id = skin.id;
+
+                if (string.IsNullOrWhiteSpace(id)) continue;
+                if (!ids.Add(id))
+                {
+                    Debug.LogError("[TrailerSystem] Duplicate " + kind + " id '" + id + "'.", asset);
+                    errors++;
                 }
             }
         }
