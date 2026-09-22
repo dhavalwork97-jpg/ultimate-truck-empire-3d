@@ -20,20 +20,13 @@ namespace UltimateTruckEmpire.Company
         public bool available = true;
         public string assignedTruckId = "";
         public string assignedContractId = "";
-
         public float ConditionPercent => Mathf.Clamp(condition, 0f, 100f);
     }
 
-    /// <summary>
-    /// Persistent trailer ownership and assignment. Contract trailer types use the
-    /// Gameplay catalogue; this manager is the single mapping point to physical
-    /// physical truck trailer enum values, avoiding the project's two UltimateTruckEmpire.Gameplay.TrailerType enums.
-    /// </summary>
     public sealed class TrailerFleetManager : MonoBehaviour
     {
         public static TrailerFleetManager Instance { get; private set; }
         public IReadOnlyList<FleetTrailerData> Trailers => trailers;
-
         private readonly List<FleetTrailerData> trailers = new();
         private int nextId = 1;
 
@@ -87,16 +80,13 @@ namespace UltimateTruckEmpire.Company
             return starter;
         }
 
-        public void EnsureStarterFleet()
-        {
-            EnsureStarterTrailer();
-        }
+        public void EnsureStarterFleet() => EnsureStarterTrailer();
 
         private FleetTrailerData AddTrailer(string id, string model, UltimateTruckEmpire.Gameplay.TrailerType type, float price, string definitionId = "")
         {
             var trailer = new FleetTrailerData {
-                id = id, model = model, definitionId = definitionId ?? "", type = type, purchasePrice = Mathf.Max(0f, price),
-                condition = 100f, available = true
+                id = id, model = model, definitionId = definitionId ?? "", type = type,
+                purchasePrice = Mathf.Max(0f, price), condition = 100f, available = true
             };
             trailers.Add(trailer);
             return trailer;
@@ -106,17 +96,15 @@ namespace UltimateTruckEmpire.Company
         {
             var truck = FleetManager.Instance?.Find(truckId);
             if (truck == null) return false;
-
             var current = FindAssignedToTruck(truckId);
+
             if (current != null && current.type == type && current.available)
             {
                 current.available = false;
                 current.assignedContractId = contractId ?? "";
                 return true;
             }
-
-            if (current != null && !string.IsNullOrWhiteSpace(current.assignedContractId))
-                return false;
+            if (current != null && !string.IsNullOrWhiteSpace(current.assignedContractId)) return false;
 
             var trailer = FindAvailableFor(type, truckId);
             if (trailer == null) return false;
@@ -158,6 +146,7 @@ namespace UltimateTruckEmpire.Company
         }
 
         public FleetTrailerData GetAssigned(string truckId) => FindAssignedToTruck(truckId);
+
         public void ReleaseContract(string truckId)
         {
             var trailer = FindAssignedToTruck(truckId);
@@ -175,10 +164,8 @@ namespace UltimateTruckEmpire.Company
             trailer.available = true;
         }
 
-        public float GetRepairCostPerConditionPoint(FleetTrailerData trailer)
-        {
-            return Mathf.Max(100f, trailer?.purchasePrice ?? 0f) * 0.00055f;
-        }
+        public float GetRepairCostPerConditionPoint(FleetTrailerData trailer) =>
+            Mathf.Max(100f, trailer?.purchasePrice ?? 0f) * 0.00055f;
 
         public bool Repair(string trailerId, float targetCondition = 100f)
         {
@@ -216,8 +203,7 @@ namespace UltimateTruckEmpire.Company
             var company = CompanyManager.Instance;
             var game = Core.GameManager.Instance;
             if (definition == null || company == null || !company.IsCompanyCreated || game == null) return false;
-            if (company.Data.level < definition.requiredCompanyLevel) return false;
-            if (OwnsDefinition(definition.id)) return false;
+            if (company.Data.level < definition.requiredCompanyLevel || OwnsDefinition(definition.id)) return false;
             if (!game.TrySpendMoney(definition.purchasePrice)) return false;
 
             AddTrailer("TRL-" + nextId++, definition.displayName, FromCategory(definition.category),
@@ -249,7 +235,6 @@ namespace UltimateTruckEmpire.Company
             var game = Core.GameManager.Instance;
             if (company == null || !company.IsCompanyCreated || game == null || price < 0f) return false;
             if (!game.TrySpendMoney(price)) return false;
-
             AddTrailer("TRL-" + nextId++, model, type, price);
             FinanceManager.Instance?.RecordCapitalExpense(price);
             return true;
@@ -264,8 +249,8 @@ namespace UltimateTruckEmpire.Company
             {
                 if (trailer == null) continue;
                 trailer.condition = Mathf.Clamp(trailer.condition, 0f, 100f);
-                if (trailer.definitionId == null) trailer.definitionId = "";
-                if (trailer.skinId == null) trailer.skinId = "";
+                trailer.definitionId ??= "";
+                trailer.skinId ??= "";
                 trailer.purchasePrice = Mathf.Max(0f, trailer.purchasePrice);
                 if (int.TryParse(trailer.id?.Replace("TRL-", ""), out int n))
                     nextId = Mathf.Max(nextId, n + 1);
@@ -276,16 +261,14 @@ namespace UltimateTruckEmpire.Company
         public TrailerController ApplyToPlayerTruck(TruckController truck)
         {
             if (truck == null) return null;
-
             var assigned = FindAssignedToTruck(truck.FleetTruckId);
             if (assigned == null) return null;
 
-            var controller = truck.GetComponent<TrailerController>();
-            if (controller == null) controller = truck.gameObject.AddComponent<TrailerController>();
-
+            var controller = truck.GetComponent<TrailerController>() ?? truck.gameObject.AddComponent<TrailerController>();
             TrailerDefinition definition = null;
             TrailerSkinDefinition skin = null;
             var catalog = TrailerCatalogRuntime.Catalog;
+
             if (catalog != null && !string.IsNullOrWhiteSpace(assigned.definitionId))
             {
                 definition = catalog.FindTrailer(assigned.definitionId);
@@ -293,7 +276,6 @@ namespace UltimateTruckEmpire.Company
                 {
                     var availableSkins = definition.availableSkins;
                     if (availableSkins != null)
-                    {
                         for (int i = 0; i < availableSkins.Length; i++)
                         {
                             var candidate = availableSkins[i];
@@ -303,7 +285,6 @@ namespace UltimateTruckEmpire.Company
                                 break;
                             }
                         }
-                    }
                 }
                 skin ??= definition.defaultSkin;
             }
@@ -325,27 +306,59 @@ namespace UltimateTruckEmpire.Company
         {
             if (truck == null || definition == null || definition.prefab == null) return;
 
+            var attachment = truck.GetComponent<TrailerPhysicsAttachment>() ??
+                             truck.gameObject.AddComponent<TrailerPhysicsAttachment>();
+            var previous = attachment.AttachedTrailer;
+            attachment.Detach(false);
+
             var fallback = truck.Find("Dry Van Trailer");
             if (fallback == null) fallback = truck.Find("Trailer Visual");
+
             Vector3 localPosition = fallback != null ? fallback.localPosition : new Vector3(0f, 1.35f, -2.35f);
             Quaternion localRotation = fallback != null ? fallback.localRotation : Quaternion.identity;
             if (fallback != null) UnityEngine.Object.Destroy(fallback.gameObject);
+            if (previous != null) UnityEngine.Object.Destroy(previous);
 
-            for (int i = truck.childCount - 1; i >= 0; i--)
-            {
-                var child = truck.GetChild(i);
-                if (child != fallback && child.GetComponentInChildren<LoadedTrailer>(true) != null)
-                    UnityEngine.Object.Destroy(child.gameObject);
-            }
-
-            var instance = UnityEngine.Object.Instantiate(definition.prefab, truck);
+            var instance = UnityEngine.Object.Instantiate(definition.prefab);
             instance.name = definition.displayName + " Trailer";
-            instance.transform.localPosition = localPosition;
-            instance.transform.localRotation = localRotation;
+            instance.transform.SetParent(null, true);
+            instance.transform.position = truck.TransformPoint(localPosition);
+            instance.transform.rotation = truck.rotation * localRotation;
 
             var loadedTrailer = instance.GetComponentInChildren<LoadedTrailer>(true);
             if (loadedTrailer != null)
                 loadedTrailer.ConfigureEmpty(definition, skin);
+
+            Transform kingpin = FindKingpin(instance.transform);
+            if (kingpin != null)
+            {
+                float mass = Mathf.Max(1200f, definition.emptyWeightTons * 1000f);
+                if (!attachment.Attach(instance, kingpin, mass))
+                {
+                    UnityEngine.Object.Destroy(instance);
+                    return;
+                }
+                controller.SetAuthoredDockingPoint(instance.transform);
+            }
+            else
+            {
+                // Keep data-driven trailers usable even when an authored prefab is
+                // missing its physical kingpin; it remains a visual-only trailer.
+                instance.transform.SetParent(truck, true);
+                controller.SetAuthoredDockingPoint(instance.transform);
+            }
+        }
+
+        private static Transform FindKingpin(Transform root)
+        {
+            if (root == null) return null;
+            var direct = root.Find("Sockets/Kingpin") ?? root.Find("Kingpin");
+            if (direct != null) return direct;
+
+            foreach (var child in root.GetComponentsInChildren<Transform>(true))
+                if (child != root && string.Equals(child.name, "Kingpin", StringComparison.OrdinalIgnoreCase))
+                    return child;
+            return null;
         }
     }
 }
