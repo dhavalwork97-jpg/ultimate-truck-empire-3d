@@ -116,7 +116,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             var cargoModule = root.GetComponent<TrailerCargoModule>();
             SetPrivateField(cargoModule, "cargoSocket", cargoSocket);
             var skin = root.GetComponent<TrailerSkinApplier>();
-            SetPrivateField(skin, "trailerDefinition", definition);
+            SetPrivateField(skin, "definition", definition);
 
             return root;
         }
