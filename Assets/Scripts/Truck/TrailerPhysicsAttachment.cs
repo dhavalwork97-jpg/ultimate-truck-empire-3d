@@ -1,5 +1,4 @@
 using UnityEngine;
-using UltimateTruckEmpire.TrailerSystem;
 
 namespace UltimateTruckEmpire.Truck
 {
@@ -19,8 +18,6 @@ namespace UltimateTruckEmpire.Truck
         [Header("Trailer tuning")]
         [SerializeField] private float minimumTrailerMass = 1200f;
         [SerializeField] private float maximumTrailerMass = 40000f;
-        [SerializeField] private float linearLimit = 0.03f;
-        [SerializeField] private float angularDriveSpring = 900f;
         [SerializeField] private float angularDriveDamper = 120f;
         [SerializeField] private float projectionDistance = 0.08f;
         [SerializeField] private float projectionAngle = 4f;
@@ -58,8 +55,6 @@ namespace UltimateTruckEmpire.Truck
             trailerBody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             SetTrailerMass(trailerMass);
 
-            // The authored kingpin is the physical reference. Move the trailer
-            // root so the kingpin sits exactly on the truck's fifth-wheel point.
             Transform hitch = EnsureHitchPoint();
             Vector3 offset = hitch.position - kingpin.position;
             trailerRoot.transform.position += offset;
@@ -72,8 +67,6 @@ namespace UltimateTruckEmpire.Truck
             joint.anchor = trailerRoot.transform.InverseTransformPoint(kingpin.position);
             joint.connectedAnchor = truckBody.transform.InverseTransformPoint(hitch.position);
 
-            // Lock translation at the kingpin. Permit yaw articulation only;
-            // pitch/roll are constrained for predictable mobile handling.
             joint.xMotion = ConfigurableJointMotion.Locked;
             joint.yMotion = ConfigurableJointMotion.Locked;
             joint.zMotion = ConfigurableJointMotion.Locked;
@@ -88,19 +81,14 @@ namespace UltimateTruckEmpire.Truck
             joint.breakForce = Mathf.Infinity;
             joint.breakTorque = Mathf.Infinity;
 
-            // A light angular drive damps violent oscillation while retaining
-            // natural articulation when reversing.
+            // Spring is deliberately zero: the kingpin must articulate instead of
+            // being pulled back toward straight. Damper-only yaw control suppresses
+            // high-frequency oscillation without fighting low-speed reversing.
             var drive = joint.angularYZDrive;
-            drive.positionSpring = angularDriveSpring;
+            drive.positionSpring = 0f;
             drive.positionDamper = angularDriveDamper;
             drive.maximumForce = Mathf.Infinity;
             joint.angularYZDrive = drive;
-
-            var linear = joint.xDrive;
-            linear.positionSpring = 0f;
-            linear.positionDamper = 0f;
-            linear.maximumForce = Mathf.Infinity;
-            joint.xDrive = linear;
 
             attachedTrailer = trailerRoot;
             attachedKingpin = kingpin;
@@ -111,6 +99,11 @@ namespace UltimateTruckEmpire.Truck
         {
             if (trailerBody == null) return;
             trailerBody.mass = Mathf.Clamp(mass, minimumTrailerMass, maximumTrailerMass);
+        }
+
+        public void SetPayloadWeightTons(float payloadTons, float emptyWeightTons)
+        {
+            SetTrailerMass(Mathf.Max(0f, emptyWeightTons) * 1000f + Mathf.Max(0f, payloadTons) * 1000f);
         }
 
         public void Detach(bool preserveVelocity = true)
