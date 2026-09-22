@@ -36,7 +36,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             importer.importBlendShapes = false;
             importer.importCameras = false;
             importer.importLights = false;
-            importer.importMaterials = false;
+            importer.materialImportMode = ModelImporterMaterialImportMode.None;
             importer.optimizeMeshPolygons = true;
             importer.optimizeMeshVertices = true;
             importer.weldVertices = true;
