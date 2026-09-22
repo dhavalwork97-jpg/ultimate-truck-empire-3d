@@ -3,6 +3,7 @@ using UltimateTruckEmpire.Core;
 using UltimateTruckEmpire.Company;
 using UltimateTruckEmpire.Save;
 using UltimateTruckEmpire.Truck;
+using UltimateTruckEmpire.TrailerSystem;
 
 namespace UltimateTruckEmpire.Gameplay
 {
@@ -69,14 +70,25 @@ namespace UltimateTruckEmpire.Gameplay
             LastAcceptMessage = "";
             ResetDocking();
             var trailerController = activeTruck == FleetManager.Instance?.ActiveTruck ? FindFirstObjectByType<TruckController>()?.GetComponent<TrailerController>() : null;
-            trailerController?.ConfigureGameplay(Trailer, ContractWeightTons);
+            if (!ConfigureActiveTrailerFromContract(false))
+                trailerController?.ConfigureGameplay(Trailer, ContractWeightTons);
             ContractAccepted = true; CargoLoaded = false; hasPickupPosition = false; pickupFuelLitres = -1f; SaveManager.Instance?.Save(); return true;
         }
 
         public void Restore(bool contractAccepted, bool cargoLoaded, ContractOffer savedContract, int completedContracts)
         {
             CompletedContracts = Mathf.Max(0, completedContracts); ContractAccepted = false; CargoLoaded = false; hasPickupPosition = false; ResetDocking();
-            if (contractAccepted && savedContract != null) { AcceptContractInternal(savedContract); CargoLoaded = cargoLoaded; }
+            if (contractAccepted && savedContract != null)
+            {
+                AcceptContractInternal(savedContract);
+                CargoLoaded = false;
+                if (cargoLoaded)
+                {
+                    CargoLoaded = ConfigureActiveTrailerFromContract(true);
+                    if (!CargoLoaded)
+                        CargoLoaded = true; // Preserve saved gameplay state when visual cargo data is unavailable.
+                }
+            }
         }
 
         private void AcceptContractInternal(ContractOffer offer)
@@ -95,14 +107,71 @@ namespace UltimateTruckEmpire.Gameplay
             if (activeTruck != null && TrailerFleetManager.Instance != null)
             {
                 TrailerFleetManager.Instance.AssignForContract(activeTruck.id, ContractId, Trailer);
-                FindFirstObjectByType<TruckController>()?.GetComponent<TrailerController>()?.ConfigureGameplay(Trailer, ContractWeightTons);
+                if (!ConfigureActiveTrailerFromContract(false))
+                    FindFirstObjectByType<TruckController>()?.GetComponent<TrailerController>()?.ConfigureGameplay(Trailer, ContractWeightTons);
             }
             ContractAccepted = true;
         }
 
+        private TrailerCatalogAsset GetTrailerCatalog()
+        {
+            return Resources.Load<TrailerCatalogAsset>("TrailerSystem/Catalog/TrailerCatalog");
+        }
+
+        private bool ConfigureActiveTrailerFromContract(bool loadCargo)
+        {
+            var fleet = TrailerFleetManager.Instance;
+            var activeTruck = FleetManager.Instance?.ActiveTruck;
+            var playerTruck = FindFirstObjectByType<TruckController>();
+            if (fleet == null || activeTruck == null || playerTruck == null) return false;
+
+            var ownedTrailer = fleet.FindAssignedToTruck(activeTruck.id);
+            var catalog = GetTrailerCatalog();
+            if (ownedTrailer == null || catalog == null || string.IsNullOrWhiteSpace(ownedTrailer.definitionId)) return false;
+
+            var definition = catalog.FindTrailer(ownedTrailer.definitionId);
+            if (definition == null) return false;
+
+            TrailerSkinDefinition skin = null;
+            if (!string.IsNullOrWhiteSpace(ownedTrailer.skinId) && definition.availableSkins != null)
+            {
+                for (int i = 0; i < definition.availableSkins.Length; i++)
+                {
+                    var candidate = definition.availableSkins[i];
+                    if (candidate != null && string.Equals(candidate.id, ownedTrailer.skinId, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        skin = candidate;
+                        break;
+                    }
+                }
+            }
+            if (skin == null) skin = definition.defaultSkin;
+
+            var controller = playerTruck.GetComponent<TrailerController>() ?? playerTruck.gameObject.AddComponent<TrailerController>();
+            if (!loadCargo)
+                return controller.ConfigureDefinition(definition, null, 0f, skin);
+
+            var cargo = catalog.FindCargo(CargoId);
+            if (cargo == null || !controller.ConfigureDefinition(definition, cargo, ContractWeightTons, skin))
+                return false;
+
+            return true;
+        }
+
         public void LoadCargo(Vector3 worldPosition)
         {
-            if (!ContractAccepted || CargoLoaded) return; CargoLoaded = true; pickupWorldPosition = worldPosition; hasPickupPosition = true;
+            if (!ContractAccepted || CargoLoaded) return;
+
+            // Prefer the authored trailer/cargo definitions when available. The legacy
+            // gameplay path remains as a safe fallback for old saves and incomplete data.
+            if (!ConfigureActiveTrailerFromContract(true))
+            {
+                var playerTruck = FindFirstObjectByType<TruckController>();
+                playerTruck?.GetComponent<TrailerController>()?.ConfigureGameplay(Trailer, ContractWeightTons);
+            }
+
+            CargoLoaded = true;
+            pickupWorldPosition = worldPosition; hasPickupPosition = true;
             var activeTruck = FleetManager.Instance?.ActiveTruck; pickupFuelLitres = activeTruck != null ? activeTruck.fuel : -1f; SaveManager.Instance?.Save();
         }
         public void LoadCargo() => LoadCargo(Vector3.zero);
@@ -198,6 +267,7 @@ namespace UltimateTruckEmpire.Gameplay
             CompanyManager.Instance?.AddRevenue(payment); GameManager.Instance?.AddXp(RewardXp + evaluation.bonusXp);
             SupplyChainManager.Instance?.RecordShipment(
                 ActiveOriginIndustryId, ActiveDestinationIndustryId, CargoId, ContractWeightTons);
+            playerTruck?.GetComponent<TrailerController>()?.Unload();
             CompletedContracts++; TrailerFleetManager.Instance?.ReleaseContract(truck?.id ?? ""); ContractQualityBonus = 0f; ContractQualityPenalty = 0f; MissionManager.Instance?.NotifyDeliveryComplete(); ContractAccepted = false; CargoLoaded = false; hasPickupPosition = false; pickupFuelLitres = -1f;
             ContractMarket.Instance?.Refresh(); SaveManager.Instance?.Save();
         }
