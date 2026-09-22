@@ -112,7 +112,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             string key = plazaId + "|" + (string.IsNullOrEmpty(vehicleKey) ? truck.GetInstanceID().ToString() : vehicleKey);
             if (paidKeys.ContainsKey(key)) return true;
             var trailer = truck.GetComponent<TrailerController>();
-            float amount = TollPricingEngine.Calculate(p.baseToll, truck, trailer != null ? trailer.ContractTrailerType : TrailerType.DryVan, method);
+            float amount = TollPricingEngine.Calculate(p.baseToll, truck, trailer != null ? trailer.Type : TrailerType.DryVan, method);
             bool charged = method == TollPaymentMethod.FastTag ? FastTagWallet.Instance != null && FastTagWallet.Instance.TryPay(amount)
                                                                : GameManager.Instance != null && GameManager.Instance.TrySpendMoney(amount);
             if (!charged) { PaymentFailed?.Invoke(method == TollPaymentMethod.FastTag ? "FASTag balance too low" : "Insufficient cash"); return false; }
@@ -197,7 +197,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
         private static void CreateGate(Transform root, string name, Vector3 pos, TollPaymentMethod method)
         {
             var go = new GameObject(name); go.transform.SetParent(root,false); go.transform.localPosition=pos;
-            var post=GameObject.CreatePrimitive(PrimitiveType.Cube); post.transform.SetParent(go.transform,false); post.transform.localScale=new Vector3(.3f,3.2f,.3f); post.transform.localPosition=new Vector3(-3f,1.6f,0f); Object.Destroy(post.GetComponent<Collider>());
+            var post=GameObject.CreatePrimitive(PrimitiveType.Cube); post.transform.SetParent(go.transform,false); post.transform.localScale=new Vector3(.3f,3.2f,.3f); post.transform.localPosition=new Vector3(-3f,1.6f,0f); UnityEngine.Object.Destroy(post.GetComponent<Collider>());
             var trigger=go.AddComponent<BoxCollider>(); trigger.isTrigger=true; trigger.size=new Vector3(4f,4f,16f);
             go.AddComponent<TollGateTrigger>().Configure("TOLL_AHM_VAD_01",method);
         }
