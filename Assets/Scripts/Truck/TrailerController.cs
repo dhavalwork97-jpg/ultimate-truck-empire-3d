@@ -37,7 +37,14 @@ namespace UltimateTruckEmpire.Truck
         }
 
         public void Load(float weightTons) { CargoWeightTons = Mathf.Max(0f, weightTons); CargoLoaded = true; }
-        public void Unload() { CargoWeightTons = 0f; CargoLoaded = false; LoadedCargo = null; }
+        public void Unload()
+        {
+            var loadedTrailer = GetComponent<LoadedTrailer>();
+            if (loadedTrailer != null) loadedTrailer.Unload();
+            CargoWeightTons = 0f;
+            CargoLoaded = false;
+            LoadedCargo = null;
+        }
 
         /// <summary>Configures this physical trailer from the new ScriptableObject data model.</summary>
         public bool ConfigureDefinition(TrailerDefinition definition, CargoDefinition cargo = null, float weightTons = 0f, TrailerSkinDefinition skin = null)
@@ -57,6 +64,12 @@ namespace UltimateTruckEmpire.Truck
                 CargoWeightTons = 0f;
                 CargoLoaded = false;
             }
+
+            var loadedTrailer = GetComponent<LoadedTrailer>() ?? gameObject.AddComponent<LoadedTrailer>();
+            if (cargo != null && !loadedTrailer.Configure(definition, cargo, CargoWeightTons, skin))
+                return false;
+            if (cargo == null && !loadedTrailer.ConfigureEmpty(definition, skin))
+                return false;
 
             var skinApplier = GetComponent<TrailerSkinApplier>() ?? gameObject.AddComponent<TrailerSkinApplier>();
             skinApplier.Initialize(definition, skin);
