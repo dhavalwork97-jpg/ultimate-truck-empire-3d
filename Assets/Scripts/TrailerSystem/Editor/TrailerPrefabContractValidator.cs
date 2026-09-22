@@ -101,7 +101,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 if (definition.wheelSockets == null || definition.wheelSockets.Length < 4)
                     Warn(definition, "Definition has fewer than 4 wheel sockets assigned.", ref warnings);
 
-                ValidateRenderBudget(definition, root, ref errors, ref warnings);
+                ValidateRenderBudget(definition, root, lodGroup, ref errors, ref warnings);
             }
             finally
             {
@@ -131,13 +131,21 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             }
         }
 
-        private static void ValidateRenderBudget(TrailerDefinition definition, GameObject root,
+        private static void ValidateRenderBudget(TrailerDefinition definition, GameObject root, LODGroup lodGroup,
             ref int errors, ref int warnings)
         {
             Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
             var materials = new HashSet<Material>();
             long triangles = 0;
             int maxTexture = 0;
+            var lod0Renderers = new HashSet<Renderer>();
+            if (lodGroup != null)
+            {
+                LOD[] lods = lodGroup.GetLODs();
+                if (lods != null && lods.Length > 0 && lods[0].renderers != null)
+                    for (int i = 0; i < lods[0].renderers.Length; i++)
+                        if (lods[0].renderers[i] != null) lod0Renderers.Add(lods[0].renderers[i]);
+            }
 
             for (int i = 0; i < renderers.Length; i++)
             {
@@ -154,6 +162,8 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                     if (texture is Texture2D texture2D)
                         maxTexture = Mathf.Max(maxTexture, Mathf.Max(texture2D.width, texture2D.height));
                 }
+
+                if (!lod0Renderers.Contains(renderer)) continue;
 
                 MeshFilter meshFilter = renderer as MeshRenderer != null
                     ? renderer.GetComponent<MeshFilter>()
