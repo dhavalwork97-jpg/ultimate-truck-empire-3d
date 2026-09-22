@@ -140,7 +140,8 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
         {
             return string.Equals(licenseType, "CC0", StringComparison.OrdinalIgnoreCase) ||
                    string.Equals(licenseType, "CommercialLicense", StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(licenseType, "CustomPermission", StringComparison.OrdinalIgnoreCase);
+                   string.Equals(licenseType, "CustomPermission", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(licenseType, "CCBY4.0", StringComparison.OrdinalIgnoreCase);
         }
 
         [Serializable]
