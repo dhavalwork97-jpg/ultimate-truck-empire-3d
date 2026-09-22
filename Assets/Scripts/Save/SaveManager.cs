@@ -3,7 +3,8 @@ using UnityEngine;
 using UltimateTruckEmpire.Core;
 using UltimateTruckEmpire.Company;
 using UltimateTruckEmpire.Gameplay;
-using UltimateTruckEmpire.Gameplay.Toll;\nusing UltimateTruckEmpire.Gameplay.RestArea;
+using UltimateTruckEmpire.Gameplay.Toll;
+using UltimateTruckEmpire.Gameplay.RestArea;
 using UltimateTruckEmpire.Truck;
 using System.Collections.Generic;
 
@@ -43,7 +44,8 @@ namespace UltimateTruckEmpire.Save
             public AutomatedDelivery[] automatedDeliveries;
             public SupplyChainSaveState[] supplyChain;
             public FuelPriceRegionState[] fuelPrices;
-            public TollSaveState tolls;\n            public RestAreaSaveState restArea;
+            public TollSaveState tolls;
+            public RestAreaSaveState restArea;
             public bool hasPlayerTransform;
             public Vector3 playerPosition;
             public Quaternion playerRotation;
@@ -96,7 +98,8 @@ namespace UltimateTruckEmpire.Save
                     automatedDeliveries = AutomatedDeliveryManager.Instance?.CaptureState(),
                     supplyChain = SupplyChainManager.Instance?.CaptureState(),
                     fuelPrices = FuelPriceManager.Instance?.CaptureState(),
-                    tolls = TollPlazaManager.Instance?.CaptureState(),\n                    restArea = RestAreaManager.Instance?.CaptureState()
+                    tolls = TollPlazaManager.Instance?.CaptureState(),
+                    restArea = RestAreaManager.Instance?.CaptureState()
                 };
                 string directory = Application.persistentDataPath;
                 Directory.CreateDirectory(directory);
@@ -203,7 +206,8 @@ namespace UltimateTruckEmpire.Save
                 AutomatedDeliveryManager.Instance?.RestoreState(data.automatedDeliveries);
                 SupplyChainManager.Instance?.RestoreState(data.supplyChain);
                 FuelPriceManager.Instance?.RestoreState(data.fuelPrices);
-                TollPlazaManager.Instance?.RestoreState(data.tolls);\n                RestAreaManager.Instance?.RestoreState(data.restArea);
+                TollPlazaManager.Instance?.RestoreState(data.tolls);
+                RestAreaManager.Instance?.RestoreState(data.restArea);
             }
             catch (System.Exception ex)
             {
