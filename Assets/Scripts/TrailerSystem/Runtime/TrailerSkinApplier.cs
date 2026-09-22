@@ -40,7 +40,7 @@ namespace UltimateTruckEmpire.TrailerSystem
                     renderer.GetPropertyBlock(block, slot);
 
                     if (skin.materialOverride != null)
-                        renderer.sharedMaterials[slot] = skin.materialOverride;
+                        materials[slot] = skin.materialOverride;
 
                     Texture2D texture = skin.GetTexture(slot);
                     if (texture != null)
@@ -53,6 +53,9 @@ namespace UltimateTruckEmpire.TrailerSystem
                     block.SetColor("_Color", skin.GetTint(slot));
                     renderer.SetPropertyBlock(block, slot);
                 }
+
+                if (skin.materialOverride != null)
+                    renderer.sharedMaterials = materials;
             }
         }
     }
