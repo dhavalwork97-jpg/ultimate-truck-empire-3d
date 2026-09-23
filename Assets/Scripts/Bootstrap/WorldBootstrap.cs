@@ -311,6 +311,12 @@ namespace UltimateTruckEmpire.Bootstrap
             }
             hudGo.Bind(truck.GetComponent<TruckController>(), truck.GetComponent<TruckLights>());
 
+            if (FindFirstObjectByType<CityMapUI>() == null)
+            {
+                var mapUiGo = new GameObject("City Map UI");
+                mapUiGo.AddComponent<CityMapUI>();
+            }
+
             var mobileControls = FindFirstObjectByType<MobileDrivingControls>();
             if (mobileControls == null)
             {
