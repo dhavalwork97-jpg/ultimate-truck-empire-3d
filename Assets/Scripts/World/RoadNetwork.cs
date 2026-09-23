@@ -68,12 +68,14 @@ namespace UltimateTruckEmpire.World
         private static readonly List<RoadCorridor> corridors = new List<RoadCorridor>(24);
 
         public static IReadOnlyList<Junction> Junctions => junctions;
+        public static int Version { get; private set; }
         public static IReadOnlyList<RoadCorridor> Corridors => corridors;
 
         public static void Reset()
         {
             junctions.Clear();
             corridors.Clear();
+            Version++;
         }
 
         public static void RegisterCorridor(string id, bool alongX, float fixedCoordinate, float min, float max, float width)
