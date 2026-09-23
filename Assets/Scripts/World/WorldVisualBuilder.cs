@@ -38,6 +38,7 @@ namespace UltimateTruckEmpire.World
             BuildBackgroundSkyline(root);
             BuildVegetation(root);
             BuildStreetFurniture(root);
+            BuildRegionalExpansion(root);
 
             EnvironmentAtmosphere.Ensure();
             StreetLightManager.Ensure();
@@ -80,27 +81,30 @@ namespace UltimateTruckEmpire.World
             RoadBuilder.RoadOptions access = RoadBuilder.RoadOptions.Access();
 
             // Main east-west highway, split around the junction with the north road.
-            RoadBuilder.BuildEastWest("Highway West", -160f, -98f, 0f, 14f, highway);
-            RoadBuilder.BuildEastWest("Highway East", -82f, 160f, 0f, 14f, highway);
+            RoadBuilder.BuildEastWest("Highway West", -220f, -98f, 0f, 14f, highway);
+            RoadBuilder.BuildEastWest("Highway East", -82f, 220f, 0f, 14f, highway);
 
-            RoadBuilder.BuildEastWest("North Highway West", -160f, -98f, 70f, 14f, highway);
-            RoadBuilder.BuildEastWest("North Highway East", -82f, 160f, 70f, 14f, highway);
+            RoadBuilder.BuildEastWest("North Highway West", -220f, -98f, 70f, 14f, highway);
+            RoadBuilder.BuildEastWest("North Highway East", -82f, 220f, 70f, 14f, highway);
 
-            RoadBuilder.BuildEastWest("South Highway", -160f, 160f, -70f, 14f, highway);
+            RoadBuilder.BuildEastWest("South Highway", -220f, 220f, -70f, 14f, highway);
 
             // Connecting road, split around both junctions it crosses.
-            RoadBuilder.BuildNorthSouth("Link Road South", -35f, -8f, NorthSouthRoadX, 14f, street);
+            RoadBuilder.BuildNorthSouth("Link Road South", -105f, -8f, NorthSouthRoadX, 14f, street);
             RoadBuilder.BuildNorthSouth("Link Road Middle", 8f, 62f, NorthSouthRoadX, 14f, street);
-            RoadBuilder.BuildNorthSouth("Link Road North", 78f, 105f, NorthSouthRoadX, 14f, street);
+            RoadBuilder.BuildNorthSouth("Link Road North", 78f, 135f, NorthSouthRoadX, 14f, street);
+            RoadBuilder.BuildNorthSouth("Gandhinagar Access", 70f, 120f, -25f, 12f, access);
 
             RoadBuilder.BuildIntersection("Junction South", new Vector3(NorthSouthRoadX, 0f, 0f), 16f, 16f);
             RoadBuilder.BuildIntersection("Junction North", new Vector3(NorthSouthRoadX, 0f, 70f), 16f, 16f);
 
             // Shared semantic metadata mirrors the same coordinates used above.
-            RoadNetwork.RegisterCorridor("Highway South", true, -70f, -160f, 160f, 14f);
-            RoadNetwork.RegisterCorridor("Highway Main", true, 0f, -160f, 160f, 14f);
-            RoadNetwork.RegisterCorridor("Highway North", true, 70f, -160f, 160f, 14f);
-            RoadNetwork.RegisterCorridor("Link Road", false, NorthSouthRoadX, -35f, 105f, 14f);
+            RoadNetwork.RegisterCorridor("Highway South", true, -70f, -220f, 220f, 14f);
+            RoadNetwork.RegisterCorridor("Highway Main", true, 0f, -220f, 220f, 14f);
+            RoadNetwork.RegisterCorridor("Highway North", true, 70f, -220f, 220f, 14f);
+            RoadNetwork.RegisterCorridor("Link Road", false, NorthSouthRoadX, -105f, 135f, 14f);
+            RoadNetwork.RegisterCorridor("Gandhinagar Access", false, -25f, 70f, 120f, 12f);
+            RoadNetwork.RegisterJunction("Gandhinagar Junction", new Vector3(-25f, 0f, 70f), 14f, 14f, false);
             RoadNetwork.RegisterJunction("Junction South", new Vector3(NorthSouthRoadX, 0f, 0f), 16f, 16f, true);
             RoadNetwork.RegisterJunction("Junction North", new Vector3(NorthSouthRoadX, 0f, 70f), 16f, 16f, true);
 
