@@ -128,7 +128,7 @@ namespace UltimateTruckEmpire.Bootstrap
             var box = zone.AddComponent<BoxCollider>();
             box.isTrigger = true;
             box.size = new Vector3(30, 4, 16);
-            zone.AddComponent<DeliveryTrigger>().Configure(type);
+            zone.AddComponent<DeliveryTrigger>().Configure(type, zoneName);
 
             var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
             marker.name = zoneName + " Marker";
