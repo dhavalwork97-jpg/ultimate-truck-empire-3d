@@ -109,6 +109,78 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             }
         }
 
+        [MenuItem("Ultimate Truck Empire/Trailer System/Prepare All Imported Trailers")]
+        public static void PrepareAllImported()
+        {
+            string[] guids = AssetDatabase.FindAssets("t:Model", new[] { ImportRoot.TrimEnd('/') });
+            int prepared = 0;
+            int skipped = 0;
+
+            for (int i = 0; i < guids.Length; i++)
+            {
+                string modelPath = AssetDatabase.GUIDToAssetPath(guids[i]);
+                if (!IsTrailerImportPath(modelPath))
+                    continue;
+
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
+                if (model == null)
+                {
+                    skipped++;
+                    Debug.LogWarning("[TrailerImport] Could not load model: " + modelPath);
+                    continue;
+                }
+
+                if (PrepareImportedModel(modelPath, model))
+                    prepared++;
+                else
+                    skipped++;
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("[TrailerImport] Batch preparation complete. Prepared: " + prepared + ", skipped: " + skipped + ".");
+        }
+
+        private static bool PrepareImportedModel(string modelPath, GameObject model)
+        {
+            string id = SanitizeId(Path.GetFileNameWithoutExtension(modelPath));
+            if (string.IsNullOrEmpty(id))
+                return false;
+
+            string prefabPath = "Assets/TrailerSystem/Prefabs/Imported/" + id + ".prefab";
+            EnsureFolder("Assets/TrailerSystem/Prefabs/Imported");
+
+            var instance = PrefabUtility.InstantiatePrefab(model) as GameObject;
+            if (instance == null)
+            {
+                Debug.LogError("[TrailerImport] Could not instantiate imported model: " + modelPath);
+                return false;
+            }
+
+            try
+            {
+                instance.name = id;
+                AddRuntimeContract(instance);
+                CreateAuthoredPlaceholderSockets(instance);
+                CreateGeneratedPhysicsProxy(instance);
+
+                var prefab = PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
+                if (prefab == null)
+                {
+                    Debug.LogError("[TrailerImport] Failed to create prefab: " + prefabPath);
+                    return false;
+                }
+
+                RegisterOrCreateDefinition(id, prefab);
+                RegisterDefinitionInCatalog(id);
+                return true;
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(instance);
+            }
+        }
+
         [MenuItem("Ultimate Truck Empire/Trailer System/Prepare Selected Imported Trailer", true)]
         private static bool ValidatePrepareSelected()
         {
