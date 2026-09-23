@@ -9,9 +9,12 @@ namespace UltimateTruckEmpire.World
         public enum TriggerType { Pickup, Destination }
         [SerializeField] private TriggerType triggerType;
         [SerializeField] private Transform dockTransform;
+        [SerializeField] private string locationId;
 
         public TriggerType Type => triggerType;
-        public void Configure(TriggerType type) => triggerType = type;
+        public string LocationId => locationId;
+        public void Configure(TriggerType type) => Configure(type, gameObject.name);
+        public void Configure(TriggerType type, string location) { triggerType = type; locationId = location ?? ""; }
 
         private Collider zone;
         private TruckController playerTruck;
@@ -32,6 +35,7 @@ namespace UltimateTruckEmpire.World
             if (triggerType != TriggerType.Pickup) return;
             var delivery = DeliveryManager.Instance;
             if (delivery == null || !IsPlayerTruck(other)) return;
+            if (!string.IsNullOrWhiteSpace(locationId) && !string.Equals(locationId, delivery.Pickup, System.StringComparison.OrdinalIgnoreCase)) return;
             delivery.LoadCargo(transform.position);
         }
 
@@ -40,6 +44,7 @@ namespace UltimateTruckEmpire.World
             if (triggerType != TriggerType.Destination) return;
             var delivery = DeliveryManager.Instance;
             if (delivery == null || !delivery.ContractAccepted || !delivery.CargoLoaded) return;
+            if (!string.IsNullOrWhiteSpace(locationId) && !string.Equals(locationId, delivery.Destination, System.StringComparison.OrdinalIgnoreCase)) return;
             if (zone == null) zone = GetComponent<Collider>();
             if (playerTruck == null) playerTruck = FindFirstObjectByType<TruckController>();
             if (playerTruck == null || zone == null) return;
