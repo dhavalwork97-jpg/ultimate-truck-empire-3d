@@ -310,6 +310,13 @@ namespace UltimateTruckEmpire.Bootstrap
                 hudGo = go.AddComponent<DrivingHUD>();
             }
             hudGo.Bind(truck.GetComponent<TruckController>(), truck.GetComponent<TruckLights>());
+
+            var mobileControls = FindFirstObjectByType<MobileDrivingControls>();
+            if (mobileControls == null)
+            {
+                var controlsGo = new GameObject("Mobile Driving Controls");
+                controlsGo.AddComponent<MobileDrivingControls>();
+            }
         }
     }
 }

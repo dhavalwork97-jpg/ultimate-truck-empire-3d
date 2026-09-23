@@ -109,8 +109,8 @@ namespace UltimateTruckEmpire.Truck
         // or repeats presses depending on the frame/step ratio.
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.I)) engineRunning = !engineRunning;
-            if (Input.GetKeyDown(gearKey)) CycleGear();
+            if (Input.GetKeyDown(KeyCode.I) || MobileInputState.ConsumeEngineToggle()) engineRunning = !engineRunning;
+            if (Input.GetKeyDown(gearKey) || MobileInputState.ConsumeGear()) CycleGear();
             if (Input.GetKeyDown(cruiseKey)) ToggleCruise();
         }
 
@@ -133,12 +133,12 @@ namespace UltimateTruckEmpire.Truck
 
         private void ReadInput(float dt)
         {
-            float rawSteer = Input.GetAxisRaw("Horizontal");
+            float rawSteer = Mathf.Clamp(Input.GetAxisRaw("Horizontal") + MobileInputState.Steering, -1f, 1f);
             float rate = Mathf.Abs(rawSteer) > 0.01f ? steerRate : steerReturnRate;
             steerInput = Mathf.MoveTowards(steerInput, rawSteer, rate * dt);
 
-            throttleInput = Input.GetAxisRaw("Vertical");
-            brakingInput = Input.GetKey(KeyCode.Space);
+            throttleInput = Mathf.Clamp(Input.GetAxisRaw("Vertical") + MobileInputState.Throttle, -1f, 1f);
+            brakingInput = Input.GetKey(KeyCode.Space) || MobileInputState.Brake;
 
             if (brakingInput || (CruiseActive && throttleInput < -0.1f)) CruiseActive = false;
         }
