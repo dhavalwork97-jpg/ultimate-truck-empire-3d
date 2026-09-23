@@ -41,7 +41,7 @@ namespace UltimateTruckEmpire.Truck
         public bool BrakesOn => brakesOn;
         public bool ReverseOn => reverseOn;
         public bool BlinkPhase => blinkPhase;
-        public bool HornActive => Input.GetKey(hornKey);
+        public bool HornActive => Input.GetKey(hornKey) || MobileInputState.Horn;
 
         public void Configure(Light[] head, Light[] brake, Light[] left, Light[] right, Light[] reverse)
         {
@@ -50,10 +50,10 @@ namespace UltimateTruckEmpire.Truck
 
         private void Update()
         {
-            if (Input.GetKeyDown(headlightKey)) headlightsOn = !headlightsOn;
-            if (Input.GetKeyDown(leftIndicatorKey)) { leftOn = !leftOn; rightOn = false; }
-            if (Input.GetKeyDown(rightIndicatorKey)) { rightOn = !rightOn; leftOn = false; }
-            if (Input.GetKeyDown(hazardKey)) { hazardsOn = !hazardsOn; if (hazardsOn) { leftOn = false; rightOn = false; } }
+            if (Input.GetKeyDown(headlightKey) || MobileInputState.ConsumeHeadlights()) headlightsOn = !headlightsOn;
+            if (Input.GetKeyDown(leftIndicatorKey) || MobileInputState.ConsumeLeftIndicator()) { leftOn = !leftOn; rightOn = false; hazardsOn = false; }
+            if (Input.GetKeyDown(rightIndicatorKey) || MobileInputState.ConsumeRightIndicator()) { rightOn = !rightOn; leftOn = false; hazardsOn = false; }
+            if (Input.GetKeyDown(hazardKey) || MobileInputState.ConsumeHazards()) { hazardsOn = !hazardsOn; if (hazardsOn) { leftOn = false; rightOn = false; } }
 
             bool blinking = LeftIndicatorOn || RightIndicatorOn;
             if (blinking)
