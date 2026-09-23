@@ -38,7 +38,6 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            Library
             ~/.cache/unity3d
           key: unity-${{ runner.os }}-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}
           restore-keys: |
@@ -50,7 +49,7 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
           projectPath: .
-          unityVersionChangeset: auto
+          unityVersion: 6000.0.65f1
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           testMode: all
           artifactsPath: artifacts/tests
