@@ -316,6 +316,14 @@ namespace UltimateTruckEmpire.World
             if (reservedJunction != null && reservedJunction != nearest)
                 ReleaseJunctionReservation();
 
+            bool insideJunction = RoadNetwork.IsInside(nearest, transform.position, 0f);
+            if (!insideJunction && !RoadNetwork.AllowsEntry(nearest, transform.position, direction, Time.time))
+            {
+                junctionBlocked = true;
+                yielding = true;
+                return;
+            }
+
             if (reservedJunction == nearest)
             {
                 RoadNetwork.TryReserve(nearest, this, Time.time, junctionReservationDuration);
