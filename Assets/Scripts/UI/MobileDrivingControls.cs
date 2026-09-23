@@ -195,7 +195,7 @@ namespace UltimateTruckEmpire.UI
         }
 
         public void OnPointerUp(PointerEventData eventData) => Release();
-        public void OnPointerExit(PointerEventData eventData) { if (IsHorn) Release(); }
+        public void OnPointerExit(PointerEventData eventData) { if (IsHorn || ClickAction == null) Release(); }
 
         private void Release()
         {
