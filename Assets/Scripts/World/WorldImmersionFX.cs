@@ -59,8 +59,8 @@ namespace UltimateTruckEmpire.World
             float windT = Mathf.Clamp01(speed / 90f);
             if (windSource != null)
             {
-                windSource.volume = Mathf.Lerp(0.015f, 0.20f, windT);
-                windSource.pitch = Mathf.Lerp(0.78f, 1.12f, windT);
+                windSource.volume = Mathf.Lerp(0.015f, 0.20f, windT) + targetWind * 0.035f;
+                windSource.pitch = Mathf.Lerp(0.78f, 1.12f, windT) + targetWind * 0.04f;
             }
 
             WeatherState state = weather != null ? weather.Weather : WeatherState.Clear;
