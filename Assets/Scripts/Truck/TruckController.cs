@@ -37,6 +37,14 @@ namespace UltimateTruckEmpire.Truck
         private float autoShiftTimer;
         private float cruiseSpeedKph;
 
+        // Mobile input is injected by MobileDrivingControls. Desktop input remains unchanged.
+        private bool mobileInputActive;
+        private float mobileSteering;
+        private float mobileThrottle;
+        private bool mobileBrake;
+        private bool mobileHorn;
+        public bool MobileHornActive => mobileHorn;
+
         public float SpeedKph => body == null ? 0f : body.linearVelocity.magnitude * 3.6f;
         public float Fuel { get; private set; } = 100f;
         public bool EngineRunning => engineRunning;
@@ -105,6 +113,19 @@ namespace UltimateTruckEmpire.Truck
 
         public void AttachLights(TruckLights truckLights) => lights = truckLights;
 
+        public void SetMobileDrivingInput(float steering, float throttle, bool brake)
+        {
+            mobileInputActive = true;
+            mobileSteering = Mathf.Clamp(steering, -1f, 1f);
+            mobileThrottle = Mathf.Clamp(throttle, -1f, 1f);
+            mobileBrake = brake;
+        }
+
+        public void SetMobileHorn(bool pressed) => mobileHorn = pressed;
+
+        public void MobileCycleGear() => CycleGear();
+        public void MobileToggleCruise() => ToggleCruise();
+
         // Key presses are read in Update. Reading GetKeyDown from FixedUpdate drops
         // or repeats presses depending on the frame/step ratio.
         private void Update()
@@ -133,12 +154,12 @@ namespace UltimateTruckEmpire.Truck
 
         private void ReadInput(float dt)
         {
-            float rawSteer = Input.GetAxisRaw("Horizontal");
+            float rawSteer = mobileInputActive ? mobileSteering : Input.GetAxisRaw("Horizontal");
             float rate = Mathf.Abs(rawSteer) > 0.01f ? steerRate : steerReturnRate;
             steerInput = Mathf.MoveTowards(steerInput, rawSteer, rate * dt);
 
-            throttleInput = Input.GetAxisRaw("Vertical");
-            brakingInput = Input.GetKey(KeyCode.Space);
+            throttleInput = mobileInputActive ? mobileThrottle : Input.GetAxisRaw("Vertical");
+            brakingInput = mobileInputActive ? mobileBrake : Input.GetKey(KeyCode.Space);
 
             if (brakingInput || (CruiseActive && throttleInput < -0.1f)) CruiseActive = false;
         }

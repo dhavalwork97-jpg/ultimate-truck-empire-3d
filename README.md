@@ -36,6 +36,6 @@ The Vite/Three.js implementation in src/ is retained only as a browser/reference
 - **F7:** cycle weather
 - **D:** truck dealership
 
-Mobile touch controls are a production task on the canonical root project; do not copy the removed legacy UnityProject implementation back into the repository.
+Mobile touch controls are implemented in `Assets/Scripts/UI/MobileDrivingControls.cs` and are enabled automatically on Android/iOS; desktop keyboard controls remain unchanged.
 
 The project uses only fictional manufacturers/assets in the base systems; no Truck Simulator: Ultimate proprietary assets are included.
