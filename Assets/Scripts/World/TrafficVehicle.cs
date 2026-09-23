@@ -11,7 +11,7 @@ namespace UltimateTruckEmpire.World
     public sealed class TrafficVehicle : MonoBehaviour
     {
         private static readonly List<TrafficVehicle> ActiveVehicles = new List<TrafficVehicle>(24);
-        private static TruckController playerTruck;
+        private static TruckController playerTruck;\n\n        private Vector3 lastPosition;\n        private float stuckTimer;\n        private float recoveryCooldown;\n        private float recoveryDistance;
 
         [SerializeField] private float cruiseSpeed = 10f;
         [SerializeField] private float acceleration = 4f;
@@ -100,7 +100,7 @@ namespace UltimateTruckEmpire.World
             float rate = targetSpeed < speed ? braking : acceleration;
             speed = Mathf.MoveTowards(speed, targetSpeed, rate * Time.deltaTime);
 
-            transform.position += direction * speed * Time.deltaTime;
+            transform.position += direction * speed * Time.deltaTime;\n            EvaluateStuckRecovery();
 
             if (direction.sqrMagnitude > 0.01f)
             {
@@ -180,7 +180,7 @@ namespace UltimateTruckEmpire.World
                 }
             }
 
-            TruckController player = FindFirstObjectByType<TruckController>();
+            if (playerTruck == null)\n                playerTruck = FindFirstObjectByType<TruckController>();\n\n            TruckController player = playerTruck;
             if (player == null)
                 return;
 
@@ -198,3 +198,4 @@ namespace UltimateTruckEmpire.World
         }
     }
 }
+\n        private void EvaluateStuckRecovery()\n        {\n            Vector3 movement = transform.position - lastPosition;\n            movement.y = 0f;\n            float movedSqr = movement.sqrMagnitude;\n            lastPosition = transform.position;\n\n            if (speed > 2f && movedSqr < 0.0025f)\n                stuckTimer += Time.deltaTime;\n            else\n                stuckTimer = Mathf.Max(0f, stuckTimer - Time.deltaTime * 0.5f);\n\n            if (stuckTimer < 3.5f || recoveryCooldown > 0f)\n                return;\n\n            // Presentation traffic has no physics body, so a deterministic recovery\n            // is safer and cheaper than adding colliders or rigidbody simulation.\n            routeIndex = (routeIndex + 1) % route.Length;\n            transform.position = GetWaypointPosition(routeIndex);\n            FaceNextSegment();\n            speed = Mathf.Max(2f, cruiseSpeed * 0.45f);\n            targetSpeed = cruiseSpeed;\n            yielding = false;\n            playerAhead = false;\n            stuckTimer = 0f;\n            recoveryCooldown = 2f;\n            recoveryDistance += 1f;\n        }\n
