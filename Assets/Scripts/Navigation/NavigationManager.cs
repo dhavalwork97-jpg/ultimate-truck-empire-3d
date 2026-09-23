@@ -21,6 +21,7 @@ namespace UltimateTruckEmpire.Navigation
         private Transform destination;
         private float rebuildTimer;
         private int nextIndex;
+        private int roadNetworkVersion = -1;
 
         public bool HasRoute => destination != null && path.Count > 0 && nextIndex < path.Count;
         public float DistanceRemainingKm { get; private set; }
@@ -45,6 +46,13 @@ namespace UltimateTruckEmpire.Navigation
 
         private void Update()
         {
+            if (roadNetworkVersion != RoadNetwork.Version)
+            {
+                BuildRoadGraph();
+                roadNetworkVersion = RoadNetwork.Version;
+                if (destination != null) RebuildRoute();
+            }
+
             if (truck == null) truck = FindFirstObjectByType<TruckController>();
             if (delivery == null) delivery = DeliveryManager.Instance;
             if (truck == null || delivery == null) return;
@@ -183,9 +191,23 @@ namespace UltimateTruckEmpire.Navigation
 
         private void BuildRoadGraph()
         {
-            nodes.Clear(); edges.Clear();
+            nodes.Clear();
+            edges.Clear();
+
+            if (RoadNetwork.Corridors.Count == 0)
+                return;
+
             var ids = new Dictionary<string, int>();
-            void AddNode(string id, Vector3 p) { ids[id] = nodes.Count; nodes.Add(new NavNode(p)); edges.Add(new List<int>()); }
+
+            void AddNode(string id, Vector3 position)
+            {
+                if (ids.ContainsKey(id))
+                    return;
+                ids[id] = nodes.Count;
+                nodes.Add(new NavNode(position));
+                edges.Add(new List<int>());
+            }
+
             void Link(string a, string b)
             {
                 if (!ids.ContainsKey(a) || !ids.ContainsKey(b)) return;
@@ -194,20 +216,72 @@ namespace UltimateTruckEmpire.Navigation
                 if (!edges[bi].Contains(ai)) edges[bi].Add(ai);
             }
 
-            float[] xs = { -160f, -90f, 0f, 80f, 160f };
-            float[] zs = { -70f, 0f, 70f };
-            for (int z = 0; z < zs.Length; z++) for (int x = 0; x < xs.Length; x++)
-                AddNode("R" + x + "_" + z, new Vector3(xs[x], 0f, zs[z]));
-            for (int z = 0; z < zs.Length; z++) for (int x = 0; x < xs.Length - 1; x++)
-                Link("R" + x + "_" + z, "R" + (x + 1) + "_" + z);
-            Link("R1_0", "R1_1"); Link("R1_1", "R1_2");
+            string NodeId(Vector3 position)
+            {
+                return "R_" + Mathf.RoundToInt(position.x * 10f) + "_" + Mathf.RoundToInt(position.z * 10f);
+            }
 
+            // Create nodes at corridor ends and real junction centers.
+            for (int i = 0; i < RoadNetwork.Corridors.Count; i++)
+            {
+                RoadNetwork.RoadCorridor corridor = RoadNetwork.Corridors[i];
+                Vector3 start = corridor.AlongX
+                    ? new Vector3(corridor.Min, 0f, corridor.FixedCoordinate)
+                    : new Vector3(corridor.FixedCoordinate, 0f, corridor.Min);
+                Vector3 end = corridor.AlongX
+                    ? new Vector3(corridor.Max, 0f, corridor.FixedCoordinate)
+                    : new Vector3(corridor.FixedCoordinate, 0f, corridor.Max);
+
+                AddNode(NodeId(start), start);
+                AddNode(NodeId(end), end);
+
+                for (int j = 0; j < RoadNetwork.Junctions.Count; j++)
+                {
+                    RoadNetwork.Junction junction = RoadNetwork.Junctions[j];
+                    bool onCorridor = corridor.AlongX
+                        ? Mathf.Abs(junction.Center.z - corridor.FixedCoordinate) <= corridor.Width * 0.5f &&
+                          junction.Center.x >= corridor.Min && junction.Center.x <= corridor.Max
+                        : Mathf.Abs(junction.Center.x - corridor.FixedCoordinate) <= corridor.Width * 0.5f &&
+                          junction.Center.z >= corridor.Min && junction.Center.z <= corridor.Max;
+
+                    if (onCorridor)
+                        AddNode(NodeId(junction.Center), junction.Center);
+                }
+
+                var corridorNodes = new List<Vector3>();
+                for (int j = 0; j < nodes.Count; j++)
+                {
+                    Vector3 position = nodes[j].position;
+                    bool onCorridor = corridor.AlongX
+                        ? Mathf.Abs(position.z - corridor.FixedCoordinate) <= 0.01f &&
+                          position.x >= corridor.Min - 0.01f && position.x <= corridor.Max + 0.01f
+                        : Mathf.Abs(position.x - corridor.FixedCoordinate) <= 0.01f &&
+                          position.z >= corridor.Min - 0.01f && position.z <= corridor.Max + 0.01f;
+
+                    if (onCorridor)
+                        corridorNodes.Add(position);
+                }
+
+                corridorNodes.Sort((a, b) => corridor.AlongX
+                    ? a.x.CompareTo(b.x)
+                    : a.z.CompareTo(b.z));
+
+                for (int j = 1; j < corridorNodes.Count; j++)
+                    Link(NodeId(corridorNodes[j - 1]), NodeId(corridorNodes[j]));
+            }
+
+            // Site access nodes remain explicit, but connect to the shared main road.
             AddNode("DEPOT_APPROACH", new Vector3(-55f, 0f, 8f));
             AddNode("DEPOT", new Vector3(-55f, 0f, 16f));
             AddNode("FACTORY_APPROACH", new Vector3(55f, 0f, 8f));
             AddNode("FACTORY", new Vector3(55f, 0f, 16f));
-            Link("DEPOT_APPROACH", "DEPOT"); Link("FACTORY_APPROACH", "FACTORY");
-            Link("DEPOT_APPROACH", "R2_1"); Link("FACTORY_APPROACH", "R2_1");
+            Link("DEPOT_APPROACH", "DEPOT");
+            Link("FACTORY_APPROACH", "FACTORY");
+
+            string depotRoad = NodeId(new Vector3(-55f, 0f, 0f));
+            string factoryRoad = NodeId(new Vector3(55f, 0f, 0f));
+            if (ids.ContainsKey(depotRoad)) Link("DEPOT_APPROACH", depotRoad);
+            if (ids.ContainsKey(factoryRoad)) Link("FACTORY_APPROACH", factoryRoad);
         }
 
         private static float FlatDistance(Vector3 a, Vector3 b)
