@@ -56,6 +56,7 @@ jobs:
           testMode: all
           artifactsPath: artifacts/tests
           customParameters: -nographics -batchmode
+          coverageEnabled: false
 
       - name: Upload test results
         if: always()
