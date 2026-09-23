@@ -10,7 +10,8 @@ namespace UltimateTruckEmpire.World
     /// </summary>
     public sealed class TrafficVehicle : MonoBehaviour
     {
-        private static readonly List<TrafficVehicle> ActiveVehicles = new List<TrafficVehicle>(24);\n        private static TruckController playerTruck;
+        private static readonly List<TrafficVehicle> ActiveVehicles = new List<TrafficVehicle>(24);
+        private static TruckController playerTruck;
 
         [SerializeField] private float cruiseSpeed = 10f;
         [SerializeField] private float acceleration = 4f;
