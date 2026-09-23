@@ -123,7 +123,10 @@ namespace UltimateTruckEmpire.UI
             if (!active) { jobPanel.text = "No active contract.\nAccept the starter contract below." + (delivery != null && !string.IsNullOrEmpty(delivery.LastAcceptMessage) ? "\n" + delivery.LastAcceptMessage : ""); return; }
             bool loaded = delivery.CargoLoaded; Transform targetPoint = loaded ? destinationPoint : pickupPoint; string targetName = loaded ? delivery.Destination : delivery.Pickup;
             StringBuilder s = new StringBuilder(220); s.Append("Contract   ").AppendLine(delivery.ContractId); s.Append("Cargo      ").Append(delivery.CargoName).Append("  [").Append(delivery.Trailer).AppendLine("]"); s.Append("Route      ").Append(delivery.Pickup).Append("  →  ").AppendLine(delivery.Destination); s.Append("Status     ").AppendLine(loaded ? "LOADED - deliver to destination" : "EMPTY - drive to pickup"); s.Append("Next stop  ").AppendLine(targetName); if (loaded && delivery.DockingActive) s.Append("Docking    ").AppendLine(delivery.DockingStatus);
-            if (targetPoint != null && truck != null) { Vector3 a = truck.transform.position; Vector3 b = targetPoint.position; a.y = 0f; b.y = 0f; s.Append("Distance   ").Append(Vector3.Distance(a, b).ToString("0")).AppendLine(" m"); }
+            if (targetPoint != null && truck != null) { Vector3 a = truck.transform.position; Vector3 b = targetPoint.position; a.y = 0f; b.y = 0f; float metres = UltimateTruckEmpire.Navigation.NavigationManager.Instance != null && UltimateTruckEmpire.Navigation.NavigationManager.Instance.HasRoute
+                ? UltimateTruckEmpire.Navigation.NavigationManager.Instance.DistanceRemainingKm * 1000f
+                : Vector3.Distance(a, b);
+            s.Append("Distance   ").Append(metres.ToString("0")).AppendLine(" m"); }
             s.Append("Reward     ₹").Append(delivery.Reward.ToString("0")).Append("  |  XP ").Append(delivery.RewardXp).Append("  |  Diff ").Append(delivery.ContractDifficulty); jobPanel.text = s.ToString();
         }
 

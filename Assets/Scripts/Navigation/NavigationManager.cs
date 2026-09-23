@@ -81,7 +81,8 @@ namespace UltimateTruckEmpire.Navigation
             {
                 if (triggers[i] == null || triggers[i].Type != wanted) continue;
                 if (fallback == null) fallback = triggers[i];
-                if (string.Equals(triggers[i].gameObject.name, preferred, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(triggers[i].LocationId, preferred, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(triggers[i].gameObject.name, preferred, StringComparison.OrdinalIgnoreCase))
                     return triggers[i].transform;
             }
             return fallback != null ? fallback.transform : null;
