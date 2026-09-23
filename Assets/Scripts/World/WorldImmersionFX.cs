@@ -17,8 +17,6 @@ namespace UltimateTruckEmpire.World
         private AudioSource engineSource;
         private AudioSource windSource;
         private AudioSource rainSource;
-        private ParticleSystem rainParticles;
-        private ParticleSystem heavyRainParticles;
         private float targetRain;
         private float targetWind;
 
@@ -37,7 +35,6 @@ namespace UltimateTruckEmpire.World
         {
             weather = TimeWeatherManager.Instance;
             BuildAudio();
-            BuildRain();
         }
 
         private void Update()
