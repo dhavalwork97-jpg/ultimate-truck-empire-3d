@@ -26,7 +26,7 @@ namespace UltimateTruckEmpire.World
             public float SizeZ { get; }
             public bool Signalized { get; }
 
-            internal TrafficReservation Reservation;
+            private TrafficReservation Reservation;
             internal Junction(string id, Vector3 center, float sizeX, float sizeZ, bool signalized)
             {
                 Id = id;
