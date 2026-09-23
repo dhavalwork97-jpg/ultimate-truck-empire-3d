@@ -27,6 +27,7 @@ namespace UltimateTruckEmpire.World
         public static void Build()
         {
             RoadBuilder.Reset();
+            RoadNetwork.Reset();
 
             Transform root = new GameObject("World").transform;
 
@@ -94,6 +95,14 @@ namespace UltimateTruckEmpire.World
 
             RoadBuilder.BuildIntersection("Junction South", new Vector3(NorthSouthRoadX, 0f, 0f), 16f, 16f);
             RoadBuilder.BuildIntersection("Junction North", new Vector3(NorthSouthRoadX, 0f, 70f), 16f, 16f);
+
+            // Shared semantic metadata mirrors the same coordinates used above.
+            RoadNetwork.RegisterCorridor("Highway South", true, -70f, -160f, 160f, 14f);
+            RoadNetwork.RegisterCorridor("Highway Main", true, 0f, -160f, 160f, 14f);
+            RoadNetwork.RegisterCorridor("Highway North", true, 70f, -160f, 160f, 14f);
+            RoadNetwork.RegisterCorridor("Link Road", false, NorthSouthRoadX, -35f, 105f, 14f);
+            RoadNetwork.RegisterJunction("Junction South", new Vector3(NorthSouthRoadX, 0f, 0f), 16f, 16f, true);
+            RoadNetwork.RegisterJunction("Junction North", new Vector3(NorthSouthRoadX, 0f, 70f), 16f, 16f, true);
 
             // Site access roads. They start exactly at the highway edge so no two
             // asphalt surfaces overlap.
