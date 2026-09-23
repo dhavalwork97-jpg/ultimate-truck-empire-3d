@@ -13,11 +13,6 @@ namespace UltimateTruckEmpire.World
         private static readonly List<TrafficVehicle> ActiveVehicles = new List<TrafficVehicle>(24);
         private static TruckController playerTruck;
 
-        private Vector3 lastPosition;
-        private float stuckTimer;
-        private float recoveryCooldown;
-
-
         [SerializeField] private float cruiseSpeed = 10f;
         [SerializeField] private float acceleration = 4f;
         [SerializeField] private float braking = 9f;
@@ -25,15 +20,23 @@ namespace UltimateTruckEmpire.World
         [SerializeField] private float lookAheadDistance = 18f;
         [SerializeField] private float minimumGap = 7f;
         [SerializeField] private float laneWidth = 3.6f;
+        [SerializeField] private float laneChangeSpeed = 2.2f;
+        [SerializeField] private float laneChangeCooldown = 4f;
 
         private Vector3[] route;
         private int routeIndex;
         private float laneOffset;
+        private float targetLaneOffset;
         private float speed;
         private float targetSpeed;
         private float checkTimer;
+        private float laneChangeTimer;
+        private float stuckTimer;
+        private float recoveryCooldown;
         private bool yielding;
         private bool playerAhead;
+        private bool laneChangeRequested;
+        private Vector3 lastPosition;
 
         public float CurrentSpeed => speed;
 
@@ -44,9 +47,14 @@ namespace UltimateTruckEmpire.World
             cruiseSpeed = Mathf.Max(1f, desiredSpeed);
             targetSpeed = cruiseSpeed;
             speed = cruiseSpeed;
-            laneOffset = Mathf.Clamp(offset, -laneWidth * 0.6f, laneWidth * 0.6f);
+            laneOffset = Mathf.Clamp(offset, -laneWidth * 0.5f, laneWidth * 0.5f);
+            targetLaneOffset = laneOffset;
+            laneChangeTimer = 0f;
+            recoveryCooldown = 0f;
+            stuckTimer = 0f;
 
-            transform.position = GetWaypointPosition(routeIndex);
+            transform.position = GetWaypointPosition(routeIndex, laneOffset);
+            lastPosition = transform.position;
             FaceNextSegment();
         }
 
@@ -66,14 +74,17 @@ namespace UltimateTruckEmpire.World
             if (route == null || route.Length < 2)
                 return;
 
-            Vector3 nextWaypoint = GetWaypointPosition(routeIndex);
+            laneChangeTimer = Mathf.Max(0f, laneChangeTimer - Time.deltaTime);
+            recoveryCooldown = Mathf.Max(0f, recoveryCooldown - Time.deltaTime);
+
+            Vector3 nextWaypoint = GetWaypointPosition(routeIndex, targetLaneOffset);
             Vector3 toWaypoint = nextWaypoint - transform.position;
             toWaypoint.y = 0f;
 
             if (toWaypoint.sqrMagnitude < 16f)
             {
                 routeIndex = (routeIndex + 1) % route.Length;
-                nextWaypoint = GetWaypointPosition(routeIndex);
+                nextWaypoint = GetWaypointPosition(routeIndex, targetLaneOffset);
                 toWaypoint = nextWaypoint - transform.position;
                 toWaypoint.y = 0f;
             }
@@ -90,14 +101,8 @@ namespace UltimateTruckEmpire.World
             }
 
             float desired = cruiseSpeed;
-
-            // Smoothly follow the vehicle in front instead of hard stopping.
             if (yielding)
                 desired = Mathf.Min(desired, Mathf.Max(1.5f, cruiseSpeed * 0.35f));
-
-            // Keep AI traffic from driving through the player. This is deliberately
-            // soft so the player can still merge through traffic rather than getting
-            // physically blocked by a collider.
             if (playerAhead)
                 desired = Mathf.Min(desired, Mathf.Max(1f, cruiseSpeed * 0.22f));
 
@@ -105,20 +110,23 @@ namespace UltimateTruckEmpire.World
             float rate = targetSpeed < speed ? braking : acceleration;
             speed = Mathf.MoveTowards(speed, targetSpeed, rate * Time.deltaTime);
 
+            laneOffset = Mathf.MoveTowards(laneOffset, targetLaneOffset, laneChangeSpeed * Time.deltaTime);
+            Vector3 movementDirection = GetWaypointPosition(routeIndex, laneOffset) - transform.position;
+            movementDirection.y = 0f;
+            if (movementDirection.sqrMagnitude > 0.04f)
+                direction = movementDirection.normalized;
+
             transform.position += direction * speed * Time.deltaTime;
             EvaluateStuckRecovery();
 
             if (direction.sqrMagnitude > 0.01f)
             {
                 Quaternion desiredRotation = Quaternion.LookRotation(direction, Vector3.up);
-                transform.rotation = Quaternion.Slerp(
-                    transform.rotation,
-                    desiredRotation,
-                    turnSpeed * Time.deltaTime);
+                transform.rotation = Quaternion.Slerp(transform.rotation, desiredRotation, turnSpeed * Time.deltaTime);
             }
         }
 
-        private Vector3 GetWaypointPosition(int index)
+        private Vector3 GetWaypointPosition(int index, float offset)
         {
             Vector3 point = route[index];
             Vector3 next = route[(index + 1) % route.Length];
@@ -130,7 +138,7 @@ namespace UltimateTruckEmpire.World
 
             forward.Normalize();
             Vector3 right = new Vector3(forward.z, 0f, -forward.x);
-            return point + right * laneOffset;
+            return point + right * offset;
         }
 
         private void FaceNextSegment()
@@ -138,8 +146,8 @@ namespace UltimateTruckEmpire.World
             if (route == null || route.Length < 2)
                 return;
 
-            Vector3 current = GetWaypointPosition(routeIndex);
-            Vector3 next = GetWaypointPosition((routeIndex + 1) % route.Length);
+            Vector3 current = GetWaypointPosition(routeIndex, laneOffset);
+            Vector3 next = GetWaypointPosition((routeIndex + 1) % route.Length, laneOffset);
             Vector3 direction = next - current;
             direction.y = 0f;
 
@@ -151,10 +159,13 @@ namespace UltimateTruckEmpire.World
         {
             yielding = false;
             playerAhead = false;
+            laneChangeRequested = false;
 
             Vector3 position = transform.position;
             float lookAhead = Mathf.Max(lookAheadDistance, speed * 1.4f + minimumGap);
             float lookAheadSqr = lookAhead * lookAhead;
+
+            TrafficVehicle blocker = null;
 
             for (int i = 0; i < ActiveVehicles.Count; i++)
             {
@@ -170,19 +181,34 @@ namespace UltimateTruckEmpire.World
                     continue;
 
                 Vector3 deltaDirection = delta.normalized;
-                float forwardDot = Vector3.Dot(direction, deltaDirection);
-                if (forwardDot < 0.72f)
+                if (Vector3.Dot(direction, deltaDirection) < 0.72f)
                     continue;
 
                 float lateral = Mathf.Abs(Vector3.Cross(direction, delta).y);
-                if (lateral > laneWidth * 0.75f)
+                if (lateral > laneWidth * 0.42f)
                     continue;
 
                 float safeDistance = minimumGap + speed * 0.65f;
                 if (distanceSqr < safeDistance * safeDistance)
                 {
                     yielding = true;
+                    blocker = other;
                     break;
+                }
+            }
+
+            if (blocker != null && laneChangeTimer <= 0f)
+            {
+                float alternateLane = Mathf.Abs(targetLaneOffset) < 0.25f
+                    ? laneWidth * 0.5f
+                    : -targetLaneOffset;
+
+                if (IsLaneClear(alternateLane, direction, lookAhead * 0.85f))
+                {
+                    targetLaneOffset = alternateLane;
+                    laneChangeTimer = laneChangeCooldown;
+                    laneChangeRequested = true;
+                    yielding = false;
                 }
             }
 
@@ -200,13 +226,61 @@ namespace UltimateTruckEmpire.World
             if (playerDistance <= lookAhead &&
                 playerDistance > 0.5f &&
                 Vector3.Dot(direction, playerDelta.normalized) > 0.75f &&
-                Mathf.Abs(Vector3.Cross(direction, playerDelta).y) < laneWidth)
+                Mathf.Abs(Vector3.Cross(direction, playerDelta).y) < laneWidth * 0.42f)
             {
                 playerAhead = true;
             }
         }
-    }
-}
+
+        private bool IsLaneClear(float candidateOffset, Vector3 direction, float distance)
+        {
+            Vector3 position = transform.position;
+            float distanceSqr = distance * distance;
+
+            for (int i = 0; i < ActiveVehicles.Count; i++)
+            {
+                TrafficVehicle other = ActiveVehicles[i];
+                if (other == null || other == this || other.route == null)
+                    continue;
+
+                Vector3 otherDelta = other.transform.position - position;
+                otherDelta.y = 0f;
+                if (otherDelta.sqrMagnitude > distanceSqr)
+                    continue;
+
+                Vector3 otherDirection = otherDelta.sqrMagnitude > 0.01f
+                    ? otherDelta.normalized
+                    : direction;
+
+                if (Vector3.Dot(direction, otherDirection) < 0.35f)
+                    continue;
+
+                Vector3 forward = direction.normalized;
+                Vector3 right = new Vector3(forward.z, 0f, -forward.x);
+                float lateral = Mathf.Abs(Vector3.Dot(otherDelta, right));
+                float laneDelta = Mathf.Abs(candidateOffset - other.laneOffset);
+
+                if (laneDelta < laneWidth * 0.55f && lateral < laneWidth * 0.55f)
+                    return false;
+            }
+
+            if (playerTruck != null)
+            {
+                Vector3 playerDelta = playerTruck.transform.position - position;
+                playerDelta.y = 0f;
+                if (playerDelta.sqrMagnitude <= distanceSqr)
+                {
+                    Vector3 forward = direction.normalized;
+                    Vector3 right = new Vector3(forward.z, 0f, -forward.x);
+                    float lateral = Mathf.Abs(Vector3.Dot(playerDelta, right));
+                    if (lateral < laneWidth * 0.55f &&
+                        Mathf.Abs(candidateOffset - laneOffset) < laneWidth * 0.55f)
+                        return false;
+                }
+            }
+
+            return true;
+        }
 
         private void EvaluateStuckRecovery()
         {
@@ -223,10 +297,9 @@ namespace UltimateTruckEmpire.World
             if (stuckTimer < 3.5f || recoveryCooldown > 0f)
                 return;
 
-            // Presentation traffic has no physics body, so a deterministic recovery
-            // is safer and cheaper than adding colliders or rigidbody simulation.
             routeIndex = (routeIndex + 1) % route.Length;
-            transform.position = GetWaypointPosition(routeIndex);
+            laneOffset = targetLaneOffset;
+            transform.position = GetWaypointPosition(routeIndex, laneOffset);
             FaceNextSegment();
             speed = Mathf.Max(2f, cruiseSpeed * 0.45f);
             targetSpeed = cruiseSpeed;
@@ -234,5 +307,6 @@ namespace UltimateTruckEmpire.World
             playerAhead = false;
             stuckTimer = 0f;
             recoveryCooldown = 2f;
-            recoveryDistance += 1f;
         }
+    }
+}
