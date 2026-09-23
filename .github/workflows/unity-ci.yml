@@ -37,8 +37,7 @@ jobs:
       - name: Cache Unity packages
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.cache/unity3d
+          path: ~/.cache/unity3d
           key: unity-${{ runner.os }}-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}
           restore-keys: |
             unity-${{ runner.os }}-
@@ -47,6 +46,8 @@ jobs:
         uses: game-ci/unity-test-runner@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           projectPath: .
           unityVersion: 6000.0.65f1
