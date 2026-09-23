@@ -6,7 +6,8 @@ namespace UltimateTruckEmpire.World
 {
     /// <summary>
     /// Lightweight lane-following traffic AI. Traffic has no colliders or rigidbodies;
-    /// it uses deterministic spatial checks so the same fleet remains cheap on mobile.
+    /// it uses deterministic spatial checks and shared junction reservations so the
+    /// fleet remains cheap on mobile.
     /// </summary>
     public sealed class TrafficVehicle : MonoBehaviour
     {
@@ -19,12 +20,17 @@ namespace UltimateTruckEmpire.World
         [SerializeField] private float turnSpeed = 6f;
         [SerializeField] private float lookAheadDistance = 18f;
         [SerializeField] private float minimumGap = 7f;
-        [SerializeField] private float laneWidth = 3.6f;
+        [SerializeField] private float laneWidth = 3.5f;
         [SerializeField] private float laneChangeSpeed = 2.2f;
         [SerializeField] private float laneChangeCooldown = 4f;
+        [SerializeField] private float junctionDetectionDistance = 30f;
+        [SerializeField] private float junctionReservationDuration = 2.5f;
+        [SerializeField] private float junctionExitPadding = 5f;
 
         private Vector3[] route;
         private int routeIndex;
+        private bool routeForward = true;
+        private bool reverseAtRouteEnds;
         private float laneOffset;
         private float targetLaneOffset;
         private float speed;
@@ -35,12 +41,19 @@ namespace UltimateTruckEmpire.World
         private float recoveryCooldown;
         private bool yielding;
         private bool playerAhead;
-        private bool laneChangeRequested;
+        private bool junctionBlocked;
+        private RoadNetwork.Junction reservedJunction;
         private Vector3 lastPosition;
 
         public float CurrentSpeed => speed;
 
-        public void Configure(Vector3[] points, int startIndex, float desiredSpeed, float offset)
+        public void Configure(
+            Vector3[] points,
+            int startIndex,
+            float desiredSpeed,
+            float offset,
+            bool reverseAtEnds,
+            bool forward)
         {
             route = points;
             routeIndex = Mathf.Clamp(startIndex, 0, points.Length - 1);
@@ -49,9 +62,12 @@ namespace UltimateTruckEmpire.World
             speed = cruiseSpeed;
             laneOffset = Mathf.Clamp(offset, -laneWidth * 0.5f, laneWidth * 0.5f);
             targetLaneOffset = laneOffset;
+            reverseAtRouteEnds = reverseAtEnds;
+            routeForward = forward;
             laneChangeTimer = 0f;
             recoveryCooldown = 0f;
             stuckTimer = 0f;
+            reservedJunction = null;
 
             transform.position = GetWaypointPosition(routeIndex, laneOffset);
             lastPosition = transform.position;
@@ -66,6 +82,7 @@ namespace UltimateTruckEmpire.World
 
         private void OnDisable()
         {
+            ReleaseJunctionReservation();
             ActiveVehicles.Remove(this);
         }
 
@@ -77,14 +94,14 @@ namespace UltimateTruckEmpire.World
             laneChangeTimer = Mathf.Max(0f, laneChangeTimer - Time.deltaTime);
             recoveryCooldown = Mathf.Max(0f, recoveryCooldown - Time.deltaTime);
 
-            Vector3 nextWaypoint = GetWaypointPosition(routeIndex, targetLaneOffset);
+            Vector3 nextWaypoint = GetNextWaypointPosition();
             Vector3 toWaypoint = nextWaypoint - transform.position;
             toWaypoint.y = 0f;
 
             if (toWaypoint.sqrMagnitude < 16f)
             {
-                routeIndex = (routeIndex + 1) % route.Length;
-                nextWaypoint = GetWaypointPosition(routeIndex, targetLaneOffset);
+                AdvanceRouteIndex();
+                nextWaypoint = GetNextWaypointPosition();
                 toWaypoint = nextWaypoint - transform.position;
                 toWaypoint.y = 0f;
             }
@@ -98,6 +115,7 @@ namespace UltimateTruckEmpire.World
             {
                 checkTimer = 0.12f;
                 EvaluateTraffic(direction);
+                EvaluateJunction(direction);
             }
 
             float desired = cruiseSpeed;
@@ -105,6 +123,8 @@ namespace UltimateTruckEmpire.World
                 desired = Mathf.Min(desired, Mathf.Max(1.5f, cruiseSpeed * 0.35f));
             if (playerAhead)
                 desired = Mathf.Min(desired, Mathf.Max(1f, cruiseSpeed * 0.22f));
+            if (junctionBlocked)
+                desired = 0f;
 
             targetSpeed = desired;
             float rate = targetSpeed < speed ? braking : acceleration;
@@ -126,12 +146,55 @@ namespace UltimateTruckEmpire.World
             }
         }
 
+        private Vector3 GetNextWaypointPosition()
+        {
+            int nextIndex = GetNextRouteIndex();
+            return GetWaypointPosition(nextIndex, targetLaneOffset);
+        }
+
+        private int GetNextRouteIndex()
+        {
+            if (routeForward)
+                return Mathf.Min(routeIndex + 1, route.Length - 1);
+            return Mathf.Max(routeIndex - 1, 0);
+        }
+
+        private void AdvanceRouteIndex()
+        {
+            if (routeForward)
+            {
+                if (routeIndex >= route.Length - 1 && reverseAtRouteEnds)
+                    routeForward = false;
+                else if (routeIndex < route.Length - 1)
+                    routeIndex++;
+            }
+            else
+            {
+                if (routeIndex <= 0 && reverseAtRouteEnds)
+                    routeForward = true;
+                else if (routeIndex > 0)
+                    routeIndex--;
+            }
+        }
+
         private Vector3 GetWaypointPosition(int index, float offset)
         {
             Vector3 point = route[index];
-            Vector3 next = route[(index + 1) % route.Length];
+            int nextIndex = routeForward
+                ? Mathf.Min(index + 1, route.Length - 1)
+                : Mathf.Max(index - 1, 0);
+            Vector3 next = route[nextIndex];
             Vector3 forward = next - point;
             forward.y = 0f;
+
+            if (forward.sqrMagnitude < 0.01f)
+            {
+                int previousIndex = routeForward
+                    ? Mathf.Max(index - 1, 0)
+                    : Mathf.Min(index + 1, route.Length - 1);
+                forward = point - route[previousIndex];
+                forward.y = 0f;
+            }
 
             if (forward.sqrMagnitude < 0.01f)
                 return point;
@@ -147,7 +210,7 @@ namespace UltimateTruckEmpire.World
                 return;
 
             Vector3 current = GetWaypointPosition(routeIndex, laneOffset);
-            Vector3 next = GetWaypointPosition((routeIndex + 1) % route.Length, laneOffset);
+            Vector3 next = GetNextWaypointPosition();
             Vector3 direction = next - current;
             direction.y = 0f;
 
@@ -159,12 +222,10 @@ namespace UltimateTruckEmpire.World
         {
             yielding = false;
             playerAhead = false;
-            laneChangeRequested = false;
 
             Vector3 position = transform.position;
             float lookAhead = Mathf.Max(lookAheadDistance, speed * 1.4f + minimumGap);
             float lookAheadSqr = lookAhead * lookAhead;
-
             TrafficVehicle blocker = null;
 
             for (int i = 0; i < ActiveVehicles.Count; i++)
@@ -197,7 +258,7 @@ namespace UltimateTruckEmpire.World
                 }
             }
 
-            if (blocker != null && laneChangeTimer <= 0f)
+            if (blocker != null && laneChangeTimer <= 0f && !junctionBlocked)
             {
                 float alternateLane = Mathf.Abs(targetLaneOffset) < 0.25f
                     ? laneWidth * 0.5f
@@ -207,7 +268,6 @@ namespace UltimateTruckEmpire.World
                 {
                     targetLaneOffset = alternateLane;
                     laneChangeTimer = laneChangeCooldown;
-                    laneChangeRequested = true;
                     yielding = false;
                 }
             }
@@ -230,6 +290,67 @@ namespace UltimateTruckEmpire.World
             {
                 playerAhead = true;
             }
+        }
+
+        private void EvaluateJunction(Vector3 direction)
+        {
+            junctionBlocked = false;
+
+            RoadNetwork.Junction nearest = RoadNetwork.FindNearestJunction(
+                transform.position,
+                junctionDetectionDistance);
+
+            if (nearest == null)
+            {
+                ReleaseJunctionReservation();
+                return;
+            }
+
+            float distance = RoadNetwork.GetDistanceToJunctionEntry(nearest, transform.position, direction);
+            if (distance > junctionDetectionDistance)
+            {
+                ReleaseJunctionReservation();
+                return;
+            }
+
+            if (reservedJunction != null && reservedJunction != nearest)
+                ReleaseJunctionReservation();
+
+            if (reservedJunction == nearest)
+            {
+                RoadNetwork.TryReserve(nearest, this, Time.time, junctionReservationDuration);
+            }
+            else if (RoadNetwork.IsReservedByOther(nearest, this, Time.time))
+            {
+                junctionBlocked = true;
+                yielding = true;
+                return;
+            }
+            else if (RoadNetwork.TryReserve(nearest, this, Time.time, junctionReservationDuration))
+            {
+                reservedJunction = nearest;
+            }
+
+            // Once clear of the junction pad, release the reservation for the next approach.
+            if (reservedJunction == nearest &&
+                !RoadNetwork.IsInside(nearest, transform.position, junctionExitPadding))
+            {
+                float fromCenter = Vector3.Distance(
+                    Flat(transform.position),
+                    Flat(nearest.Center));
+
+                if (fromCenter > Mathf.Max(nearest.SizeX, nearest.SizeZ) * 0.5f + junctionExitPadding)
+                    ReleaseJunctionReservation();
+            }
+        }
+
+        private void ReleaseJunctionReservation()
+        {
+            if (reservedJunction == null)
+                return;
+
+            RoadNetwork.Release(reservedJunction, this);
+            reservedJunction = null;
         }
 
         private bool IsLaneClear(float candidateOffset, Vector3 direction, float distance)
@@ -297,7 +418,7 @@ namespace UltimateTruckEmpire.World
             if (stuckTimer < 3.5f || recoveryCooldown > 0f)
                 return;
 
-            routeIndex = (routeIndex + 1) % route.Length;
+            AdvanceRouteIndex();
             laneOffset = targetLaneOffset;
             transform.position = GetWaypointPosition(routeIndex, laneOffset);
             FaceNextSegment();
@@ -305,8 +426,16 @@ namespace UltimateTruckEmpire.World
             targetSpeed = cruiseSpeed;
             yielding = false;
             playerAhead = false;
+            junctionBlocked = false;
             stuckTimer = 0f;
             recoveryCooldown = 2f;
+            ReleaseJunctionReservation();
+        }
+
+        private static Vector3 Flat(Vector3 value)
+        {
+            value.y = 0f;
+            return value;
         }
     }
 }
