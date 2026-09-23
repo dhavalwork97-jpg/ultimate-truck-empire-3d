@@ -1,17 +1,25 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UltimateTruckEmpire.Truck;
 
 namespace UltimateTruckEmpire.World
 {
+    /// <summary>
+    /// Lightweight lane-following traffic AI. Traffic has no colliders or rigidbodies;
+    /// it uses deterministic spatial checks so the same fleet remains cheap on mobile.
+    /// </summary>
     public sealed class TrafficVehicle : MonoBehaviour
     {
-        private static readonly List<TrafficVehicle> ActiveVehicles = new List<TrafficVehicle>();
+        private static readonly List<TrafficVehicle> ActiveVehicles = new List<TrafficVehicle>(24);
+        private static TruckController playerTruck;
 
         [SerializeField] private float cruiseSpeed = 10f;
         [SerializeField] private float acceleration = 4f;
-        [SerializeField] private float braking = 7f;
-        [SerializeField] private float turnSpeed = 5f;
-        [SerializeField] private float lookAheadDistance = 14f;
+        [SerializeField] private float braking = 9f;
+        [SerializeField] private float turnSpeed = 6f;
+        [SerializeField] private float lookAheadDistance = 18f;
+        [SerializeField] private float minimumGap = 7f;
+        [SerializeField] private float laneWidth = 3.6f;
 
         private Vector3[] route;
         private int routeIndex;
@@ -20,6 +28,9 @@ namespace UltimateTruckEmpire.World
         private float targetSpeed;
         private float checkTimer;
         private bool yielding;
+        private bool playerAhead;
+
+        public float CurrentSpeed => speed;
 
         public void Configure(Vector3[] points, int startIndex, float desiredSpeed, float offset)
         {
@@ -28,16 +39,10 @@ namespace UltimateTruckEmpire.World
             cruiseSpeed = Mathf.Max(1f, desiredSpeed);
             targetSpeed = cruiseSpeed;
             speed = cruiseSpeed;
-            laneOffset = offset;
+            laneOffset = Mathf.Clamp(offset, -laneWidth * 0.6f, laneWidth * 0.6f);
 
-            transform.position = route[routeIndex] + Vector3.forward * laneOffset;
-            if (route.Length > 1)
-            {
-                Vector3 next = route[(routeIndex + 1) % route.Length] - route[routeIndex];
-                next.y = 0f;
-                if (next.sqrMagnitude > 0.01f)
-                    transform.rotation = Quaternion.LookRotation(next.normalized, Vector3.up);
-            }
+            transform.position = GetWaypointPosition(routeIndex);
+            FaceNextSegment();
         }
 
         private void OnEnable()
@@ -53,68 +58,143 @@ namespace UltimateTruckEmpire.World
 
         private void Update()
         {
-            if (route == null || route.Length < 2) return;
+            if (route == null || route.Length < 2)
+                return;
 
-            Vector3 waypoint = route[routeIndex] + Vector3.forward * laneOffset;
-            Vector3 toWaypoint = waypoint - transform.position;
+            Vector3 nextWaypoint = GetWaypointPosition(routeIndex);
+            Vector3 toWaypoint = nextWaypoint - transform.position;
             toWaypoint.y = 0f;
 
-            if (toWaypoint.sqrMagnitude < 9f)
+            if (toWaypoint.sqrMagnitude < 16f)
             {
                 routeIndex = (routeIndex + 1) % route.Length;
-                waypoint = route[routeIndex] + Vector3.forward * laneOffset;
-                toWaypoint = waypoint - transform.position;
+                nextWaypoint = GetWaypointPosition(routeIndex);
+                toWaypoint = nextWaypoint - transform.position;
                 toWaypoint.y = 0f;
             }
 
-            Vector3 direction = toWaypoint.sqrMagnitude > 0.01f
+            Vector3 direction = toWaypoint.sqrMagnitude > 0.04f
                 ? toWaypoint.normalized
                 : transform.forward;
 
             checkTimer -= Time.deltaTime;
             if (checkTimer <= 0f)
             {
-                checkTimer = 0.2f;
-                yielding = ShouldYield(direction);
+                checkTimer = 0.12f;
+                EvaluateTraffic(direction);
             }
 
-            targetSpeed = yielding ? cruiseSpeed * 0.28f : cruiseSpeed;
+            float desired = cruiseSpeed;
+
+            // Smoothly follow the vehicle in front instead of hard stopping.
+            if (yielding)
+                desired = Mathf.Min(desired, Mathf.Max(1.5f, cruiseSpeed * 0.35f));
+
+            // Keep AI traffic from driving through the player. This is deliberately
+            // soft so the player can still merge through traffic rather than getting
+            // physically blocked by a collider.
+            if (playerAhead)
+                desired = Mathf.Min(desired, Mathf.Max(1f, cruiseSpeed * 0.22f));
+
+            targetSpeed = desired;
             float rate = targetSpeed < speed ? braking : acceleration;
             speed = Mathf.MoveTowards(speed, targetSpeed, rate * Time.deltaTime);
 
             transform.position += direction * speed * Time.deltaTime;
+
             if (direction.sqrMagnitude > 0.01f)
             {
-                Quaternion desired = Quaternion.LookRotation(direction, Vector3.up);
-                transform.rotation = Quaternion.Slerp(transform.rotation, desired, turnSpeed * Time.deltaTime);
+                Quaternion desiredRotation = Quaternion.LookRotation(direction, Vector3.up);
+                transform.rotation = Quaternion.Slerp(
+                    transform.rotation,
+                    desiredRotation,
+                    turnSpeed * Time.deltaTime);
             }
         }
 
-        private bool ShouldYield(Vector3 direction)
+        private Vector3 GetWaypointPosition(int index)
         {
+            Vector3 point = route[index];
+            Vector3 next = route[(index + 1) % route.Length];
+            Vector3 forward = next - point;
+            forward.y = 0f;
+
+            if (forward.sqrMagnitude < 0.01f)
+                return point;
+
+            forward.Normalize();
+            Vector3 right = new Vector3(forward.z, 0f, -forward.x);
+            return point + right * laneOffset;
+        }
+
+        private void FaceNextSegment()
+        {
+            if (route == null || route.Length < 2)
+                return;
+
+            Vector3 current = GetWaypointPosition(routeIndex);
+            Vector3 next = GetWaypointPosition((routeIndex + 1) % route.Length);
+            Vector3 direction = next - current;
+            direction.y = 0f;
+
+            if (direction.sqrMagnitude > 0.01f)
+                transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+        }
+
+        private void EvaluateTraffic(Vector3 direction)
+        {
+            yielding = false;
+            playerAhead = false;
+
             Vector3 position = transform.position;
-            float closestAhead = lookAheadDistance * lookAheadDistance;
+            float lookAhead = Mathf.Max(lookAheadDistance, speed * 1.4f + minimumGap);
+            float lookAheadSqr = lookAhead * lookAhead;
 
             for (int i = 0; i < ActiveVehicles.Count; i++)
             {
                 TrafficVehicle other = ActiveVehicles[i];
-                if (other == null || other == this || other.route == null) continue;
+                if (other == null || other == this || other.route == null)
+                    continue;
 
                 Vector3 delta = other.transform.position - position;
                 delta.y = 0f;
                 float distanceSqr = delta.sqrMagnitude;
-                if (distanceSqr < 0.25f || distanceSqr > closestAhead) continue;
 
-                float forwardDot = Vector3.Dot(direction, delta.normalized);
-                if (forwardDot < 0.65f) continue;
+                if (distanceSqr < 0.25f || distanceSqr > lookAheadSqr)
+                    continue;
 
-                // Only slow for a vehicle travelling in roughly the same direction.
-                float headingDot = Vector3.Dot(direction, other.transform.forward);
-                if (headingDot > 0.65f)
-                    return true;
+                Vector3 deltaDirection = delta.normalized;
+                float forwardDot = Vector3.Dot(direction, deltaDirection);
+                if (forwardDot < 0.72f)
+                    continue;
+
+                float lateral = Mathf.Abs(Vector3.Cross(direction, delta).y);
+                if (lateral > laneWidth * 0.75f)
+                    continue;
+
+                float safeDistance = minimumGap + speed * 0.65f;
+                if (distanceSqr < safeDistance * safeDistance)
+                {
+                    yielding = true;
+                    break;
+                }
             }
 
-            return false;
+            TruckController player = FindFirstObjectByType<TruckController>();
+            if (player == null)
+                return;
+
+            Vector3 playerDelta = player.transform.position - position;
+            playerDelta.y = 0f;
+            float playerDistance = playerDelta.magnitude;
+
+            if (playerDistance <= lookAhead &&
+                playerDistance > 0.5f &&
+                Vector3.Dot(direction, playerDelta.normalized) > 0.75f &&
+                Mathf.Abs(Vector3.Cross(direction, playerDelta).y) < laneWidth)
+            {
+                playerAhead = true;
+            }
         }
     }
 }
