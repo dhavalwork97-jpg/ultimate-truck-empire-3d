@@ -103,8 +103,6 @@ namespace UltimateTruckEmpire.World
             RoadNetwork.RegisterCorridor("Highway Main", true, 0f, -220f, 220f, 14f);
             RoadNetwork.RegisterCorridor("Highway North", true, 70f, -220f, 220f, 14f);
             RoadNetwork.RegisterCorridor("Link Road", false, NorthSouthRoadX, -105f, 135f, 14f);
-            RoadNetwork.RegisterCorridor("Gandhinagar Access", false, -25f, 70f, 120f, 12f);
-            RoadNetwork.RegisterJunction("Gandhinagar Junction", new Vector3(-25f, 0f, 70f), 14f, 14f, false);
             RoadNetwork.RegisterJunction("Junction South", new Vector3(NorthSouthRoadX, 0f, 0f), 16f, 16f, true);
             RoadNetwork.RegisterJunction("Junction North", new Vector3(NorthSouthRoadX, 0f, 70f), 16f, 16f, true);
 
@@ -291,6 +289,45 @@ namespace UltimateTruckEmpire.World
             }
 
             batch.Emit("Street Furniture", root, WorldPaletteAdapter.Palette);
+        }
+
+        // ==================================================================
+        // Regional city gateways
+        // ==================================================================
+        private static void BuildRegionalExpansion(Transform root)
+        {
+            BuildCityGateway(root, "GANDHINAGAR", new Vector3(-45f, 0f, 98f), BuildingStyle.Office, 6201);
+            BuildCityGateway(root, "SURAT", new Vector3(95f, 0f, -88f), BuildingStyle.Warehouse, 6202);
+            BuildCityGateway(root, "RAJKOT", new Vector3(-110f, 0f, -88f), BuildingStyle.Warehouse, 6203);
+            BuildCityGateway(root, "UDAIPUR", new Vector3(-120f, 0f, 98f), BuildingStyle.Office, 6204);
+
+            for (int i = 0; i < 10; i++)
+            {
+                float x = -205f + i * 45f;
+                PropBuilder.CreateStreetLight(root, new Vector3(x, 0f, 11.5f),
+                    i % 2 == 0 ? 180f : 0f, false);
+            }
+
+            PropBuilder.CreateSign(root, new Vector3(-35f, 0f, 81f), 90f,
+                8f, 2.2f, 3.8f, WorldSurface.SignGreen, "GANDHINAGAR  ->");
+            PropBuilder.CreateSign(root, new Vector3(115f, 0f, -80f), 270f,
+                8f, 2.2f, 3.8f, WorldSurface.SignGreen, "SURAT  ->");
+            PropBuilder.CreateSign(root, new Vector3(-130f, 0f, -80f), 90f,
+                8f, 2.2f, 3.8f, WorldSurface.SignGreen, "RAJKOT  ->");
+            PropBuilder.CreateSign(root, new Vector3(-105f, 0f, 80f), 270f,
+                8f, 2.2f, 3.8f, WorldSurface.SignGreen, "UDAIPUR  ->");
+        }
+
+        private static void BuildCityGateway(Transform root, string city, Vector3 position,
+                                              BuildingStyle style, int seed)
+        {
+            Vector3 size = style == BuildingStyle.Office
+                ? new Vector3(20f, 16f, 15f)
+                : new Vector3(28f, 9f, 17f);
+
+            BuildingBuilder.Build(style, position, 0f, size, seed, root);
+            PropBuilder.CreateSign(root, position + new Vector3(0f, 0f, -12f),
+                0f, 12f, 2.6f, 4.2f, WorldSurface.SignGreen, city);
         }
 
         // ==================================================================
