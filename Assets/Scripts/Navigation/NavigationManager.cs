@@ -10,7 +10,6 @@ namespace UltimateTruckEmpire.Navigation
     public sealed class NavigationManager : MonoBehaviour
     {
         public static NavigationManager Instance { get; private set; }
-
         [SerializeField] private float rebuildInterval = 0.75f;
         [SerializeField] private float waypointReachDistance = 7f;
 
@@ -33,8 +32,7 @@ namespace UltimateTruckEmpire.Navigation
         private sealed class NavNode
         {
             public Vector3 position;
-            public string label;
-            public NavNode(Vector3 p, string l) { position = p; label = l; }
+            public NavNode(Vector3 p) { position = p; }
         }
 
         private void Awake()
@@ -52,17 +50,13 @@ namespace UltimateTruckEmpire.Navigation
             if (truck == null || delivery == null) return;
 
             Transform target = ResolveTarget(delivery);
-            if (target != destination)
-            {
-                destination = target;
-                RebuildRoute();
-            }
+            if (target != destination) { destination = target; RebuildRoute(); }
 
             rebuildTimer -= Time.deltaTime;
             if (rebuildTimer <= 0f)
             {
                 rebuildTimer = rebuildInterval;
-                if (destination != null) UpdateProgressAndRebuildIfNeeded();
+                if (destination != null) UpdateProgress();
             }
         }
 
@@ -72,26 +66,24 @@ namespace UltimateTruckEmpire.Navigation
             DeliveryTrigger.TriggerType wanted = d.ContractAccepted && d.CargoLoaded
                 ? DeliveryTrigger.TriggerType.Destination
                 : DeliveryTrigger.TriggerType.Pickup;
-
             string preferred = wanted == DeliveryTrigger.TriggerType.Pickup ? d.Pickup : d.Destination;
             DeliveryTrigger fallback = null;
+
             for (int i = 0; i < triggers.Length; i++)
             {
                 if (triggers[i] == null || triggers[i].Type != wanted) continue;
                 if (fallback == null) fallback = triggers[i];
-                if (string.Equals(triggers[i].LocationName, preferred, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(triggers[i].gameObject.name, preferred, StringComparison.OrdinalIgnoreCase))
                     return triggers[i].transform;
             }
             return fallback != null ? fallback.transform : null;
         }
 
-        private void UpdateProgressAndRebuildIfNeeded()
+        private void UpdateProgress()
         {
             if (!HasRoute) { RebuildRoute(); return; }
-
             Vector3 current = truck.transform.position;
-            while (nextIndex < path.Count && FlatDistance(current, path[nextIndex]) <= waypointReachDistance)
-                nextIndex++;
+            while (nextIndex < path.Count && FlatDistance(current, path[nextIndex]) <= waypointReachDistance) nextIndex++;
 
             if (nextIndex >= path.Count)
             {
@@ -100,12 +92,10 @@ namespace UltimateTruckEmpire.Navigation
                 return;
             }
 
-            DistanceRemainingKm = FlatDistance(current, destination.position);
+            float metres = FlatDistance(current, destination.position);
             for (int i = nextIndex; i < path.Count; i++)
-                DistanceRemainingKm += i == nextIndex
-                    ? FlatDistance(current, path[i])
-                    : FlatDistance(path[i - 1], path[i]);
-            DistanceRemainingKm /= 1000f;
+                metres += i == nextIndex ? FlatDistance(current, path[i]) : FlatDistance(path[i - 1], path[i]);
+            DistanceRemainingKm = metres / 1000f;
 
             Vector3 target = path[nextIndex] - current;
             target.y = 0f;
@@ -117,7 +107,6 @@ namespace UltimateTruckEmpire.Navigation
                 else Instruction = signed < -65f ? "Turn left" : "Keep left";
             }
 
-            // If the final waypoint is reached, use the real destination trigger.
             if (nextIndex == path.Count - 1 && FlatDistance(current, destination.position) < 18f)
                 Instruction = "Arrive at " + DestinationName;
         }
@@ -127,7 +116,6 @@ namespace UltimateTruckEmpire.Navigation
             path.Clear();
             nextIndex = 0;
             DistanceRemainingKm = 0f;
-
             if (truck == null || destination == null) { Instruction = "Waiting for a job"; return; }
 
             int start = NearestNode(truck.transform.position);
@@ -138,9 +126,9 @@ namespace UltimateTruckEmpire.Navigation
             for (int i = 0; i < nodePath.Count; i++) path.Add(nodes[nodePath[i]].position);
             path.Add(destination.position);
 
-            DestinationName = destination.GetComponent<DeliveryTrigger>()?.LocationName ?? delivery.Destination;
+            DestinationName = destination.gameObject.name;
             rebuildTimer = rebuildInterval;
-            UpdateProgressAndRebuildIfNeeded();
+            UpdateProgress();
         }
 
         private List<int> FindPath(int start, int goal)
@@ -156,9 +144,7 @@ namespace UltimateTruckEmpire.Navigation
             while (open.Count > 0)
             {
                 int current = open[0];
-                for (int i = 1; i < open.Count; i++)
-                    if (f[open[i]] < f[current]) current = open[i];
-
+                for (int i = 1; i < open.Count; i++) if (f[open[i]] < f[current]) current = open[i];
                 if (current == goal) return Reconstruct(cameFrom, current);
                 open.Remove(current);
 
@@ -178,11 +164,7 @@ namespace UltimateTruckEmpire.Navigation
         private static List<int> Reconstruct(Dictionary<int, int> cameFrom, int current)
         {
             var result = new List<int> { current };
-            while (cameFrom.ContainsKey(current))
-            {
-                current = cameFrom[current];
-                result.Add(current);
-            }
+            while (cameFrom.ContainsKey(current)) { current = cameFrom[current]; result.Add(current); }
             result.Reverse();
             return result;
         }
@@ -203,13 +185,7 @@ namespace UltimateTruckEmpire.Navigation
         {
             nodes.Clear(); edges.Clear();
             var ids = new Dictionary<string, int>();
-
-            void AddNode(string id, Vector3 p)
-            {
-                ids[id] = nodes.Count;
-                nodes.Add(new NavNode(p, id));
-                edges.Add(new List<int>());
-            }
+            void AddNode(string id, Vector3 p) { ids[id] = nodes.Count; nodes.Add(new NavNode(p)); edges.Add(new List<int>()); }
             void Link(string a, string b)
             {
                 if (!ids.ContainsKey(a) || !ids.ContainsKey(b)) return;
@@ -220,32 +196,18 @@ namespace UltimateTruckEmpire.Navigation
 
             float[] xs = { -160f, -90f, 0f, 80f, 160f };
             float[] zs = { -70f, 0f, 70f };
-            for (int z = 0; z < zs.Length; z++)
-                for (int x = 0; x < xs.Length; x++)
-                    AddNode("R" + x + "_" + z, new Vector3(xs[x], 0f, zs[z]));
-
-            for (int z = 0; z < zs.Length; z++)
-                for (int x = 0; x < xs.Length - 1; x++)
-                    Link("R" + x + "_" + z, "R" + (x + 1) + "_" + z);
-            for (int x = 0; x < xs.Length; x++)
-                if (x == 1) { Link("R1_0", "R1_1"); Link("R1_1", "R1_2"); }
+            for (int z = 0; z < zs.Length; z++) for (int x = 0; x < xs.Length; x++)
+                AddNode("R" + x + "_" + z, new Vector3(xs[x], 0f, zs[z]));
+            for (int z = 0; z < zs.Length; z++) for (int x = 0; x < xs.Length - 1; x++)
+                Link("R" + x + "_" + z, "R" + (x + 1) + "_" + z);
+            Link("R1_0", "R1_1"); Link("R1_1", "R1_2");
 
             AddNode("DEPOT_APPROACH", new Vector3(-55f, 0f, 8f));
             AddNode("DEPOT", new Vector3(-55f, 0f, 16f));
             AddNode("FACTORY_APPROACH", new Vector3(55f, 0f, 8f));
             AddNode("FACTORY", new Vector3(55f, 0f, 16f));
-
-            AddNode("TRUCK_STOP", new Vector3(28f, 0f, -17f));
-            AddNode("SERVICE", new Vector3(-30f, 0f, -18f));
-
-            Link("DEPOT_APPROACH", "DEPOT");
-            Link("FACTORY_APPROACH", "FACTORY");
-            Link("R2_1", "FACTORY_APPROACH");
-            Link("R2_1", "DEPOT_APPROACH");
-            Link("TRUCK_STOP", "R3_0");
-            Link("SERVICE", "R2_0");
-            Link("DEPOT_APPROACH", "R2_1");
-            Link("FACTORY_APPROACH", "R2_1");
+            Link("DEPOT_APPROACH", "DEPOT"); Link("FACTORY_APPROACH", "FACTORY");
+            Link("DEPOT_APPROACH", "R2_1"); Link("FACTORY_APPROACH", "R2_1");
         }
 
         private static float FlatDistance(Vector3 a, Vector3 b)
