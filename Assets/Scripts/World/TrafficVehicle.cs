@@ -13,6 +13,11 @@ namespace UltimateTruckEmpire.World
         private static readonly List<TrafficVehicle> ActiveVehicles = new List<TrafficVehicle>(24);
         private static TruckController playerTruck;
 
+        private Vector3 lastPosition;
+        private float stuckTimer;
+        private float recoveryCooldown;
+
+
         [SerializeField] private float cruiseSpeed = 10f;
         [SerializeField] private float acceleration = 4f;
         [SerializeField] private float braking = 9f;
@@ -101,6 +106,7 @@ namespace UltimateTruckEmpire.World
             speed = Mathf.MoveTowards(speed, targetSpeed, rate * Time.deltaTime);
 
             transform.position += direction * speed * Time.deltaTime;
+            EvaluateStuckRecovery();
 
             if (direction.sqrMagnitude > 0.01f)
             {
@@ -180,7 +186,10 @@ namespace UltimateTruckEmpire.World
                 }
             }
 
-            TruckController player = FindFirstObjectByType<TruckController>();
+            if (playerTruck == null)
+                playerTruck = FindFirstObjectByType<TruckController>();
+
+            TruckController player = playerTruck;
             if (player == null)
                 return;
 
@@ -198,3 +207,32 @@ namespace UltimateTruckEmpire.World
         }
     }
 }
+
+        private void EvaluateStuckRecovery()
+        {
+            Vector3 movement = transform.position - lastPosition;
+            movement.y = 0f;
+            float movedSqr = movement.sqrMagnitude;
+            lastPosition = transform.position;
+
+            if (speed > 2f && movedSqr < 0.0025f)
+                stuckTimer += Time.deltaTime;
+            else
+                stuckTimer = Mathf.Max(0f, stuckTimer - Time.deltaTime * 0.5f);
+
+            if (stuckTimer < 3.5f || recoveryCooldown > 0f)
+                return;
+
+            // Presentation traffic has no physics body, so a deterministic recovery
+            // is safer and cheaper than adding colliders or rigidbody simulation.
+            routeIndex = (routeIndex + 1) % route.Length;
+            transform.position = GetWaypointPosition(routeIndex);
+            FaceNextSegment();
+            speed = Mathf.Max(2f, cruiseSpeed * 0.45f);
+            targetSpeed = cruiseSpeed;
+            yielding = false;
+            playerAhead = false;
+            stuckTimer = 0f;
+            recoveryCooldown = 2f;
+            recoveryDistance += 1f;
+        }
