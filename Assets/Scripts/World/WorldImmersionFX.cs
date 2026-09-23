@@ -205,11 +205,27 @@ namespace UltimateTruckEmpire.World
             bool heavy = amount > 0.65f;
             bool normal = amount > 0.05f;
 
-            if (normal && !rainParticles.isPlaying) rainParticles.Play();
-            if (!normal && rainParticles.isPlaying) rainParticles.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+            if (normal)
+            {
+                if (!rainParticles.gameObject.activeSelf) rainParticles.gameObject.SetActive(true);
+                if (!rainParticles.isPlaying) rainParticles.Play();
+            }
+            else
+            {
+                if (rainParticles.isPlaying) rainParticles.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                if (rainParticles.gameObject.activeSelf) rainParticles.gameObject.SetActive(false);
+            }
 
-            if (heavy && !heavyRainParticles.isPlaying) heavyRainParticles.Play();
-            if (!heavy && heavyRainParticles.isPlaying) heavyRainParticles.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+            if (heavy)
+            {
+                if (!heavyRainParticles.gameObject.activeSelf) heavyRainParticles.gameObject.SetActive(true);
+                if (!heavyRainParticles.isPlaying) heavyRainParticles.Play();
+            }
+            else
+            {
+                if (heavyRainParticles.isPlaying) heavyRainParticles.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                if (heavyRainParticles.gameObject.activeSelf) heavyRainParticles.gameObject.SetActive(false);
+            }
 
             var player = truck != null ? truck.transform : null;
             if (player != null)
