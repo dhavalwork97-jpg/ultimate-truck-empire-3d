@@ -5,7 +5,7 @@ namespace UltimateTruckEmpire.World
 {
     /// <summary>
     /// Lightweight runtime presentation layer for the mobile build.
-    /// Adds procedural engine/wind/rain audio and rain particles without
+    /// Adds procedural engine/wind/rain audio without
     /// requiring external audio or VFX assets. Gameplay state remains owned
     /// by the existing truck and weather systems.
     /// </summary>
@@ -17,8 +17,6 @@ namespace UltimateTruckEmpire.World
         private AudioSource engineSource;
         private AudioSource windSource;
         private AudioSource rainSource;
-        private ParticleSystem rainParticles;
-        private ParticleSystem heavyRainParticles;
         private float targetRain;
         private float targetWind;
 
@@ -37,7 +35,6 @@ namespace UltimateTruckEmpire.World
         {
             weather = TimeWeatherManager.Instance;
             BuildAudio();
-            BuildRain();
         }
 
         private void Update()
@@ -73,7 +70,6 @@ namespace UltimateTruckEmpire.World
                 rainSource.pitch = Mathf.Lerp(0.88f, 1.08f, targetRain);
             }
 
-            UpdateParticles(targetRain);
         }
 
         private void BuildAudio()
