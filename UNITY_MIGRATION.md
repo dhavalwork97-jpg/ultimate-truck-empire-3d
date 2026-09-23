@@ -1,29 +1,39 @@
-# Ultimate Truck Empire — Unity Android Direction
+# Ultimate Truck Empire — Unity Production Structure
 
-The project direction is now officially a real Unity Android game rather than a browser-only Three.js game.
+## Canonical project
 
-## Target
-- Android APK
-- 3D truck driving + tycoon gameplay
-- Touch controls
-- High-quality authored 3D assets
-- PBR materials and mobile-optimized lighting
-- Garage, fleet, contracts, economy, upgrades and progression
-- Save/load system
+The **repository root** is the production Unity project.
 
-## Existing browser prototype
-The existing Vite/Three.js implementation is retained as a gameplay/reference prototype. It is not the target production renderer.
+It contains the required Unity project structure:
 
-## Unity production plan
-1. Create Unity project with mobile-first rendering.
-2. Establish truck controller and camera.
-3. Add authored truck/trailer assets.
-4. Build optimized city/highway/industrial environments.
-5. Add contracts, economy, garage and progression.
-6. Add touch controls and Android UI.
-7. Add save system and settings.
-8. Profile on Android hardware and optimize draw calls, textures, shadows and memory.
-9. Produce development APK builds.
+- Assets/
+- Packages/
+- ProjectSettings/
 
-## Visual target
-Aim for polished mobile 3D visuals using real 3D assets, PBR materials, physically based lighting where practical, baked lighting for static environments, optimized shadows, LODs, occlusion/culling and mobile-friendly post-processing. Do not treat the current procedural low-poly Three.js scene as the final art direction.
+Unity version:
+
+- **6000.0.65f1**
+
+GitHub Actions validates this root project with Unity 6000.0.65f1.
+
+## Removed duplicate
+
+The former UnityProject/ directory was a second, incomplete Unity implementation. It did not contain its own Packages/ or ProjectSettings/ and duplicated older truck, garage, mobile-input, and world-builder code.
+
+It has been removed from the production branch so developers cannot accidentally open or modify the wrong implementation.
+
+Useful concepts from that prototype should be reimplemented against the canonical root architecture rather than copied back wholesale.
+
+## Browser prototype
+
+The Vite/Three.js files under src/, public/, and the root package.json remain as a browser/reference prototype. They are intentionally separate from the Unity production renderer.
+
+## Production rule
+
+All future Unity work must be made under the repository root:
+
+    Assets/
+    Packages/
+    ProjectSettings/
+
+Do not create another nested Unity project.

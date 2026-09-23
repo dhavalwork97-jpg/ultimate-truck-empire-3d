@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "source": "User-supplied Meshy-generated asset bundle",
+  "inspection": {
+    "completed": true,
+    "bundleFile": "Meshy_AI_Covered_Cargo_Trailer_0921131731_texture_fbx (2).zip",
+    "assetCount": 6,
+    "formats": ["FBX", "PNG"],
+    "textureResolution": "2048x2048",
+    "licenseBasis": "CC BY 4.0 for Meshy Free / Meshy 6 Lite generations, subject to Meshy terms and source-material rights",
+    "commercialUse": true,
+    "attributionRequired": true
+  },
+  "productionDisposition": "approved-for-engineering-integration-pending-source-reference-confirmation",
+  "attribution": "Model created with Meshy – CC BY 4.0 License",
+  "assets": [
+    {"file":"Meshy_AI_Covered_Cargo_Trailer_0921131731_texture_fbx.zip","role":"trailer","targetCategory":"DryVan","licenseType":"CCBY4.0"},
+    {"file":"Meshy_AI_Gas_Combustion_Tanker_0921132427_texture_fbx.zip","role":"trailer","targetCategory":"CementTanker","engineeringUse":"tanker candidate; verify cement/bulk semantics","licenseType":"CCBY4.0"},
+    {"file":"Meshy_AI_Gas_Combustion_Tanker_0921133940_texture_fbx.zip","role":"trailer","targetCategory":"CementTanker","engineeringUse":"alternate tanker candidate; verify cement/bulk semantics","licenseType":"CCBY4.0"},
+    {"file":"Meshy_AI_Tarp_Covered_Flatbed__0921132930_texture_fbx.zip","role":"trailer","targetCategory":"Flatbed","licenseType":"CCBY4.0"},
+    {"file":"Meshy_AI_Timber_Hauler_0921134318_texture_fbx.zip","role":"trailer","targetCategory":"HeavyFlatbed","licenseType":"CCBY4.0"},
+    {"file":"Meshy_AI_Corrugated_Steel_Ware_0921140814_texture_fbx.zip","role":"cargo","targetCategory":"Cargo","engineeringUse":"candidate Steel/Construction cargo","licenseType":"CCBY4.0"}
+  ],
+  "coverage": {
+    "covered": ["DryVan","Flatbed","HeavyFlatbed","CementTanker","Cargo"],
+    "stillNeeded": ["Refrigerated","Lowboy","ContainerChassis","GrainHopper"],
+    "notYetClearedAsCementSpecific": ["CementTanker"]
+  },
+  "commercialReleaseChecks": [
+    "Retain Meshy CC BY 4.0 attribution in the game credits / project attribution.",
+    "Confirm these generations did not use third-party copyrighted reference images, logos, branded vehicle photos, or other protected source material without permission.",
+    "Do not mark the assets fully release-verified until that source-reference check is confirmed.",
+    "Keep original generation records/screenshots or account history as provenance evidence."
+  ]
+}
