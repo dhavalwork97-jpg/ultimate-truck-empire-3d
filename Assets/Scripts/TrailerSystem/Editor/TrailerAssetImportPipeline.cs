@@ -127,6 +127,79 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             }
         }
 
+        /// <summary>
+        /// Headless CI entry point. Runs the same production preparation used by the Editor menu,
+        /// validates the generated assets, and returns a non-zero Unity process exit code on failure.
+        /// </summary>
+        public static void PrepareAllImportedBatch()
+        {
+            try
+            {
+                PrepareAllImported();
+                bool valid = ValidatePreparedProductionAssets();
+                Debug.Log("[TrailerImport] Headless production preparation validation: " + (valid ? "PASS" : "FAIL"));
+                EditorApplication.Exit(valid ? 0 : 1);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                EditorApplication.Exit(1);
+            }
+        }
+
+        private static bool ValidatePreparedProductionAssets()
+        {
+            bool valid = true;
+            string[] guids = AssetDatabase.FindAssets("t:Model", new[] { ImportRoot.TrimEnd('/') });
+            int checkedModels = 0;
+            foreach (string guid in guids)
+            {
+                string modelPath = AssetDatabase.GUIDToAssetPath(guid);
+                if (!IsTrailerImportPath(modelPath)) continue;
+                checkedModels++;
+                string id = ProductionIdForSource(modelPath);
+                string prefabPath = "Assets/TrailerSystem/Prefabs/Imported/" + id + ".prefab";
+                string definitionPath = "Assets/TrailerSystem/Data/Trailers/" + id + ".asset";
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                var definition = AssetDatabase.LoadAssetAtPath<TrailerDefinition>(definitionPath);
+                if (prefab == null || definition == null)
+                {
+                    Debug.LogError("[TrailerImport] Missing production asset(s) for " + id);
+                    valid = false;
+                    continue;
+                }
+                if (prefab.GetComponent<LoadedTrailer>() == null ||
+                    prefab.GetComponent<TrailerCargoModule>() == null ||
+                    prefab.GetComponent<TrailerSkinApplier>() == null)
+                {
+                    Debug.LogError("[TrailerImport] Runtime contract missing on " + id);
+                    valid = false;
+                }
+                if (prefab.GetComponentInChildren<LODGroup>(true) == null)
+                {
+                    Debug.LogError("[TrailerImport] LODGroup missing on " + id);
+                    valid = false;
+                }
+                if (!prefab.GetComponentsInChildren<Collider>(true).Any(col => col != null && !col.isTrigger))
+                {
+                    Debug.LogError("[TrailerImport] No non-trigger collider found on " + id);
+                    valid = false;
+                }
+                if (definition.prefab != prefab)
+                {
+                    Debug.LogError("[TrailerImport] Definition prefab reference mismatch for " + id);
+                    valid = false;
+                }
+            }
+            if (checkedModels == 0)
+            {
+                Debug.LogError("[TrailerImport] No imported trailer models found under " + ImportRoot);
+                return false;
+            }
+            AssetDatabase.SaveAssets();
+            return valid;
+        }
+
         [MenuItem("Ultimate Truck Empire/Trailer System/Prepare All Imported Trailers")]
         public static void PrepareAllImported()
         {
