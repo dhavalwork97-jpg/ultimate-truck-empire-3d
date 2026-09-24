@@ -1,10 +1,12 @@
 name: Truck Production CI
 
 on:
-  # Run on every main push so headless truck preparation cannot be skipped
-  # by path-filter evaluation or changes outside the truck asset folders.
   push:
     branches: [main]
+    paths:
+      - 'Assets/TruckSystem/Imports/Trucks/Batch02/**'
+      - 'Assets/Scripts/Truck/Editor/**'
+      - '.github/workflows/truck-production.yml'
   workflow_dispatch:
 
 permissions:
@@ -87,9 +89,16 @@ jobs:
             exit 0
           fi
           git commit -m "Persist generated truck production assets"
-          git fetch origin main
-          git rebase origin/main
-          git push origin HEAD:main
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then
+              exit 0
+            fi
+            git rebase --abort || true
+            sleep $((attempt * 5))
+          done
+          echo "Failed to persist generated truck production assets after 5 attempts."
+          exit 1
 
       - name: Upload generated truck production assets
         if: always()
