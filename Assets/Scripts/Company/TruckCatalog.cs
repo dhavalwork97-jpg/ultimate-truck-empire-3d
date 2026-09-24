@@ -8,6 +8,7 @@ namespace UltimateTruckEmpire.Company
     {
         public string id;
         public string displayName;
+        public string productionProfileId;
         public float purchasePrice;
         public float capacityTons;
         public float fuelCapacity;
