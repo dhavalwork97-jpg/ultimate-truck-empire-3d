@@ -50,6 +50,10 @@ namespace UltimateTruckEmpire.Company
             catalog.Add(new TruckCatalogEntry("Bharat Forge Trucks", "Atlas X 520", 495000f, 45f, 760f, 520f, 2400f, 120f, 6.1f, "8x4", 3));
             catalog.Add(new TruckCatalogEntry("Western Starline", "Titan 600", 680000f, 50f, 850f, 600f, 2800f, 120f, 5.7f, "8x4", 4));
             catalog.Add(new TruckCatalogEntry("Western Starline", "Titan Heavy 750", 950000f, 65f, 1050f, 750f, 3400f, 105f, 4.9f, "8x8", 5));
+            // Batch 02 imported production trucks. Values here are game-balance defaults;
+            // the production profile ID links the dealership record to the prepared asset.
+            catalog.Add(new TruckCatalogEntry("Nordic", "Titan 500", 450000f, 40f, 750f, 500f, 2500f, 120f, 6.5f, "6x4", 3));
+            catalog.Add(new TruckCatalogEntry("Golden", "Hauler", 625000f, 48f, 900f, 600f, 2800f, 115f, 5.8f, "6x4", 4));
         }
 
         public bool IsUnlocked(TruckCatalogEntry entry)
