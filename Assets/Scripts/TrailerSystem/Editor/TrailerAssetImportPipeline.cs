@@ -44,6 +44,22 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             importer.isReadable = false;
         }
 
+        void OnPreprocessTexture()
+        {
+            if (!assetPath.StartsWith(ImportRoot, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            var importer = (TextureImporter)assetImporter;
+            string file = Path.GetFileNameWithoutExtension(assetPath).ToLowerInvariant();
+            bool dataTexture = file.Contains("_metallic") || file.Contains("_roughness") || file.Contains("_normal");
+            importer.maxTextureSize = 1024;
+            importer.mipmapEnabled = true;
+            importer.textureCompression = TextureImporterCompression.CompressedHQ;
+            importer.sRGBTexture = !dataTexture;
+            if (file.Contains("_normal"))
+                importer.textureType = TextureImporterType.NormalMap;
+        }
+
         [MenuItem("Ultimate Truck Empire/Trailer System/Prepare Selected Imported Trailer")]
         public static void PrepareSelected()
         {
@@ -86,6 +102,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 AddRuntimeContract(instance);
                 CreateAuthoredPlaceholderSockets(instance);
                 CreateGeneratedPhysicsProxy(instance);
+                AssignProductionMaterial(instance, modelPath, id);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
                 if (prefab == null)
@@ -212,6 +229,78 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             EnsureChild(sockets, "Wheel_FR");
             EnsureChild(sockets, "Wheel_RL");
             EnsureChild(sockets, "Wheel_RR");
+
+            var renderers = root.GetComponentsInChildren<Renderer>(true);
+            if (renderers.Length == 0) return;
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+            Vector3 center = root.transform.InverseTransformPoint(bounds.center);
+            Vector3 size = root.transform.InverseTransformVector(bounds.size);
+            float halfX = Mathf.Abs(size.x) * 0.45f;
+            float halfZ = Mathf.Abs(size.z) * 0.42f;
+            float y = center.y - Mathf.Abs(size.y) * 0.38f;
+            FindDirectChild(sockets, "CargoSocket").localPosition = center + Vector3.up * (Mathf.Abs(size.y) * 0.05f);
+            FindDirectChild(sockets, "Kingpin").localPosition = center + new Vector3(0f, -Mathf.Abs(size.y) * 0.25f, halfZ);
+            FindDirectChild(sockets, "Wheel_FL").localPosition = center + new Vector3(-halfX, y - center.y, -halfZ);
+            FindDirectChild(sockets, "Wheel_FR").localPosition = center + new Vector3(halfX, y - center.y, -halfZ);
+            FindDirectChild(sockets, "Wheel_RL").localPosition = center + new Vector3(-halfX, y - center.y, halfZ);
+            FindDirectChild(sockets, "Wheel_RR").localPosition = center + new Vector3(halfX, y - center.y, halfZ);
+        }
+
+        private static void AssignProductionMaterial(GameObject root, string modelPath, string id)
+        {
+            string directory = Path.GetDirectoryName(modelPath)?.Replace("\\", "/");
+            if (string.IsNullOrEmpty(directory)) return;
+
+            string source = Path.GetFileNameWithoutExtension(modelPath);
+            string baseName = source;
+            Texture2D baseColor = AssetDatabase.LoadAssetAtPath<Texture2D>(directory + "/" + baseName + ".png");
+            Texture2D metallic = AssetDatabase.LoadAssetAtPath<Texture2D>(directory + "/" + baseName + "_metallic.png");
+            Texture2D normal = AssetDatabase.LoadAssetAtPath<Texture2D>(directory + "/" + baseName + "_normal.png");
+            Texture2D roughness = AssetDatabase.LoadAssetAtPath<Texture2D>(directory + "/" + baseName + "_roughness.png");
+            if (baseColor == null && metallic == null && normal == null && roughness == null)
+            {
+                Debug.LogWarning("[TrailerImport] No matching PBR textures found for " + modelPath);
+                return;
+            }
+
+            string materialFolder = "Assets/TrailerSystem/Production/Materials";
+            EnsureFolder(materialFolder);
+            string materialPath = materialFolder + "/" + id + ".mat";
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+            if (material == null)
+            {
+                Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+                if (shader == null) return;
+                material = new Material(shader) { name = id + "_PBR" };
+                AssetDatabase.CreateAsset(material, materialPath);
+            }
+
+            if (baseColor != null && material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", baseColor);
+            else if (baseColor != null && material.HasProperty("_MainTex")) material.SetTexture("_MainTex", baseColor);
+            if (normal != null && material.HasProperty("_BumpMap"))
+            {
+                material.SetTexture("_BumpMap", normal);
+                material.EnableKeyword("_NORMALMAP");
+            }
+            if (metallic != null && material.HasProperty("_MetallicGlossMap"))
+            {
+                material.SetTexture("_MetallicGlossMap", metallic);
+                material.EnableKeyword("_METALLICGLOSSMAP");
+            }
+            if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", metallic != null ? 1f : 0.2f);
+            if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", 0.55f);
+            if (roughness != null)
+                Debug.Log("[TrailerImport] Roughness map retained at 1024 source resolution; automatic roughness-to-smoothness packing is intentionally deferred.");
+
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+            {
+                var slots = renderer.sharedMaterials;
+                if (slots == null || slots.Length == 0) slots = new Material[1];
+                for (int i = 0; i < slots.Length; i++) slots[i] = material;
+                renderer.sharedMaterials = slots;
+            }
+            EditorUtility.SetDirty(material);
         }
 
         private static void CreateGeneratedPhysicsProxy(GameObject root)
