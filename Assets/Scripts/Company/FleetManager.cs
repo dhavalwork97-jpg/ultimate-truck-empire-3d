@@ -10,6 +10,7 @@ namespace UltimateTruckEmpire.Company
         public string id;
         public string model;
         public string definitionId = "ute-starter";
+        public string productionProfileId = "";
         public float purchasePrice;
         public float fuelCapacity = 350f;
         public float fuel = 350f;
@@ -82,6 +83,7 @@ namespace UltimateTruckEmpire.Company
             {
                 id = "TRK-" + nextId++,
                 definitionId = definitionId,
+                productionProfileId = TruckCatalog.Find(definitionId)?.productionProfileId ?? "",
                 model = string.IsNullOrWhiteSpace(model) ? "UTE Hauler" : model.Trim(),
                 purchasePrice = Mathf.Max(0f, price),
                 capacityTons = Mathf.Max(1f, capacityTons),
@@ -313,6 +315,7 @@ namespace UltimateTruckEmpire.Company
                     if (truck.reliability <= 0f) truck.reliability = definition.reliability;
                     if (truck.maintenanceCostPerKm <= 0f) truck.maintenanceCostPerKm = definition.maintenanceCostPerKm;
                     if (string.IsNullOrWhiteSpace(truck.definitionId)) truck.definitionId = definition.id;
+                    if (string.IsNullOrWhiteSpace(truck.productionProfileId)) truck.productionProfileId = definition.productionProfileId ?? "";
                 }
 
                 truck.fuelCapacity = Mathf.Max(1f, truck.fuelCapacity);
