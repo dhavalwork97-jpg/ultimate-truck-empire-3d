@@ -118,6 +118,10 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             asset.materialSlotBudget = 3;
             asset.maxTextureResolution = 1024;
             asset.lodCount = 3;
+            asset.axleCount = category == TrailerCategory.FuelTanker ? 3 : (category == TrailerCategory.DryVan ? 2 : 3);
+            asset.hazmat = category == TrailerCategory.FuelTanker;
+            asset.trafficSpawnWeight = category == TrailerCategory.FuelTanker ? 0.35f : 1f;
+            asset.maintenanceCostMultiplier = category == TrailerCategory.FuelTanker ? 1.25f : 1f;
             EditorUtility.SetDirty(asset);
             return asset;
         }
