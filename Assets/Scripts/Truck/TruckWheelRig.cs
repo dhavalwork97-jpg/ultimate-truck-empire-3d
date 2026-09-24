@@ -31,6 +31,17 @@ namespace UltimateTruckEmpire.Truck
             var controller = GetComponent<TruckController>();
             if (controller == null) return;
 
+            var existing = GetComponentsInChildren<WheelCollider>(true);
+            if (existing.Length >= 4)
+            {
+                wheels[0] = existing[0];
+                wheels[1] = existing[1];
+                wheels[2] = existing[2];
+                wheels[3] = existing[3];
+                controller.ConfigureWheels(wheels[0], wheels[1], wheels[2], wheels[3]);
+                return;
+            }
+
             visualRoot = new GameObject("Wheel Visuals").transform;
             visualRoot.SetParent(transform, false);
 
