@@ -1,0 +1,79 @@
+name: Trailer Production CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: production-assets-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare-trailers:
+    name: Headless trailer asset preparation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Cache Unity packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/unity3d
+          key: unity-${{ runner.os }}-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: |
+            unity-${{ runner.os }}-
+      - name: Pre-pull Unity GameCI image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull unityci/editor:ubuntu-6000.0.65f1-base-3
+      - name: Prepare imported trailer production assets
+        uses: game-ci/unity-builder@v4.3.0
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: .
+          unityVersion: 6000.0.65f1
+          customImage: unityci/editor:ubuntu-6000.0.65f1-base-3
+          buildMethod: UltimateTruckEmpire.TrailerSystem.Editor.TrailerAssetImportPipeline.PrepareAllImportedBatch
+          customParameters: -nographics -batchmode
+      - name: Persist generated trailer production assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            Assets/TrailerSystem/Imports/Trailers/Batch01 \
+            Assets/TrailerSystem/Prefabs/Imported \
+            Assets/TrailerSystem/Data/Trailers \
+            Assets/TrailerSystem/Production/Materials \
+            Assets/TrailerSystem/Production/Meshes \
+            Assets/TrailerSystem/Production/Reports/Batch01Validation.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Persist generated Batch 01 trailer production assets [skip ci]"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then exit 0; fi
+            git rebase --abort || true
+            sleep $((attempt * 5))
+          done
+          exit 1
+      - name: Upload generated trailer assets
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prepared-trailer-assets
+          path: |
+            Assets/TrailerSystem/Prefabs/Imported
+            Assets/TrailerSystem/Data/Trailers
+            Assets/TrailerSystem/Production/Materials
+            Assets/TrailerSystem/Production/Reports/Batch01Validation.json
+          if-no-files-found: ignore
