@@ -61,7 +61,17 @@ namespace UltimateTruckEmpire.Tests.Editor
             foreach (var guid in guids)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
-                if (path.IndexOf(id, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                string fileName = System.IO.Path.GetFileNameWithoutExtension(path);
+
+                // Production IDs are normalized slugs while imported FBX files retain
+                // their source naming (for example, underscores and title casing).
+                // Compare normalized alphanumeric forms so both naming conventions resolve.
+                string normalizedId = NormalizeAssetKey(id);
+                string normalizedFileName = NormalizeAssetKey(fileName);
+
+                if (normalizedFileName == normalizedId ||
+                    normalizedFileName.StartsWith(normalizedId, System.StringComparison.OrdinalIgnoreCase) ||
+                    normalizedId.StartsWith(normalizedFileName, System.StringComparison.OrdinalIgnoreCase))
                 {
                     found = true;
                     break;
@@ -69,6 +79,19 @@ namespace UltimateTruckEmpire.Tests.Editor
             }
 
             Assert.IsTrue(found, "Missing imported source model for production ID: " + id);
+        }
+
+        private static string NormalizeAssetKey(string value)
+        {
+            var chars = value.ToCharArray();
+            var builder = new System.Text.StringBuilder(chars.Length);
+            foreach (var c in chars)
+            {
+                if (char.IsLetterOrDigit(c))
+                    builder.Append(char.ToLowerInvariant(c));
+            }
+
+            return builder.ToString();
         }
     }
 }
