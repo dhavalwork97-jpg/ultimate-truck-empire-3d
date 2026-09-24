@@ -254,7 +254,7 @@ namespace UltimateTruckEmpire.Truck
             if (Fuel <= 0f) { engineRunning = false; CruiseActive = false; }
         }
 
-        public void Refuel(float amount) => Fuel = Mathf.Clamp(Fuel + amount, 0f, 100f);
+        public void Refuel(float amount) => Fuel = Mathf.Clamp(Fuel + amount, 0f, FuelCapacity);
 
         private void SetMotor(float torque) { SetMotor(rearLeft, torque); SetMotor(rearRight, torque); }
         private static void SetMotor(WheelCollider wheel, float torque) { if (wheel) wheel.motorTorque = torque; }
