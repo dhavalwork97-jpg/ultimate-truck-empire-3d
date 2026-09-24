@@ -75,10 +75,10 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \\
-            Assets/TruckSystem/Imports \\
-            Assets/TruckSystem/Prefabs/Imported \\
-            Assets/TruckSystem/Data/Production \\
+          git add \
+            Assets/TruckSystem/Imports \
+            Assets/TruckSystem/Prefabs/Imported \
+            Assets/TruckSystem/Data/Production \
             Assets/TruckSystem/Production
           if git diff --cached --quiet; then
             echo "No generated truck changes to persist."
