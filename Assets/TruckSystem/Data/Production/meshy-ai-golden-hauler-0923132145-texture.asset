@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 054023126d0eab06098ebfea94ccf8da, type: 3}
+  m_Name: meshy-ai-golden-hauler-0923132145-texture
+  m_EditorClassIdentifier: 
+  id: meshy-ai-golden-hauler-0923132145-texture
+  displayName: Meshy Ai Golden Hauler 0923132145 Texture
+  manufacturer: UTE Motors
+  prefab: {fileID: 6354860579839479755, guid: 28928007f38292763a4b31e12c31584e, type: 3}
+  emptyMassTons: 8
+  fuelCapacityLitres: 900
+  enginePowerHp: 600
+  maxSpeedKph: 115
+  fuelEfficiency: 5.8
+  drivetrain: 6x4
+  couplingSocket: {fileID: 3899767735413102872, guid: 28928007f38292763a4b31e12c31584e, type: 3}
+  wheelSockets:
+  - {fileID: 6724276445185250368, guid: 28928007f38292763a4b31e12c31584e, type: 3}
+  - {fileID: 8168836165198996676, guid: 28928007f38292763a4b31e12c31584e, type: 3}
+  - {fileID: 3130386779834326884, guid: 28928007f38292763a4b31e12c31584e, type: 3}
+  - {fileID: 3490524537201949463, guid: 28928007f38292763a4b31e12c31584e, type: 3}
+  lodCount: 1
+  maxTextureResolution: 1024
+  materialSlotBudget: 6

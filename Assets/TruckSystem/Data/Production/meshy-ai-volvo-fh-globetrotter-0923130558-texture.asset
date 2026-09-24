@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 054023126d0eab06098ebfea94ccf8da, type: 3}
+  m_Name: meshy-ai-volvo-fh-globetrotter-0923130558-texture
+  m_EditorClassIdentifier: 
+  id: meshy-ai-volvo-fh-globetrotter-0923130558-texture
+  displayName: Nordic Titan 500
+  manufacturer: UTE Motors
+  prefab: {fileID: 4725513023006922020, guid: 8a03551f1f53e9e4fbd3bb44805ffea6, type: 3}
+  emptyMassTons: 8
+  fuelCapacityLitres: 750
+  enginePowerHp: 500
+  maxSpeedKph: 120
+  fuelEfficiency: 6.5
+  drivetrain: 6x4
+  couplingSocket: {fileID: 8892902454498357788, guid: 8a03551f1f53e9e4fbd3bb44805ffea6, type: 3}
+  wheelSockets:
+  - {fileID: 3014890150222549862, guid: 8a03551f1f53e9e4fbd3bb44805ffea6, type: 3}
+  - {fileID: 7475635627318130077, guid: 8a03551f1f53e9e4fbd3bb44805ffea6, type: 3}
+  - {fileID: 7826160326418440496, guid: 8a03551f1f53e9e4fbd3bb44805ffea6, type: 3}
+  - {fileID: 5853435058865847112, guid: 8a03551f1f53e9e4fbd3bb44805ffea6, type: 3}
+  lodCount: 1
+  maxTextureResolution: 1024
+  materialSlotBudget: 6
