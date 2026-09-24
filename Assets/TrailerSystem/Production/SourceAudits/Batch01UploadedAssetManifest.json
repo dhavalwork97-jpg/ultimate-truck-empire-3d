@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "batch": "01",
+  "inspectedOn": "2026-09-24",
+  "assets": [
+    {
+      "productionId": "TRAILER_DRY_VAN_001",
+      "role": "Dry Van Mk1",
+      "sourceArchive": "Meshy_AI_Covered_Cargo_Trailer_0921131731_texture_fbx.zip",
+      "files": [
+        {
+          "type": "model",
+          "name": "Meshy_AI_Covered_Cargo_Trailer_0921131731_texture.fbx",
+          "bytes": 13539452,
+          "format": "FBX Binary"
+        },
+        {
+          "type": "baseColor",
+          "name": "Meshy_AI_Covered_Cargo_Trailer_0921131731_texture.png",
+          "bytes": 4652509,
+          "resolution": "2048x2048"
+        },
+        {
+          "type": "metallic",
+          "name": "Meshy_AI_Covered_Cargo_Trailer_0921131731_texture_metallic.png",
+          "bytes": 1429146,
+          "resolution": "2048x2048"
+        },
+        {
+          "type": "normal",
+          "name": "Meshy_AI_Covered_Cargo_Trailer_0921131731_texture_normal.png",
+          "bytes": 4162946,
+          "resolution": "2048x2048"
+        },
+        {
+          "type": "roughness",
+          "name": "Meshy_AI_Covered_Cargo_Trailer_0921131731_texture_roughness.png",
+          "bytes": 1563640,
+          "resolution": "2048x2048"
+        }
+      ]
+    },
+    {
+      "productionId": "TRAILER_FUEL_TANKER_001",
+      "role": "Fuel Tanker Mk1",
+      "sourceArchive": "Meshy_AI_Gas_Combustion_Tanker_0921132427_texture_fbx.zip",
+      "files": [
+        {
+          "type": "model",
+          "name": "Meshy_AI_Gas_Combustion_Tanker_0921132427_texture.fbx",
+          "bytes": 10662444,
+          "format": "FBX Binary"
+        },
+        {
+          "type": "baseColor",
+          "name": "Meshy_AI_Gas_Combustion_Tanker_0921132427_texture.png",
+          "bytes": 3616272,
+          "resolution": "2048x2048"
+        },
+        {
+          "type": "metallic",
+          "name": "Meshy_AI_Gas_Combustion_Tanker_0921132427_texture_metallic.png",
+          "bytes": 54482,
+          "resolution": "2048x2048"
+        },
+        {
+          "type": "normal",
+          "name": "Meshy_AI_Gas_Combustion_Tanker_0921132427_texture_normal.png",
+          "bytes": 3040316,
+          "resolution": "2048x2048"
+        },
+        {
+          "type": "roughness",
+          "name": "Meshy_AI_Gas_Combustion_Tanker_0921132427_texture_roughness.png",
+          "bytes": 1465637,
+          "resolution": "2048x2048"
+        }
+      ]
+    }
+  ],
+  "status": "source-inspected; extracted FBX and PBR textures uploaded under Assets/TrailerSystem/Imports/Trailers/Batch01"
+}

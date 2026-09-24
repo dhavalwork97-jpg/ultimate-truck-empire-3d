@@ -44,7 +44,8 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 CreateTrailer("lowboy-rgn", "Lowboy / RGN", TrailerCategory.Lowboy, 42f, 9.0f, 210000f, skins[2]),
                 CreateTrailer("container-chassis", "Container Chassis", TrailerCategory.ContainerChassis, 30f, 5.5f, 135000f, skins[2]),
                 CreateTrailer("grain-hopper", "Grain Hopper", TrailerCategory.GrainHopper, 30f, 7.5f, 150000f, skins[3]),
-                CreateTrailer("cement-tanker", "Cement Tanker", TrailerCategory.CementTanker, 30f, 8.0f, 185000f, skins[4])
+                CreateTrailer("cement-tanker", "Cement Tanker", TrailerCategory.CementTanker, 30f, 8.0f, 185000f, skins[4]),
+                CreateTrailer("fuel-tanker", "Fuel Tanker", TrailerCategory.FuelTanker, 30f, 9.0f, 180000f, skins[5])
             };
 
             var cargo = new List<CargoDefinition>
@@ -64,7 +65,8 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 CreateCargo("wheat", "Wheat", CargoCategory.Grain, 10, 30, trailers[6], false, false, false),
                 CreateCargo("corn", "Corn", CargoCategory.Grain, 10, 30, trailers[6], false, false, false),
                 CreateCargo("animal-feed", "Animal Feed", CargoCategory.AnimalFeed, 8, 28, trailers[6], false, false, false),
-                CreateCargo("cement-powder", "Cement Powder", CargoCategory.Cement, 10, 30, trailers[7], false, false, false)
+                CreateCargo("cement-powder", "Cement Powder", CargoCategory.Cement, 10, 30, trailers[7], false, false, false),
+                CreateCargo("industrial-fuel", "Industrial Fuel", CargoCategory.Fuel, 8, 30, trailers[8], false, false, false)
             };
 
             // Shared compatibility references. This keeps one trailer mesh reusable across many cargo types.
@@ -116,6 +118,10 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             asset.materialSlotBudget = 3;
             asset.maxTextureResolution = 1024;
             asset.lodCount = 3;
+            asset.axleCount = category == TrailerCategory.FuelTanker ? 3 : (category == TrailerCategory.DryVan ? 2 : 3);
+            asset.hazmat = category == TrailerCategory.FuelTanker;
+            asset.trafficSpawnWeight = category == TrailerCategory.FuelTanker ? 0.35f : 1f;
+            asset.maintenanceCostMultiplier = category == TrailerCategory.FuelTanker ? 1.25f : 1f;
             EditorUtility.SetDirty(asset);
             return asset;
         }

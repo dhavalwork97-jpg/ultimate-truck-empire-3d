@@ -15,6 +15,12 @@ namespace UltimateTruckEmpire.TrailerSystem
                 return null;
 
             GameObject instance = Object.Instantiate(definition.prefab, parent);
+            var calibrator = instance.GetComponent<TrailerRuntimeCalibrator>();
+            if (calibrator != null && !calibrator.ApplyCalibration())
+            {
+                Object.Destroy(instance);
+                return null;
+            }
             LoadedTrailer loaded = instance.GetComponent<LoadedTrailer>();
             if (loaded == null)
                 loaded = instance.AddComponent<LoadedTrailer>();

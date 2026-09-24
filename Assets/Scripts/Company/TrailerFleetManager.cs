@@ -223,6 +223,7 @@ namespace UltimateTruckEmpire.Company
                 case TrailerCategory.ContainerChassis: return UltimateTruckEmpire.Gameplay.TrailerType.Container;
                 case TrailerCategory.GrainHopper: return UltimateTruckEmpire.Gameplay.TrailerType.GrainHopper;
                 case TrailerCategory.CementTanker: return UltimateTruckEmpire.Gameplay.TrailerType.CementTanker;
+                case TrailerCategory.FuelTanker: return UltimateTruckEmpire.Gameplay.TrailerType.Tanker;
                 case TrailerCategory.DumpTrailer: return UltimateTruckEmpire.Gameplay.TrailerType.Dump;
                 case TrailerCategory.AgriculturalBulk: return UltimateTruckEmpire.Gameplay.TrailerType.AgriculturalBulk;
                 default: return UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider;
@@ -329,10 +330,19 @@ namespace UltimateTruckEmpire.Company
             if (loadedTrailer != null)
                 loadedTrailer.ConfigureEmpty(definition, skin);
 
+            var calibrator = instance.GetComponent<TrailerRuntimeCalibrator>();
+            if (calibrator != null && !calibrator.ApplyCalibration())
+            {
+                UnityEngine.Object.Destroy(instance);
+                return;
+            }
+
             Transform kingpin = FindKingpin(instance.transform);
             if (kingpin != null)
             {
-                float mass = Mathf.Max(1200f, definition.emptyWeightTons * 1000f);
+                float mass = calibrator != null && calibrator.HasValidCalibration
+                    ? calibrator.EmptyMassTons * 1000f
+                    : definition.emptyWeightTons * 1000f;
                 if (!attachment.Attach(instance, kingpin, mass))
                 {
                     UnityEngine.Object.Destroy(instance);
