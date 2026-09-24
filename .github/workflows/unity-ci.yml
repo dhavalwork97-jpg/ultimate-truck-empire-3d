@@ -67,7 +67,8 @@ jobs:
           if-no-files-found: ignore
 
   validate:
-    name: Unity compile and tests
+    name: Full Unity compile and tests (main)
+    if: github.event_name != 'pull_request'
     needs: prepare-trailers
     runs-on: ubuntu-latest
     timeout-minutes: 60
