@@ -74,10 +74,45 @@ namespace UltimateTruckEmpire.Company
 
         public FleetTrailerData EnsureStarterTrailer()
         {
-            if (trailers.Count > 0) return trailers[0];
-            var starter = AddTrailer("TRL-" + nextId++, "UTE Curtainsider 30T", UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider, 95000f, "dry-van");
+            if (trailers.Count > 0)
+            {
+                MigrateStarterDefinitionIfProductionCatalogIsReady(trailers[0]);
+                return trailers[0];
+            }
+
+            // Prefer the production Batch 01 dry-van identity when the generated
+            // catalog is present. Until Unity has generated the catalog, keep the
+            // existing starter id so a headless/legacy build remains playable.
+            string definitionId = ResolveProductionDefinitionId(
+                "TRAILER_DRY_VAN_001",
+                "dry-van");
+
+            var starter = AddTrailer(
+                "TRL-" + nextId++,
+                "UTE Curtainsider 30T",
+                UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider,
+                95000f,
+                definitionId);
             starter.skinId = "plain-white";
             return starter;
+        }
+
+        private static string ResolveProductionDefinitionId(string productionId, string fallbackId)
+        {
+            var catalog = TrailerCatalogRuntime.Catalog;
+            if (catalog != null && catalog.FindTrailer(productionId) != null)
+                return productionId;
+            return fallbackId;
+        }
+
+        private static void MigrateStarterDefinitionIfProductionCatalogIsReady(FleetTrailerData trailer)
+        {
+            if (trailer == null || !string.Equals(trailer.definitionId, "dry-van", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            string productionId = ResolveProductionDefinitionId("TRAILER_DRY_VAN_001", null);
+            if (!string.IsNullOrWhiteSpace(productionId))
+                trailer.definitionId = productionId;
         }
 
         public void EnsureStarterFleet() => EnsureStarterTrailer();
