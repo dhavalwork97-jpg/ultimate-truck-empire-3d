@@ -203,6 +203,8 @@ namespace UltimateTruckEmpire.Truck.Editor
             string source = ProfileRoot + "/" + id + ".asset";
             string destination = RuntimeProfileRoot + "/" + id + ".asset";
             if (AssetDatabase.LoadAssetAtPath<TruckProductionProfile>(source) == null) return;
+            if (AssetDatabase.LoadAssetAtPath<TruckProductionProfile>(destination) != null)
+                AssetDatabase.DeleteAsset(destination);
             AssetDatabase.CopyAsset(source, destination);
         }
 
