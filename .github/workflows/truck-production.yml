@@ -82,7 +82,7 @@ jobs:
           # Unity may create additional generated/meta files during preparation.
           # Stage the complete production tree so no unstaged generated files
           # block the rebase/push step.
-          git add -A Assets/TruckSystem
+          git add -A
           if git diff --cached --quiet; then
             echo "No generated truck changes to persist."
             exit 0
