@@ -12,6 +12,7 @@ namespace UltimateTruckEmpire.Truck.Editor
         private const string ImportRoot = "Assets/TruckSystem/Imports/Trucks/";
         private const string PrefabRoot = "Assets/TruckSystem/Prefabs/Imported";
         private const string ProfileRoot = "Assets/TruckSystem/Data/Production";
+        private const string RuntimeProfileRoot = "Assets/Resources/TruckSystem/Data/Production";
 
         private static bool IsTruckModel(string path)
         {
@@ -58,6 +59,7 @@ namespace UltimateTruckEmpire.Truck.Editor
         {
             EnsureFolder(PrefabRoot);
             EnsureFolder(ProfileRoot);
+            EnsureFolder(RuntimeProfileRoot);
             string[] guids = AssetDatabase.FindAssets("t:Model", new[] { ImportRoot.TrimEnd('/') });
             int prepared = 0;
             foreach (string guid in guids)
@@ -116,6 +118,8 @@ namespace UltimateTruckEmpire.Truck.Editor
                 AddComponent<PlayerTruckFleetBinding>(instance);
                 AddComponent<TrailerController>(instance);
                 AddComponent<TruckWheelRig>(instance);
+                var runtimeMarker = AddComponent<TruckProductionRuntimeInstance>(instance);
+                runtimeMarker.Initialize(id);
 
                 ConfigureWheelColliders(instance);
                 EnsureCouplingSocket(instance);
@@ -124,6 +128,7 @@ namespace UltimateTruckEmpire.Truck.Editor
                 if (prefab == null) return false;
 
                 EnsureProductionProfile(id, prefab);
+                CopyRuntimeProfile(id);
                 return ValidateTruckPrefab(prefab, id);
             }
             finally
@@ -191,6 +196,16 @@ namespace UltimateTruckEmpire.Truck.Editor
             var bounds = GetRendererBounds(root);
             socket.localPosition = root.transform.InverseTransformPoint(
                 new Vector3(bounds.center.x, bounds.min.y + bounds.size.y * 0.62f, bounds.max.z - bounds.size.z * 0.06f));
+        }
+
+        private static void CopyRuntimeProfile(string id)
+        {
+            string source = ProfileRoot + "/" + id + ".asset";
+            string destination = RuntimeProfileRoot + "/" + id + ".asset";
+            if (AssetDatabase.LoadAssetAtPath<TruckProductionProfile>(source) == null) return;
+            if (AssetDatabase.LoadAssetAtPath<TruckProductionProfile>(destination) != null)
+                AssetDatabase.DeleteAsset(destination);
+            AssetDatabase.CopyAsset(source, destination);
         }
 
         private static void EnsureProductionProfile(string id, GameObject prefab)
@@ -298,6 +313,8 @@ namespace UltimateTruckEmpire.Truck.Editor
 
         private static string ToDisplayName(string id)
         {
+            if (string.Equals(id, "meshy-ai-volvo-fh-globetrotter-0923130558-texture", StringComparison.OrdinalIgnoreCase))
+                return "Nordic Titan 500";
             if (string.IsNullOrEmpty(id)) return "Imported Truck";
             return string.Join(" ", id.Split(new[] { '-' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(part => char.ToUpperInvariant(part[0]) + part.Substring(1)));

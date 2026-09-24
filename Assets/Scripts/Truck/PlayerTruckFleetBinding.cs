@@ -19,7 +19,6 @@ namespace UltimateTruckEmpire.Truck
 
         private void Start()
         {
-            controller = GetComponent<TruckController>();
             fleet = FleetManager.Instance;
 
             if (fleet == null)
@@ -37,8 +36,38 @@ namespace UltimateTruckEmpire.Truck
                 return;
             }
 
+            if (TryResolveProductionPrefab(truck))
+                return;
+
+            controller = GetComponent<TruckController>();
             controller.ApplyFleetConfiguration(truck);
             nextSync = Time.time + syncInterval;
+        }
+
+        private bool TryResolveProductionPrefab(FleetTruckData activeTruck)
+        {
+            if (activeTruck == null || string.IsNullOrWhiteSpace(activeTruck.productionProfileId))
+                return false;
+
+            if (GetComponent<TruckProductionRuntimeInstance>() != null)
+                return false;
+
+            if (!TruckProductionRuntimeResolver.TryGetPrefab(activeTruck.productionProfileId, out var prefab))
+                return false;
+
+            if (prefab == null || prefab == gameObject)
+                return false;
+
+            var instance = Instantiate(prefab, transform.position, transform.rotation, transform.parent);
+            instance.name = prefab.name;
+            var marker = instance.GetComponent<TruckProductionRuntimeInstance>();
+            if (marker == null) marker = instance.AddComponent<TruckProductionRuntimeInstance>();
+            marker.Initialize(activeTruck.productionProfileId);
+
+            var old = gameObject;
+            old.SetActive(false);
+            Destroy(old);
+            return true;
         }
 
         private void Update()
