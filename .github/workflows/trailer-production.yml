@@ -59,7 +59,7 @@ jobs:
           # Unity may create additional generated/meta files during preparation.
           # Stage the complete production tree so no unstaged generated files
           # block the rebase/push step.
-          git add -A Assets/TrailerSystem
+          git add -A
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "Persist generated Batch 01 trailer production assets"
           for attempt in 1 2 3 4 5; do
