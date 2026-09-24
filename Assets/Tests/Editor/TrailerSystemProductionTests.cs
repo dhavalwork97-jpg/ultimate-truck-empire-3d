@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using UltimateTruckEmpire.TrailerSystem;
 
 namespace UltimateTruckEmpire.Tests
 {
