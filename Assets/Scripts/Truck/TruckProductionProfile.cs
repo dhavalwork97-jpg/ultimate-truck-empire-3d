@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using UnityEngine;
 
 namespace UltimateTruckEmpire.Truck
@@ -23,4 +22,3 @@ namespace UltimateTruckEmpire.Truck
         public int materialSlotBudget = 6;
     }
 }
-#endif
