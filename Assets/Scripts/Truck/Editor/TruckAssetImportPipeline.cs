@@ -140,30 +140,49 @@ namespace UltimateTruckEmpire.Truck.Editor
             float rearZ = bounds.center.z - bounds.size.z * 0.22f;
             float y = bounds.min.y + Mathf.Max(0.25f, bounds.size.y * 0.12f);
 
-            CreateWheel(root.transform, "Wheel_FL", new Vector3(-halfTrack, y, frontZ));
-            CreateWheel(root.transform, "Wheel_FR", new Vector3(halfTrack, y, frontZ));
-            CreateWheel(root.transform, "Wheel_RL", new Vector3(-halfTrack, y, rearZ));
-            CreateWheel(root.transform, "Wheel_RR", new Vector3(halfTrack, y, rearZ));
+            var fl = CreateWheel(root.transform, "Wheel_FL", new Vector3(-halfTrack, y, frontZ));
+            var fr = CreateWheel(root.transform, "Wheel_FR", new Vector3(halfTrack, y, frontZ));
+            var rl = CreateWheel(root.transform, "Wheel_RL", new Vector3(-halfTrack, y, rearZ));
+            var rr = CreateWheel(root.transform, "Wheel_RR", new Vector3(halfTrack, y, rearZ));
 
             var controller = root.GetComponent<TruckController>();
-            if (controller == null) return;
-            controller.ConfigureWheels(
-                root.transform.Find("Wheel_FL").GetComponent<WheelCollider>(),
-                root.transform.Find("Wheel_FR").GetComponent<WheelCollider>(),
-                root.transform.Find("Wheel_RL").GetComponent<WheelCollider>(),
-                root.transform.Find("Wheel_RR").GetComponent<WheelCollider>());
+            if (controller == null || fl == null || fr == null || rl == null || rr == null)
+                throw new InvalidOperationException("[TruckImport] Failed to create the four production WheelColliders.");
+
+            controller.ConfigureWheels(fl, fr, rl, rr);
         }
 
-        private static void CreateWheel(Transform root, string name, Vector3 position)
+        private static WheelCollider CreateWheel(Transform root, string name, Vector3 position)
         {
             var existing = FindChild(root, name);
-            var go = existing != null ? existing.gameObject : new GameObject(name);
-            go.transform.SetParent(root, false);
+            GameObject go;
+
+            if (existing != null && existing.GetComponent<WheelCollider>() != null)
+            {
+                go = existing.gameObject;
+            }
+            else
+            {
+                string physicsName = name + "_Physics";
+                var physics = FindChild(root, physicsName);
+                go = physics != null ? physics.gameObject : new GameObject(physicsName);
+                go.transform.SetParent(root, false);
+            }
+
             go.transform.localPosition = position;
-            var wheel = go.GetComponent<WheelCollider>() ?? go.AddComponent<WheelCollider>();
+
+            var wheel = go.GetComponent<WheelCollider>();
+            if (wheel == null)
+                wheel = Undo.AddComponent<WheelCollider>(go);
+            if (wheel == null)
+                wheel = go.AddComponent<WheelCollider>();
+            if (wheel == null)
+                throw new InvalidOperationException("[TruckImport] Failed to add WheelCollider to " + go.name);
+
             wheel.radius = 0.62f;
             wheel.suspensionDistance = 0.20f;
             wheel.mass = 80f;
+            return wheel;
         }
 
         private static void EnsureCouplingSocket(GameObject root)
@@ -190,10 +209,10 @@ namespace UltimateTruckEmpire.Truck.Editor
             profile.couplingSocket = FindChild(prefab.transform, "TrailerCoupling");
             profile.wheelSockets = new[]
             {
-                FindChild(prefab.transform, "Wheel_FL"),
-                FindChild(prefab.transform, "Wheel_FR"),
-                FindChild(prefab.transform, "Wheel_RL"),
-                FindChild(prefab.transform, "Wheel_RR")
+                FindWheelSocket(prefab.transform, "Wheel_FL"),
+                FindWheelSocket(prefab.transform, "Wheel_FR"),
+                FindWheelSocket(prefab.transform, "Wheel_RL"),
+                FindWheelSocket(prefab.transform, "Wheel_RR")
             };
             profile.maxTextureResolution = 1024;
             profile.materialSlotBudget = 6;
@@ -215,7 +234,8 @@ namespace UltimateTruckEmpire.Truck.Editor
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 var profile = AssetDatabase.LoadAssetAtPath<TruckProductionProfile>(path);
                 if (profile == null || profile.prefab == null || profile.wheelSockets == null ||
-                    profile.wheelSockets.Length != 4 || profile.couplingSocket == null)
+                    profile.wheelSockets.Length != 4 || profile.wheelSockets.Any(socket => socket == null) ||
+                    profile.couplingSocket == null)
                 {
                     Debug.LogError("[TruckImport] Production profile incomplete: " + path);
                     valid = false;
@@ -281,6 +301,13 @@ namespace UltimateTruckEmpire.Truck.Editor
             if (string.IsNullOrEmpty(id)) return "Imported Truck";
             return string.Join(" ", id.Split(new[] { '-' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(part => char.ToUpperInvariant(part[0]) + part.Substring(1)));
+        }
+
+        private static Transform FindWheelSocket(Transform root, string name)
+        {
+            var existing = FindChild(root, name);
+            if (existing != null && existing.GetComponent<WheelCollider>() != null) return existing;
+            return FindChild(root, name + "_Physics");
         }
 
         private static Transform FindChild(Transform root, string name)
