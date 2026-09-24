@@ -87,23 +87,45 @@ jobs:
             echo "No generated truck changes to persist."
             exit 0
           fi
-          git commit -m "Persist generated truck production assets"
-          # Unity can leave transient tracked/untracked changes outside the
-          # production tree. Stash those transient changes before rebasing so
-          # they cannot make git rebase refuse to start.
-          git stash push --include-untracked -m "unity-production-transient"
-          for attempt in 1 2 3 4 5; do
-            git fetch origin main
-            if git rebase origin/main && git push origin HEAD:main; then
-              git stash drop || true
-              exit 0
+          # Preserve the generated outputs outside the git worktree first.
+          # Unity also creates transient files under Assets/Resources, and those
+          # untracked files can prevent rebase/reset from applying a concurrent
+          # production commit. Rebase is unnecessary here because the production
+          # workflows share a concurrency group: refresh main, reset cleanly,
+          # restore only the generated outputs, then commit and push.
+          rm -rf /tmp/generated-truck-production
+          mkdir -p /tmp/generated-truck-production
+          for path in \
+            Assets/TruckSystem/Data/Production \
+            Assets/TruckSystem/Prefabs/Imported \
+            Assets/Resources/TruckSystem; do
+            if [ -e "$path" ]; then
+              mkdir -p "/tmp/generated-truck-production/$(dirname "$path")"
+              cp -a "$path" "/tmp/generated-truck-production/$path"
             fi
-            git rebase --abort || true
-            sleep $((attempt * 5))
           done
-          git stash drop || true
-          echo "Failed to persist generated truck production assets after 5 attempts."
-          exit 1
+
+          git fetch origin main
+          git reset --hard origin/main
+          git clean -fd
+
+          for path in \
+            Assets/TruckSystem/Data/Production \
+            Assets/TruckSystem/Prefabs/Imported \
+            Assets/Resources/TruckSystem; do
+            if [ -e "/tmp/generated-truck-production/$path" ]; then
+              mkdir -p "$(dirname "$path")"
+              cp -a "/tmp/generated-truck-production/$path" "$path"
+            fi
+          done
+
+          git add -A Assets/TruckSystem Assets/Resources/TruckSystem
+          if git diff --cached --quiet; then
+            echo "No generated truck changes to persist."
+            exit 0
+          fi
+          git commit -m "Persist generated truck production assets"
+          git push origin HEAD:main
 
       - name: Upload generated truck production assets
         if: always()
