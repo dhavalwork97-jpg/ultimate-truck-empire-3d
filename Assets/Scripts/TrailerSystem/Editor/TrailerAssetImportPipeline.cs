@@ -103,6 +103,8 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 AddRuntimeContract(instance);
                 CreateAuthoredPlaceholderSockets(instance);
                 AddProductionCalibration(instance, id);
+                if (instance.GetComponent<TrailerRuntimeCalibrator>() == null)
+                    instance.AddComponent<TrailerRuntimeCalibrator>();
                 CreateGeneratedPhysicsProxy(instance);
                 AddProductionLodGroup(instance);
                 AssignProductionMaterial(instance, modelPath, id);
@@ -219,6 +221,11 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 if (!reportEntry.calibrationValid)
                 {
                     Debug.LogError("[TrailerImport] Production calibration component missing/invalid on " + id);
+                    valid = false;
+                }
+                if (prefab.GetComponent<TrailerRuntimeCalibrator>() == null)
+                {
+                    Debug.LogError("[TrailerImport] Runtime calibrator missing on " + id);
                     valid = false;
                 }
                 if (prefab.GetComponent<LoadedTrailer>() == null ||
@@ -380,6 +387,9 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 instance.name = id;
                 AddRuntimeContract(instance);
                 CreateAuthoredPlaceholderSockets(instance);
+                AddProductionCalibration(instance, id);
+                if (instance.GetComponent<TrailerRuntimeCalibrator>() == null)
+                    instance.AddComponent<TrailerRuntimeCalibrator>();
                 CreateGeneratedPhysicsProxy(instance);
                 AddProductionLodGroup(instance);
                 AssignProductionMaterial(instance, modelPath, id);
