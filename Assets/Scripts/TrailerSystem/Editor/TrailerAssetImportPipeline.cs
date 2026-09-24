@@ -69,7 +69,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 return;
             }
 
-            string id = SanitizeId(Path.GetFileNameWithoutExtension(modelPath));
+            string id = ProductionIdForSource(modelPath);
             string prefabPath = "Assets/TrailerSystem/Prefabs/Imported/" + id + ".prefab";
             EnsureFolder("Assets/TrailerSystem/Prefabs/Imported");
 
@@ -297,6 +297,14 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             Debug.LogWarning("[TrailerImport] No TrailerCatalogAsset found; definition was created but not registered.");
         }
 
+        private static string ProductionIdForSource(string modelPath)
+        {
+            string source = Path.GetFileNameWithoutExtension(modelPath).ToLowerInvariant();
+            if (source.Contains("covered_cargo_trailer_0921131731")) return "TRAILER_DRY_VAN_001";
+            if (source.Contains("gas_combustion_tanker_0921132427")) return "TRAILER_FUEL_TANKER_001";
+            return SanitizeId(source);
+        }
+
         private static TrailerCategory InferCategory(string id)
         {
             string value = id.ToLowerInvariant();
@@ -306,6 +314,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             if (value.Contains("flat")) return TrailerCategory.Flatbed;
             if (value.Contains("container")) return TrailerCategory.ContainerChassis;
             if (value.Contains("grain") || value.Contains("hopper")) return TrailerCategory.GrainHopper;
+            if (value.Contains("fuel-tanker") || value.Contains("fuel_tanker") || value.Contains("fuel")) return TrailerCategory.FuelTanker;
             if (value.Contains("cement") || value.Contains("tanker")) return TrailerCategory.CementTanker;
             if (value.Contains("dump")) return TrailerCategory.DumpTrailer;
             if (value.Contains("agri") || value.Contains("bulk")) return TrailerCategory.AgriculturalBulk;
