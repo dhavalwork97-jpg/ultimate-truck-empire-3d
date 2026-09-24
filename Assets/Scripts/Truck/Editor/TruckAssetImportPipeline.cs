@@ -138,12 +138,11 @@ namespace UltimateTruckEmpire.Truck.Editor
 
             var controller = root.GetComponent<TruckController>();
             if (controller == null) return;
-            var serialized = new SerializedObject(controller);
-            serialized.FindProperty("frontLeft").objectReferenceValue = root.transform.Find("Wheel_FL").GetComponent<WheelCollider>();
-            serialized.FindProperty("frontRight").objectReferenceValue = root.transform.Find("Wheel_FR").GetComponent<WheelCollider>();
-            serialized.FindProperty("rearLeft").objectReferenceValue = root.transform.Find("Wheel_RL").GetComponent<WheelCollider>();
-            serialized.FindProperty("rearRight").objectReferenceValue = root.transform.Find("Wheel_RR").GetComponent<WheelCollider>();
-            serialized.ApplyModifiedPropertiesWithoutUndo();
+            controller.ConfigureWheels(
+                root.transform.Find("Wheel_FL").GetComponent<WheelCollider>(),
+                root.transform.Find("Wheel_FR").GetComponent<WheelCollider>(),
+                root.transform.Find("Wheel_RL").GetComponent<WheelCollider>(),
+                root.transform.Find("Wheel_RR").GetComponent<WheelCollider>());
         }
 
         private static void CreateWheel(Transform root, string name, Vector3 position)
@@ -230,7 +229,12 @@ namespace UltimateTruckEmpire.Truck.Editor
                 prefab.GetComponentsInChildren<WheelCollider>(true).Length >= 4 &&
                 FindChild(prefab.transform, "TrailerCoupling") != null;
 
-            if (!valid) Debug.LogError("[TruckImport] Runtime contract failed for " + id);
+            int materialSlots = 0;
+            foreach (var renderer in prefab.GetComponentsInChildren<Renderer>(true))
+                materialSlots += renderer.sharedMaterials?.Length ?? 0;
+            valid &= materialSlots <= 6;
+
+            if (!valid) Debug.LogError("[TruckImport] Runtime/mobile contract failed for " + id + " (material slots: " + materialSlots + ")");
             return valid;
         }
 
