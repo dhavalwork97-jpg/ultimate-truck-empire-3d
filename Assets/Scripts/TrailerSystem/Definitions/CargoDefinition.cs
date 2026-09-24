@@ -6,7 +6,7 @@ namespace UltimateTruckEmpire.TrailerSystem
     {
         Retail, Food, FrozenFood, Produce, Electronics, Furniture,
         Steel, Timber, Pipes, Construction, Machinery, Agricultural,
-        Grain, AnimalFeed, Cement, Aggregate, Waste, Containerized
+        Grain, AnimalFeed, Cement, Aggregate, Waste, Containerized, Fuel
     }
 
     [CreateAssetMenu(fileName = "CargoDefinition", menuName = "Ultimate Truck Empire/Trailer/Cargo Definition")]
