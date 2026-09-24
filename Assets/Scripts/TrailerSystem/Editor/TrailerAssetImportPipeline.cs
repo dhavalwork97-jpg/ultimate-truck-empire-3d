@@ -143,7 +143,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
 
         private static bool PrepareImportedModel(string modelPath, GameObject model)
         {
-            string id = SanitizeId(Path.GetFileNameWithoutExtension(modelPath));
+            string id = ProductionIdForSource(modelPath);
             if (string.IsNullOrEmpty(id))
                 return false;
 
@@ -254,9 +254,13 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             definition.category = InferCategory(id);
             definition.manufacturer = "UTE Trailers";
             definition.prefab = prefab;
-            definition.payloadCapacityTons = 30f;
-            definition.emptyWeightTons = 7f;
-            definition.purchasePrice = 100000f;
+            definition.payloadCapacityTons = definition.category == TrailerCategory.FuelTanker ? 30f : 30f;
+            definition.emptyWeightTons = definition.category == TrailerCategory.FuelTanker ? 9f : 7f;
+            definition.purchasePrice = definition.category == TrailerCategory.FuelTanker ? 180000f : 100000f;
+            definition.axleCount = definition.category == TrailerCategory.DryVan ? 2 : 3;
+            definition.hazmat = definition.category == TrailerCategory.FuelTanker;
+            definition.trafficSpawnWeight = definition.category == TrailerCategory.FuelTanker ? 0.35f : 1f;
+            definition.maintenanceCostMultiplier = definition.category == TrailerCategory.FuelTanker ? 1.25f : 1f;
             definition.targetTriangles = 15000;
             definition.materialSlotBudget = 3;
             definition.maxTextureResolution = 1024;
