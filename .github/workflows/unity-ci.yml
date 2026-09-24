@@ -83,12 +83,12 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \\
-            Assets/TrailerSystem/Imports/Trailers/Batch01 \\
-            Assets/TrailerSystem/Prefabs/Imported \\
-            Assets/TrailerSystem/Data/Trailers \\
-            Assets/TrailerSystem/Production/Materials \\
-            Assets/TrailerSystem/Production/Meshes \\
+          git add \
+            Assets/TrailerSystem/Imports/Trailers/Batch01 \
+            Assets/TrailerSystem/Prefabs/Imported \
+            Assets/TrailerSystem/Data/Trailers \
+            Assets/TrailerSystem/Production/Materials \
+            Assets/TrailerSystem/Production/Meshes \
             Assets/TrailerSystem/Production/Reports/Batch01Validation.json
           if git diff --cached --quiet; then
             echo "No generated trailer changes to persist."
