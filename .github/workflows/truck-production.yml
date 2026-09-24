@@ -1,0 +1,87 @@
+name: Truck Production CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Assets/TruckSystem/**'
+      - 'Assets/Scripts/Truck/**'
+      - 'Assets/Scripts/TrailerSystem/**'
+      - 'ProjectSettings/**'
+      - 'Packages/**'
+      - '.github/workflows/truck-production.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: truck-production-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare-trucks:
+    name: Headless truck production preparation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Prepare runner
+        shell: bash
+        timeout-minutes: 5
+        run: |
+          set -euxo pipefail
+          sudo rm -rf /usr/local/lib/android || true
+          sudo rm -rf /usr/share/dotnet || true
+          sudo rm -rf /opt/ghc || true
+          sudo rm -rf /opt/hostedtoolcache/CodeQL || true
+          df -h
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Unity packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/unity3d
+          key: unity-${{ runner.os }}-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: |
+            unity-${{ runner.os }}-
+
+      - name: Pre-pull Unity GameCI image with retry
+        shell: bash
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          image="unityci/editor:ubuntu-6000.0.65f1-base-3"
+          for attempt in 1 2 3 4 5; do
+            echo "Pulling $image (attempt $attempt/5)"
+            if docker pull "$image"; then
+              exit 0
+            fi
+            sleep $((attempt * 10))
+          done
+          echo "Failed to pull $image after 5 attempts."
+          exit 1
+
+      - name: Prepare imported truck production assets
+        uses: game-ci/unity-builder@v4.3.0
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: .
+          unityVersion: 6000.0.65f1
+          customImage: unityci/editor:ubuntu-6000.0.65f1-base-3
+          buildMethod: UltimateTruckEmpire.Truck.Editor.TruckAssetImportPipeline.PrepareAllImportedHeadless
+          customParameters: -nographics -batchmode
+
+      - name: Upload generated truck production assets
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prepared-truck-assets
+          path: |
+            Assets/TruckSystem/Prefabs/Imported
+            Assets/TruckSystem/Data/Production
+          if-no-files-found: ignore
