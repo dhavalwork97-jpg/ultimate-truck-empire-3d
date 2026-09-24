@@ -289,10 +289,8 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
         {
             if (prefab == null) return false;
 
-            // Validate the production sockets under the dedicated Sockets parent. Imported
-            // Meshy hierarchies may contain unrelated child transforms with the same names;
-            // selecting by name across the whole hierarchy can therefore compare positions
-            // from different coordinate spaces and produce a false failure.
+            // Validate only the dedicated production sockets so local positions share
+            // the same coordinate space.
             Transform sockets = FindChild(prefab.transform, "Sockets");
             if (sockets == null) return false;
 
@@ -610,3 +608,359 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
             {
                 var slots = renderer.sharedMaterials;
+                if (slots == null || slots.Length == 0) slots = new Material[1];
+                for (int i = 0; i < slots.Length; i++) slots[i] = material;
+                renderer.sharedMaterials = slots;
+            }
+            EditorUtility.SetDirty(material);
+        }
+
+        private static void AddProductionLodGroup(GameObject root)
+        {
+            var sourceRenderers = root.GetComponentsInChildren<MeshRenderer>(true)
+                .Where(r => r.GetComponent<MeshFilter>() != null && r.GetComponent<MeshFilter>().sharedMesh != null)
+                .ToArray();
+            if (sourceRenderers.Length == 0) return;
+
+            var lodHost = EnsureChild(root.transform, "LODGroup");
+            var group = lodHost.GetComponent<LODGroup>();
+            if (group == null) group = lodHost.gameObject.AddComponent<LODGroup>();
+
+            // Build genuine reduced meshes from the imported geometry. This is intentionally
+            // deterministic and editor-only: production LOD meshes are generated once and
+            // stored as .asset meshes, while the original imported renderers remain LOD0.
+            var lod1Renderers = CreateReducedLodRenderers(lodHost, sourceRenderers, 0.075f, "LOD1");
+            var lod2Renderers = CreateReducedLodRenderers(lodHost, sourceRenderers, 0.035f, "LOD2");
+
+            var lod0 = new LOD(0.60f, sourceRenderers.Cast<Renderer>().ToArray());
+            var lod1 = new LOD(0.25f, lod1Renderers);
+            var lod2 = new LOD(0.08f, lod2Renderers);
+            group.SetLODs(new[] { lod0, lod1, lod2 });
+            group.RecalculateBounds();
+            group.fadeMode = LODFadeMode.CrossFade;
+            group.animateCrossFading = false;
+            EditorUtility.SetDirty(group);
+        }
+
+        private static Renderer[] CreateReducedLodRenderers(Transform lodHost, MeshRenderer[] sourceRenderers, float ratio, string lodName)
+        {
+            var container = EnsureChild(lodHost, lodName);
+            var output = new List<Renderer>();
+            string meshFolder = "Assets/TrailerSystem/Production/Meshes/" + lodHost.parent.name;
+            EnsureFolder(meshFolder);
+
+            foreach (var sourceRenderer in sourceRenderers)
+            {
+                var sourceFilter = sourceRenderer.GetComponent<MeshFilter>();
+                var sourceMesh = sourceFilter.sharedMesh;
+                string meshPath = meshFolder + "/" + sourceMesh.name + "_" + lodName + "_v2.asset";
+                var reduced = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+                if (reduced == null)
+                {
+                    reduced = ReduceMeshByVertexClustering(sourceMesh, ratio);
+                    reduced.name = sourceMesh.name + "_" + lodName + "_v2";
+                    AssetDatabase.CreateAsset(reduced, meshPath);
+                }
+
+                var go = new GameObject(sourceRenderer.name + "_" + lodName);
+                go.transform.SetParent(container, false);
+                go.transform.localPosition = sourceRenderer.transform.localPosition;
+                go.transform.localRotation = sourceRenderer.transform.localRotation;
+                go.transform.localScale = sourceRenderer.transform.localScale;
+
+                var filter = go.AddComponent<MeshFilter>();
+                filter.sharedMesh = reduced;
+                var renderer = go.AddComponent<MeshRenderer>();
+                renderer.sharedMaterials = sourceRenderer.sharedMaterials;
+                output.Add(renderer);
+            }
+            return output.ToArray();
+        }
+
+        private static Mesh ReduceMeshByVertexClustering(Mesh source, float targetRatio)
+        {
+            var srcVertices = source.vertices;
+            var srcTriangles = source.triangles;
+            if (srcVertices.Length < 64 || srcTriangles.Length < 96)
+                return UnityEngine.Object.Instantiate(source);
+
+            int targetVertices = Mathf.Clamp(Mathf.RoundToInt(srcVertices.Length * targetRatio), 32, srcVertices.Length - 1);
+            Bounds bounds = source.bounds;
+            Vector3 size = bounds.size;
+            float maxSize = Mathf.Max(size.x, Mathf.Max(size.y, size.z));
+            if (maxSize <= Mathf.Epsilon) return UnityEngine.Object.Instantiate(source);
+
+            float low = maxSize / 100000f;
+            float high = maxSize;
+            int[] bestMap = null;
+            int bestCount = srcVertices.Length;
+
+            for (int iteration = 0; iteration < 20; iteration++)
+            {
+                float cell = (low + high) * 0.5f;
+                var map = BuildClusterMap(srcVertices, bounds.min, cell, out int count);
+                if (count > targetVertices)
+                    low = cell;
+                else
+                {
+                    high = cell;
+                    bestMap = map;
+                    bestCount = count;
+                }
+            }
+
+            if (bestMap == null)
+                bestMap = BuildClusterMap(srcVertices, bounds.min, high, out bestCount);
+
+            var sums = new Vector3[bestCount];
+            var counts = new int[bestCount];
+            for (int i = 0; i < srcVertices.Length; i++)
+            {
+                int c = bestMap[i];
+                sums[c] += srcVertices[i];
+                counts[c]++;
+            }
+
+            var vertices = new Vector3[bestCount];
+            for (int i = 0; i < bestCount; i++)
+                vertices[i] = sums[i] / Mathf.Max(1, counts[i]);
+
+            var triangles = new List<int>(srcTriangles.Length);
+            for (int i = 0; i < srcTriangles.Length; i += 3)
+            {
+                int a = bestMap[srcTriangles[i]];
+                int b = bestMap[srcTriangles[i + 1]];
+                int c = bestMap[srcTriangles[i + 2]];
+                if (a == b || b == c || a == c) continue;
+                triangles.Add(a); triangles.Add(b); triangles.Add(c);
+            }
+
+            var result = new Mesh();
+            result.indexFormat = vertices.Length > 65535
+                ? UnityEngine.Rendering.IndexFormat.UInt32
+                : UnityEngine.Rendering.IndexFormat.UInt16;
+            result.vertices = vertices;
+            result.triangles = triangles.ToArray();
+            result.RecalculateBounds();
+            result.RecalculateNormals();
+            return result;
+        }
+
+        private static int[] BuildClusterMap(Vector3[] vertices, Vector3 origin, float cell, out int clusterCount)
+        {
+            var clusters = new Dictionary<Vector3Int, int>();
+            var map = new int[vertices.Length];
+            clusterCount = 0;
+            float inv = 1f / Mathf.Max(cell, 0.000001f);
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                var key = new Vector3Int(
+                    Mathf.FloorToInt((vertices[i].x - origin.x) * inv),
+                    Mathf.FloorToInt((vertices[i].y - origin.y) * inv),
+                    Mathf.FloorToInt((vertices[i].z - origin.z) * inv));
+                if (!clusters.TryGetValue(key, out int cluster))
+                {
+                    cluster = clusterCount++;
+                    clusters.Add(key, cluster);
+                }
+                map[i] = cluster;
+            }
+            return map;
+        }
+
+        private static int CountLodTriangles(LOD[] lods, int index)
+        {
+            if (lods == null || index < 0 || index >= lods.Length) return 0;
+            int total = 0;
+            foreach (var renderer in lods[index].renderers)
+            {
+                if (renderer is SkinnedMeshRenderer skinned && skinned.sharedMesh != null)
+                    total += skinned.sharedMesh.triangles.Length / 3;
+                else if (renderer is MeshRenderer meshRenderer)
+                {
+                    var filter = meshRenderer.GetComponent<MeshFilter>();
+                    if (filter != null && filter.sharedMesh != null)
+                        total += filter.sharedMesh.triangles.Length / 3;
+                }
+            }
+            return total;
+        }
+
+        private static void CreateGeneratedPhysicsProxy(GameObject root)
+        {
+            if (root.GetComponentsInChildren<Collider>(true).Any(c => c != null && !c.isTrigger))
+                return;
+
+            var renderers = root.GetComponentsInChildren<Renderer>(true);
+            if (renderers.Length == 0)
+            {
+                Debug.LogWarning("[TrailerImport] No renderers found; physics proxy was not generated.");
+                return;
+            }
+
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+                bounds.Encapsulate(renderers[i].bounds);
+
+            var proxy = root.AddComponent<BoxCollider>();
+            proxy.name = "GeneratedPhysicsProxy";
+            proxy.center = root.transform.InverseTransformPoint(bounds.center);
+            proxy.size = bounds.size;
+            Debug.LogWarning("[TrailerImport] GeneratedPhysicsProxy created. It is an integration placeholder, not final collision geometry.");
+        }
+
+        private static void RegisterOrCreateDefinition(string id, GameObject prefab)
+        {
+            string path = "Assets/TrailerSystem/Data/Trailers/" + id + ".asset";
+            EnsureFolder("Assets/TrailerSystem/Data/Trailers");
+
+            var definition = AssetDatabase.LoadAssetAtPath<TrailerDefinition>(path);
+            if (definition == null)
+            {
+                definition = ScriptableObject.CreateInstance<TrailerDefinition>();
+                AssetDatabase.CreateAsset(definition, path);
+            }
+
+            definition.id = id;
+            definition.displayName = ToDisplayName(id);
+            definition.category = InferCategory(id);
+            definition.manufacturer = "UTE Trailers";
+            definition.prefab = prefab;
+            definition.payloadCapacityTons = definition.category == TrailerCategory.FuelTanker ? 30f : 30f;
+            definition.emptyWeightTons = definition.category == TrailerCategory.FuelTanker ? 9f : 7f;
+            definition.purchasePrice = definition.category == TrailerCategory.FuelTanker ? 180000f : 100000f;
+            definition.axleCount = definition.category == TrailerCategory.DryVan ? 2 : 3;
+            definition.hazmat = definition.category == TrailerCategory.FuelTanker;
+            definition.trafficSpawnWeight = definition.category == TrailerCategory.FuelTanker ? 0.35f : 1f;
+            definition.maintenanceCostMultiplier = definition.category == TrailerCategory.FuelTanker ? 1.25f : 1f;
+            definition.targetTriangles = 15000;
+            definition.materialSlotBudget = 3;
+            definition.maxTextureResolution = 1024;
+            definition.lodCount = 3;
+            var root = prefab != null ? prefab.transform : null;
+            definition.cargoSocket = FindChild(root, "CargoSocket");
+            definition.kingpinSocket = FindChild(root, "Kingpin");
+            var sockets = FindChild(root, "Sockets");
+            string[] names = { "Wheel_FL", "Wheel_FR", "Wheel_RL", "Wheel_RR" };
+            var wheels = new Transform[names.Length];
+            for (int i = 0; i < names.Length; i++)
+                wheels[i] = FindDirectChild(sockets, names[i]);
+            definition.wheelSockets = wheels;
+            EditorUtility.SetDirty(definition);
+        }
+
+        private static void RegisterDefinitionInCatalog(string id)
+        {
+            var definition = AssetDatabase.LoadAssetAtPath<TrailerDefinition>(
+                "Assets/TrailerSystem/Data/Trailers/" + id + ".asset");
+            if (definition == null) return;
+
+            string[] guids = AssetDatabase.FindAssets("t:TrailerCatalogAsset");
+            for (int i = 0; i < guids.Length; i++)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                var catalog = AssetDatabase.LoadAssetAtPath<TrailerCatalogAsset>(path);
+                if (catalog == null) continue;
+                if (catalog.trailers == null)
+                    catalog.trailers = new System.Collections.Generic.List<TrailerDefinition>();
+                if (!catalog.trailers.Contains(definition))
+                {
+                    catalog.trailers.Add(definition);
+                    EditorUtility.SetDirty(catalog);
+                }
+                return;
+            }
+            Debug.LogWarning("[TrailerImport] No TrailerCatalogAsset found; definition was created but not registered.");
+        }
+
+        private static string ProductionIdForSource(string modelPath)
+        {
+            string source = Path.GetFileNameWithoutExtension(modelPath).ToLowerInvariant();
+            if (source.Contains("covered_cargo_trailer_0921131731")) return "TRAILER_DRY_VAN_001";
+            if (source.Contains("gas_combustion_tanker_0921132427")) return "TRAILER_FUEL_TANKER_001";
+            return SanitizeId(source);
+        }
+
+        private static TrailerCategory InferCategory(string id)
+        {
+            string value = id.ToLowerInvariant();
+            if (value.Contains("reefer") || value.Contains("refriger")) return TrailerCategory.Refrigerated;
+            if (value.Contains("lowboy") || value.Contains("rgn")) return TrailerCategory.Lowboy;
+            if (value.Contains("heavy") && value.Contains("flat")) return TrailerCategory.HeavyFlatbed;
+            if (value.Contains("flat")) return TrailerCategory.Flatbed;
+            if (value.Contains("container")) return TrailerCategory.ContainerChassis;
+            if (value.Contains("grain") || value.Contains("hopper")) return TrailerCategory.GrainHopper;
+            if (value.Contains("fuel-tanker") || value.Contains("fuel_tanker") || value.Contains("fuel")) return TrailerCategory.FuelTanker;
+            if (value.Contains("cement") || value.Contains("tanker")) return TrailerCategory.CementTanker;
+            if (value.Contains("dump")) return TrailerCategory.DumpTrailer;
+            if (value.Contains("agri") || value.Contains("bulk")) return TrailerCategory.AgriculturalBulk;
+            return TrailerCategory.DryVan;
+        }
+
+        private static string SanitizeId(string value)
+        {
+            var chars = value.ToLowerInvariant().Select(c =>
+                char.IsLetterOrDigit(c) ? c : '-').ToArray();
+            string result = new string(chars);
+            while (result.Contains("--"))
+                result = result.Replace("--", "-");
+            return result.Trim('-');
+        }
+
+        private static string ToDisplayName(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                return "Imported Trailer";
+
+            return string.Join(" ", id.Split(new[] { '-' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(part => char.ToUpperInvariant(part[0]) + part.Substring(1)));
+        }
+
+        private static Transform FindChild(Transform root, string name)
+        {
+            if (root == null) return null;
+            if (string.Equals(root.name, name, StringComparison.Ordinal)) return root;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                var result = FindChild(root.GetChild(i), name);
+                if (result != null) return result;
+            }
+            return null;
+        }
+
+        private static Transform EnsureChild(Transform parent, string name)
+        {
+            var existing = FindDirectChild(parent, name);
+            return existing ?? CreateChild(parent, name);
+        }
+
+        private static Transform FindDirectChild(Transform parent, string name)
+        {
+            for (int i = 0; i < parent.childCount; i++)
+                if (string.Equals(parent.GetChild(i).name, name, StringComparison.Ordinal))
+                    return parent.GetChild(i);
+            return null;
+        }
+
+        private static Transform CreateChild(Transform parent, string name)
+        {
+            var child = new GameObject(name);
+            child.transform.SetParent(parent, false);
+            return child.transform;
+        }
+
+        private static void EnsureFolder(string path)
+        {
+            string[] parts = path.Split('/');
+            string current = parts[0];
+            for (int i = 1; i < parts.Length; i++)
+            {
+                string next = current + "/" + parts[i];
+                if (!AssetDatabase.IsValidFolder(next))
+                    AssetDatabase.CreateFolder(current, parts[i]);
+                current = next;
+            }
+        }
+    }
+}
+#endif
