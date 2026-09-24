@@ -181,6 +181,9 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             public bool calibrationAuthored;
             public float calibrationMassTons;
             public Vector3 calibrationColliderSize;
+            public bool kingpinSocketValid;
+            public bool wheelSocketsValid;
+            public bool axleGeometryValid;
         }
 
         private static bool ValidatePreparedProductionAssets()
@@ -221,6 +224,11 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 if (!reportEntry.calibrationValid)
                 {
                     Debug.LogError("[TrailerImport] Production calibration component missing/invalid on " + id);
+                    valid = false;
+                }
+                if (!reportEntry.kingpinSocketValid || !reportEntry.wheelSocketsValid || !reportEntry.axleGeometryValid)
+                {
+                    Debug.LogError("[TrailerImport] Kingpin/wheel/axle calibration geometry invalid on " + id);
                     valid = false;
                 }
                 if (prefab.GetComponent<TrailerRuntimeCalibrator>() == null)
@@ -265,6 +273,38 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             return valid;
         }
 
+        private static bool HasSocket(GameObject prefab, string socketName)
+        {
+            if (prefab == null || string.IsNullOrWhiteSpace(socketName)) return false;
+            foreach (var child in prefab.GetComponentsInChildren<Transform>(true))
+            {
+                if (child != prefab.transform &&
+                    string.Equals(child.name, socketName, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool HasValidAxleGeometry(GameObject prefab)
+        {
+            if (prefab == null) return false;
+            Transform fl = null, fr = null, rl = null, rr = null;
+            foreach (var child in prefab.GetComponentsInChildren<Transform>(true))
+            {
+                if (string.Equals(child.name, "Wheel_FL", StringComparison.OrdinalIgnoreCase)) fl = child;
+                else if (string.Equals(child.name, "Wheel_FR", StringComparison.OrdinalIgnoreCase)) fr = child;
+                else if (string.Equals(child.name, "Wheel_RL", StringComparison.OrdinalIgnoreCase)) rl = child;
+                else if (string.Equals(child.name, "Wheel_RR", StringComparison.OrdinalIgnoreCase)) rr = child;
+            }
+            if (fl == null || fr == null || rl == null || rr == null) return false;
+
+            float frontTrack = Vector3.Distance(fl.localPosition, fr.localPosition);
+            float rearTrack = Vector3.Distance(rl.localPosition, rr.localPosition);
+            float axleSeparation = Vector3.Distance((fl.localPosition + fr.localPosition) * 0.5f,
+                (rl.localPosition + rr.localPosition) * 0.5f);
+            return frontTrack > 0.01f && rearTrack > 0.01f && axleSeparation > 0.01f;
+        }
+
         private static ProductionValidationEntry BuildValidationEntry(string id, string modelPath, GameObject prefab)
         {
             var calibration = prefab.GetComponent<TrailerProductionCalibration>();
@@ -281,7 +321,13 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 calibrationValid = calibration != null && calibration.IsValid(),
                 calibrationAuthored = calibration != null && calibration.authored,
                 calibrationMassTons = calibration != null ? calibration.massTons : 0f,
-                calibrationColliderSize = calibration != null ? calibration.colliderSize : Vector3.zero
+                calibrationColliderSize = calibration != null ? calibration.colliderSize : Vector3.zero,
+                kingpinSocketValid = HasSocket(prefab, "Kingpin"),
+                wheelSocketsValid = HasSocket(prefab, "Wheel_FL") &&
+                    HasSocket(prefab, "Wheel_FR") &&
+                    HasSocket(prefab, "Wheel_RL") &&
+                    HasSocket(prefab, "Wheel_RR"),
+                axleGeometryValid = HasValidAxleGeometry(prefab)
             };
 
             var renderers = prefab.GetComponentsInChildren<Renderer>(true);
