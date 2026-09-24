@@ -64,6 +64,7 @@ jobs:
             Assets/TrailerSystem/Prefabs/Imported
             Assets/TrailerSystem/Data/Trailers
             Assets/TrailerSystem/Production/Materials
+            Assets/TrailerSystem/Production/Reports/Batch01Validation.json
           if-no-files-found: ignore
 
   validate:
