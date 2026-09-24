@@ -7,6 +7,10 @@ on:
       - 'Assets/TrailerSystem/Imports/Trailers/Batch01/**'
       - 'Assets/Scripts/TrailerSystem/Editor/**'
       - '.github/workflows/trailer-production.yml'
+    paths:
+      - 'Assets/TrailerSystem/Imports/Trailers/Batch01/**'
+      - 'Assets/Scripts/TrailerSystem/Editor/**'
+      - '.github/workflows/trailer-production.yml'
   workflow_dispatch:
 
 permissions:
