@@ -61,6 +61,34 @@ namespace UltimateTruckEmpire.Company
                 fuelEfficiency = 2.6f,
                 reliability = 84f,
                 maintenanceCostPerKm = 9f
+            },
+            new TruckDefinition
+            {
+                id = "nordic-titan-500",
+                displayName = "Nordic Titan 500",
+                productionProfileId = "meshy-ai-volvo-fh-globetrotter-0923130558-texture",
+                purchasePrice = 450000f,
+                capacityTons = 40f,
+                fuelCapacity = 750f,
+                enginePower = 500f,
+                maxSpeedKph = 120f,
+                fuelEfficiency = 6.5f,
+                reliability = 82f,
+                maintenanceCostPerKm = 7.5f
+            },
+            new TruckDefinition
+            {
+                id = "golden-hauler",
+                displayName = "Golden Hauler",
+                productionProfileId = "meshy-ai-golden-hauler-0923132145-texture",
+                purchasePrice = 625000f,
+                capacityTons = 48f,
+                fuelCapacity = 900f,
+                enginePower = 600f,
+                maxSpeedKph = 115f,
+                fuelEfficiency = 5.8f,
+                reliability = 80f,
+                maintenanceCostPerKm = 8.5f
             }
         };
 
