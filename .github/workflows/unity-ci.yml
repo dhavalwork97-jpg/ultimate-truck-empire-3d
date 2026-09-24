@@ -52,7 +52,8 @@ jobs:
           projectPath: .
           unityVersion: 6000.0.65f1
           customImage: unityci/editor:ubuntu-6000.0.65f1-base-3
-          customParameters: -nographics -batchmode -executeMethod UltimateTruckEmpire.TrailerSystem.Editor.TrailerAssetImportPipeline.PrepareAllImportedBatch
+          buildMethod: UltimateTruckEmpire.TrailerSystem.Editor.TrailerAssetImportPipeline.PrepareAllImportedBatch
+          customParameters: -nographics -batchmode
 
       - name: Upload generated trailer assets
         if: always()
