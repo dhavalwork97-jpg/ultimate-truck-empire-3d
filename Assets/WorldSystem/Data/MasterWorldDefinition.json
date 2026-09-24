@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "worldId": "ute-master-world-18km",
+  "displayName": "Ultimate Truck Empire 3D Master World",
+  "designStatus": "layout-blueprint",
+  "footprintKm": { "width": 18.0, "height": 18.0 },
+  "streamingGrid": { "columns": 8, "rows": 8, "chunkSizeKm": 2.25, "chunkCount": 64, "labels": "A1-H8" },
+  "designTargets": {
+    "cities": 6,
+    "villages": 12,
+    "nationalHighways": 4,
+    "drivableNetworkKm": 370,
+    "truckStopSpacingKm": { "min": 15, "max": 20 }
+  },
+  "principles": {
+    "cityArt": "minimum modular art; rely on freely available premade assets where licensing permits",
+    "environmentArt": "prioritize reusable farmland, village, country-road and highway pieces",
+    "streaming": "chunk boundaries must not cut through a drivable road",
+    "gameplay": "world data is authoritative for placement; existing road, GPS, traffic, facility and fleet systems remain the runtime owners"
+  },
+  "regions": [
+    { "id": "farmland", "role": "primary rural coverage" },
+    { "id": "forest", "role": "southwest natural region" },
+    { "id": "hills", "role": "northeast terrain region" },
+    { "id": "river", "role": "Kaveli River corridor" },
+    { "id": "industrial", "role": "cargo and manufacturing clusters" },
+    { "id": "logistics", "role": "large freight and transport hubs" }
+  ],
+  "cities": [
+    { "id": "riverport-city", "displayName": "Riverport City", "role": "HQ, dealership, fleet garage" },
+    { "id": "industrial-junction", "displayName": "Industrial Junction", "role": "steel, cement, rail cargo" },
+    { "id": "harbor-freight-city", "displayName": "Harbor Freight City", "role": "port, customs, fuel depot" },
+    { "id": "manufacturing-city", "displayName": "Manufacturing City", "role": "auto factory, logistics park" },
+    { "id": "capital-logistics-city", "displayName": "Capital Logistics City", "role": "HQ, transport office, flyovers" },
+    { "id": "steel-chemical-hub", "displayName": "Steel & Chemical Hub", "role": "refinery, LPG, tanker loading" }
+  ],
+  "villages": [
+    { "id": "gehun-pura", "displayName": "Gehun Pura", "cargoTheme": "wheat" },
+    { "id": "kapaspur", "displayName": "Kapaspur", "cargoTheme": "cotton" },
+    { "id": "dudhgaon", "displayName": "Dudhgaon", "cargoTheme": "dairy" },
+    { "id": "ganeshpura", "displayName": "Ganeshpura", "cargoTheme": "sugarcane" },
+    { "id": "harigram", "displayName": "Harigram", "cargoTheme": "vegetables" },
+    { "id": "amrit-bagh", "displayName": "Amrit Bagh", "cargoTheme": "orchards" },
+    { "id": "chawalpur", "displayName": "Chawalpur", "cargoTheme": "rice" },
+    { "id": "kisanpur", "displayName": "Kisanpur", "cargoTheme": "wheat" },
+    { "id": "suti-nagar", "displayName": "Suti Nagar", "cargoTheme": "cotton" },
+    { "id": "dudhwa", "displayName": "Dudhwa", "cargoTheme": "dairy" },
+    { "id": "ganna-kheda", "displayName": "Ganna Kheda", "cargoTheme": "sugarcane" },
+    { "id": "bagicha", "displayName": "Bagicha", "cargoTheme": "orchards" }
+  ],
+  "highways": [
+    { "id": "nh1", "displayName": "NH1", "corridor": "Riverport City -> Industrial Junction -> Harbor Freight City" },
+    { "id": "nh2", "displayName": "NH2", "corridor": "Riverport City -> Manufacturing City -> Steel & Chemical Hub" },
+    { "id": "nh3", "displayName": "NH3", "corridor": "Capital Logistics City -> Industrial Junction -> Steel & Chemical Hub" },
+    { "id": "nh4", "displayName": "NH4", "corridor": "Manufacturing City <-> Harbor Freight City bypass" }
+  ],
+  "assetStrategy": {
+    "cityAssets": {
+      "priority": "minimum",
+      "method": "small reusable modular buildings and props; supplement with freely available premade assets after license review",
+      "avoid": "large monolithic city base-map packs"
+    },
+    "ruralAssets": ["farmland tiles", "village clusters", "country roads", "highway segments", "bridges", "truck stops"],
+    "laterOptionalAssets": ["industrial modules", "port modules", "airport cargo modules", "dense city landmarks"]
+  }
+}
