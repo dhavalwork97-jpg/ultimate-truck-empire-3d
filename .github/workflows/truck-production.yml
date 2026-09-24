@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: truck-production-${{ github.ref }}
@@ -67,6 +67,27 @@ jobs:
           customImage: unityci/editor:ubuntu-6000.0.65f1-base-3
           buildMethod: UltimateTruckEmpire.Truck.Editor.TruckAssetImportPipeline.PrepareAllImportedHeadless
           customParameters: -nographics -batchmode
+
+      - name: Persist generated truck production assets
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \\
+            Assets/TruckSystem/Imports \\
+            Assets/TruckSystem/Prefabs/Imported \\
+            Assets/TruckSystem/Data/Production \\
+            Assets/TruckSystem/Production
+          if git diff --cached --quiet; then
+            echo "No generated truck changes to persist."
+            exit 0
+          fi
+          git commit -m "Persist generated truck production assets [skip ci]"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
 
       - name: Upload generated truck production assets
         if: always()
