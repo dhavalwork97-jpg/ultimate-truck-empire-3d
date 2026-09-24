@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f8838eae4c74dd46a3399d7b5aa2aef, type: 3}
+  m_Script: {fileID: 11500000, guid: 139b4078d1256f9edad8aa75c337aac7, type: 3}
   m_Name: TRAILER_DRY_VAN_001
   m_EditorClassIdentifier: 
   id: TRAILER_DRY_VAN_001

@@ -588,19 +588,19 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 12bec9f77812cd3559d8a8e6f8b27694, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4486898264536302609}
+      addedObject: {fileID: 9151480600942283171}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 12bec9f77812cd3559d8a8e6f8b27694, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4511655926941951281}
+      addedObject: {fileID: 6540934968675350464}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 12bec9f77812cd3559d8a8e6f8b27694, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8153493881798812933}
+      addedObject: {fileID: 2382672360466198643}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 12bec9f77812cd3559d8a8e6f8b27694, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6687782937689878816}
+      addedObject: {fileID: 2854002295253052915}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 12bec9f77812cd3559d8a8e6f8b27694, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3943347079629510361}
+      addedObject: {fileID: 4763758843974737013}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 12bec9f77812cd3559d8a8e6f8b27694, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5074690663262029238}
@@ -620,7 +620,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 12bec9f77812cd3559d8a8e6f8b27694, type: 3}
   m_PrefabInstance: {fileID: 1546274973204066964}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &4486898264536302609
+--- !u!114 &9151480600942283171
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -629,7 +629,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1852124264525369285}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bcc87b84ccaee527ea33640d5311a0b3, type: 3}
+  m_Script: {fileID: 11500000, guid: a98678aba276f240b822be0a53cb3e22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   trailer: {fileID: 0}
@@ -637,7 +637,7 @@ MonoBehaviour:
   skin: {fileID: 0}
   cargoWeightTons: 0
   cargoModule: {fileID: 0}
---- !u!114 &4511655926941951281
+--- !u!114 &6540934968675350464
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -646,12 +646,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1852124264525369285}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b431f2fc8e882aa4199189baea63070c, type: 3}
+  m_Script: {fileID: 11500000, guid: b43c1a3a226f8ccda8a6cc5229871fa1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   cargoSocket: {fileID: 0}
   loadedInstance: {fileID: 0}
---- !u!114 &8153493881798812933
+--- !u!114 &2382672360466198643
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -660,12 +660,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1852124264525369285}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c8c96591fbfc7658090de7a0d73c82c6, type: 3}
+  m_Script: {fileID: 11500000, guid: d68ec4024713fddfe8ddb89f6fbf097d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   definition: {fileID: 0}
   skin: {fileID: 0}
---- !u!114 &6687782937689878816
+--- !u!114 &2854002295253052915
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -674,7 +674,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1852124264525369285}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8808731c625b69a74b21296807a1b8ca, type: 3}
+  m_Script: {fileID: 11500000, guid: 9ee68d09719b88495a16843317367536, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   modelScale: 7.5959616
@@ -698,7 +698,7 @@ MonoBehaviour:
     mass preset follows trailer class. Review in-game coupling/handling if final
     art orientation changes.'
   source: Meshy Batch 01 / canonical game calibration
---- !u!114 &3943347079629510361
+--- !u!114 &4763758843974737013
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -707,7 +707,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1852124264525369285}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30877b71fcc23712a8ca91a278e943e9, type: 3}
+  m_Script: {fileID: 11500000, guid: 56d68ecf84c7aa27f9429c9703e2747d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   calibration: {fileID: 0}
