@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -147,9 +148,33 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             }
         }
 
+        [Serializable]
+        private sealed class ProductionValidationReport
+        {
+            public string generatedUtc;
+            public List<ProductionValidationEntry> trailers = new List<ProductionValidationEntry>();
+        }
+
+        [Serializable]
+        private sealed class ProductionValidationEntry
+        {
+            public string productionId;
+            public string sourceModel;
+            public int rendererCount;
+            public int materialSlotCount;
+            public int triangleCount;
+            public int vertexCount;
+            public Vector3 boundsSize;
+            public bool hasReducedLods;
+            public bool runtimeContractValid;
+            public bool colliderValid;
+            public bool definitionValid;
+        }
+
         private static bool ValidatePreparedProductionAssets()
         {
             bool valid = true;
+            var report = new ProductionValidationReport { generatedUtc = DateTime.UtcNow.ToString("O") };
             string[] guids = AssetDatabase.FindAssets("t:Model", new[] { ImportRoot.TrimEnd('/') });
             int checkedModels = 0;
             foreach (string guid in guids)
@@ -168,6 +193,12 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                     valid = false;
                     continue;
                 }
+
+                var reportEntry = BuildValidationEntry(id, modelPath, prefab);
+                report.trailers.Add(reportEntry);
+                Debug.Log("[TrailerImport] " + id + " metrics: renderers=" + reportEntry.rendererCount +
+                    ", materials=" + reportEntry.materialSlotCount + ", triangles=" + reportEntry.triangleCount +
+                    ", vertices=" + reportEntry.vertexCount + ", reducedLods=" + reportEntry.hasReducedLods);
                 if (prefab.GetComponent<LoadedTrailer>() == null ||
                     prefab.GetComponent<TrailerCargoModule>() == null ||
                     prefab.GetComponent<TrailerSkinApplier>() == null)
@@ -196,8 +227,68 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 Debug.LogError("[TrailerImport] No imported trailer models found under " + ImportRoot);
                 return false;
             }
+            string reportDir = "Assets/TrailerSystem/Production/Reports";
+            EnsureFolder(reportDir);
+            string reportPath = reportDir + "/Batch01Validation.json";
+            File.WriteAllText(reportPath, JsonUtility.ToJson(report, true));
+            AssetDatabase.ImportAsset(reportPath, ImportAssetOptions.ForceUpdate);
             AssetDatabase.SaveAssets();
             return valid;
+        }
+
+        private static ProductionValidationEntry BuildValidationEntry(string id, string modelPath, GameObject prefab)
+        {
+            var entry = new ProductionValidationEntry
+            {
+                productionId = id,
+                sourceModel = modelPath,
+                runtimeContractValid = prefab.GetComponent<LoadedTrailer>() != null &&
+                    prefab.GetComponent<TrailerCargoModule>() != null &&
+                    prefab.GetComponent<TrailerSkinApplier>() != null,
+                colliderValid = prefab.GetComponentsInChildren<Collider>(true).Any(col => col != null && !col.isTrigger),
+                definitionValid = AssetDatabase.LoadAssetAtPath<TrailerDefinition>(
+                    "Assets/TrailerSystem/Data/Trailers/" + id + ".asset")?.prefab == prefab
+            };
+
+            var renderers = prefab.GetComponentsInChildren<Renderer>(true);
+            entry.rendererCount = renderers.Length;
+            entry.materialSlotCount = renderers.Sum(r => r.sharedMaterials?.Length ?? 0);
+            foreach (var renderer in renderers)
+            {
+                if (renderer is SkinnedMeshRenderer skinned && skinned.sharedMesh != null)
+                {
+                    entry.triangleCount += skinned.sharedMesh.triangles.Length / 3;
+                    entry.vertexCount += skinned.sharedMesh.vertexCount;
+                }
+                else if (renderer is MeshRenderer meshRenderer)
+                {
+                    var meshFilter = meshRenderer.GetComponent<MeshFilter>();
+                    if (meshFilter != null && meshFilter.sharedMesh != null)
+                    {
+                        entry.triangleCount += meshFilter.sharedMesh.triangles.Length / 3;
+                        entry.vertexCount += meshFilter.sharedMesh.vertexCount;
+                    }
+                }
+            }
+
+            var lodGroups = prefab.GetComponentsInChildren<LODGroup>(true);
+            entry.hasReducedLods = lodGroups.Any(g =>
+            {
+                var lods = g.GetLODs();
+                if (lods.Length < 2) return false;
+                var first = new HashSet<Renderer>(lods[0].renderers);
+                return lods.Skip(1).Any(l => l.renderers.Any(r => r != null && !first.Contains(r)));
+            });
+
+            Bounds bounds = new Bounds(prefab.transform.position, Vector3.zero);
+            bool hasBounds = false;
+            foreach (var renderer in renderers)
+            {
+                if (!hasBounds) { bounds = renderer.bounds; hasBounds = true; }
+                else bounds.Encapsulate(renderer.bounds);
+            }
+            entry.boundsSize = hasBounds ? bounds.size : Vector3.zero;
+            return entry;
         }
 
         [MenuItem("Ultimate Truck Empire/Trailer System/Prepare All Imported Trailers")]
