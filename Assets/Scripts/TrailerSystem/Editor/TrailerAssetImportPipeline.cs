@@ -537,13 +537,13 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             var srcVertices = source.vertices;
             var srcTriangles = source.triangles;
             if (srcVertices.Length < 64 || srcTriangles.Length < 96)
-                return Instantiate(source);
+                return UnityEngine.Object.Instantiate(source);
 
             int targetVertices = Mathf.Clamp(Mathf.RoundToInt(srcVertices.Length * targetRatio), 32, srcVertices.Length - 1);
             Bounds bounds = source.bounds;
             Vector3 size = bounds.size;
             float maxSize = Mathf.Max(size.x, Mathf.Max(size.y, size.z));
-            if (maxSize <= Mathf.Epsilon) return Instantiate(source);
+            if (maxSize <= Mathf.Epsilon) return UnityEngine.Object.Instantiate(source);
 
             float low = maxSize / 100000f;
             float high = maxSize;
