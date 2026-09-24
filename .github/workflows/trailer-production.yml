@@ -3,12 +3,18 @@ name: Trailer Production CI
 on:
   push:
     branches: [main]
+    paths:
+      - 'Assets/TrailerSystem/Imports/Trailers/Batch01/**'
+      - 'Assets/Scripts/TrailerSystem/Editor/**'
+      - '.github/workflows/trailer-production.yml'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
+  # Trailer and truck production both write generated assets to main.
+  # A shared queue prevents simultaneous generated-asset commits from racing.
   group: production-assets-${{ github.ref }}
   cancel-in-progress: false
 
@@ -58,7 +64,7 @@ jobs:
             Assets/TrailerSystem/Production/Meshes \
             Assets/TrailerSystem/Production/Reports/Batch01Validation.json
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Persist generated Batch 01 trailer production assets [skip ci]"
+          git commit -m "Persist generated Batch 01 trailer production assets"
           for attempt in 1 2 3 4 5; do
             git fetch origin main
             if git rebase origin/main && git push origin HEAD:main; then exit 0; fi
