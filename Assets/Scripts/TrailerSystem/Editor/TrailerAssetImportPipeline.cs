@@ -101,8 +101,8 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             {
                 instance.name = id;
                 AddRuntimeContract(instance);
-                AddProductionCalibration(instance, id);
                 CreateAuthoredPlaceholderSockets(instance);
+                AddProductionCalibration(instance, id);
                 CreateGeneratedPhysicsProxy(instance);
                 AddProductionLodGroup(instance);
                 AssignProductionMaterial(instance, modelPath, id);
