@@ -102,6 +102,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 AddRuntimeContract(instance);
                 CreateAuthoredPlaceholderSockets(instance);
                 CreateGeneratedPhysicsProxy(instance);
+                AddProductionLodGroup(instance);
                 AssignProductionMaterial(instance, modelPath, id);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
@@ -302,6 +303,28 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 renderer.sharedMaterials = slots;
             }
             EditorUtility.SetDirty(material);
+        }
+
+        private static void AddProductionLodGroup(GameObject root)
+        {
+            var renderers = root.GetComponentsInChildren<Renderer>(true);
+            if (renderers == null || renderers.Length == 0) return;
+
+            var lodHost = EnsureChild(root.transform, "LODGroup");
+            var group = lodHost.GetComponent<LODGroup>();
+            if (group == null) group = lodHost.gameObject.AddComponent<LODGroup>();
+
+            // Until artist-authored reduced meshes exist, all levels intentionally reference
+            // the imported renderer set. This gives the prefab a stable LOD contract without
+            // pretending that a screen-relative switch reduces geometry.
+            var lod0 = new LOD(0.60f, renderers);
+            var lod1 = new LOD(0.25f, renderers);
+            var lod2 = new LOD(0.08f, renderers);
+            group.SetLODs(new[] { lod0, lod1, lod2 });
+            group.RecalculateBounds();
+            group.fadeMode = LODFadeMode.CrossFade;
+            group.animateCrossFading = false;
+            EditorUtility.SetDirty(group);
         }
 
         private static void CreateGeneratedPhysicsProxy(GameObject root)
