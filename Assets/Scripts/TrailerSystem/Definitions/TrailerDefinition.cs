@@ -7,7 +7,7 @@ namespace UltimateTruckEmpire.TrailerSystem
     public enum TrailerCategory
     {
         DryVan, Refrigerated, Flatbed, HeavyFlatbed, Lowboy, ContainerChassis,
-        GrainHopper, CementTanker, DumpTrailer, AgriculturalBulk
+        GrainHopper, CementTanker, FuelTanker, DumpTrailer, AgriculturalBulk
     }
 
     [CreateAssetMenu(fileName = "TrailerDefinition", menuName = "Ultimate Truck Empire/Trailer/Trailer Definition")]
@@ -19,6 +19,11 @@ namespace UltimateTruckEmpire.TrailerSystem
         public TrailerCategory category;
         public string manufacturer = "UTE Trailers";
         public int requiredCompanyLevel = 1;
+        [Min(1)] public int axleCount = 3;
+        public bool hazmat;
+        [Min(0f)] public float trafficSpawnWeight = 1f;
+        [Min(0f)] public float maintenanceCostMultiplier = 1f;
+        public Texture2D icon;
 
         [Header("Runtime")]
         public GameObject prefab;
@@ -63,6 +68,9 @@ namespace UltimateTruckEmpire.TrailerSystem
         {
             if (string.IsNullOrWhiteSpace(id)) id = name.ToLowerInvariant().Replace(" ", "-");
             requiredCompanyLevel = Mathf.Max(1, requiredCompanyLevel);
+            axleCount = Mathf.Max(1, axleCount);
+            trafficSpawnWeight = Mathf.Max(0f, trafficSpawnWeight);
+            maintenanceCostMultiplier = Mathf.Max(0f, maintenanceCostMultiplier);
             payloadCapacityTons = Mathf.Max(1f, payloadCapacityTons);
             emptyWeightTons = Mathf.Max(0f, emptyWeightTons);
             resaleMultiplier = Mathf.Clamp01(resaleMultiplier);
