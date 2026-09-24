@@ -11,7 +11,9 @@ permissions:
   contents: write
 
 concurrency:
-  group: truck-production-${{ github.ref }}
+  # Trailer and truck production both write generated assets to main.
+  # A shared queue prevents simultaneous generated-asset commits from racing.
+  group: production-assets-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -84,7 +86,7 @@ jobs:
             echo "No generated truck changes to persist."
             exit 0
           fi
-          git commit -m "Persist generated truck production assets [skip ci]"
+          git commit -m "Persist generated truck production assets"
           git fetch origin main
           git rebase origin/main
           git push origin HEAD:main
