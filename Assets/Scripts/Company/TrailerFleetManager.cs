@@ -223,6 +223,7 @@ namespace UltimateTruckEmpire.Company
                 case TrailerCategory.ContainerChassis: return UltimateTruckEmpire.Gameplay.TrailerType.Container;
                 case TrailerCategory.GrainHopper: return UltimateTruckEmpire.Gameplay.TrailerType.GrainHopper;
                 case TrailerCategory.CementTanker: return UltimateTruckEmpire.Gameplay.TrailerType.CementTanker;
+                case TrailerCategory.FuelTanker: return UltimateTruckEmpire.Gameplay.TrailerType.Tanker;
                 case TrailerCategory.DumpTrailer: return UltimateTruckEmpire.Gameplay.TrailerType.Dump;
                 case TrailerCategory.AgriculturalBulk: return UltimateTruckEmpire.Gameplay.TrailerType.AgriculturalBulk;
                 default: return UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider;
