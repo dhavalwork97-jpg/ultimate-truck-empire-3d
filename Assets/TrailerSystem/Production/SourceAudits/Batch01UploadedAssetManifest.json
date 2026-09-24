@@ -78,5 +78,5 @@
       ]
     }
   ],
-  "status": "source-inspected; binary import remains pending repository asset upload"
+  "status": "source-inspected; extracted FBX and PBR textures uploaded under Assets/TrailerSystem/Imports/Trailers/Batch01"
 }
