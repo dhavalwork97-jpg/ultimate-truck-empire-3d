@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 849defbe50d516ad88577b5dbd2ddf46, type: 3}
+  m_Name: TRAILER_DRY_VAN_001
+  m_EditorClassIdentifier: 
+  id: TRAILER_DRY_VAN_001
+  displayName: TRAILER_DRY_VAN_001
+  category: 0
+  manufacturer: UTE Trailers
+  requiredCompanyLevel: 1
+  axleCount: 2
+  hazmat: 0
+  trafficSpawnWeight: 1
+  maintenanceCostMultiplier: 1
+  icon: {fileID: 0}
+  prefab: {fileID: 5580640347619777098, guid: c91aeb55540dd98c89795d56be307376, type: 3}
+  payloadCapacityTons: 30
+  emptyWeightTons: 7
+  purchasePrice: 100000
+  resaleMultiplier: 0.65
+  compatibleCargo: []
+  replacementCompatibleBases: []
+  defaultSkin: {fileID: 0}
+  availableSkins: []
+  targetTriangles: 15000
+  materialSlotBudget: 3
+  maxTextureResolution: 1024
+  lodCount: 3
+  cargoSocket: {fileID: 2550644170355473855, guid: c91aeb55540dd98c89795d56be307376, type: 3}
+  kingpinSocket: {fileID: 8314783921124219066, guid: c91aeb55540dd98c89795d56be307376, type: 3}
+  wheelSockets:
+  - {fileID: 4783810638570924624, guid: c91aeb55540dd98c89795d56be307376, type: 3}
+  - {fileID: 2310175554009913750, guid: c91aeb55540dd98c89795d56be307376, type: 3}
+  - {fileID: 3582705016082984306, guid: c91aeb55540dd98c89795d56be307376, type: 3}
+  - {fileID: 2702519790659299281, guid: c91aeb55540dd98c89795d56be307376, type: 3}

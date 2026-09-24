@@ -1,0 +1,71 @@
+{
+    "generatedUtc": "2026-09-24T14:52:32.9035480Z",
+    "trailers": [
+        {
+            "productionId": "TRAILER_DRY_VAN_001",
+            "sourceModel": "Assets/TrailerSystem/Imports/Trailers/Batch01/DryVan/Meshy_AI_Covered_Cargo_Trailer_0921131731_texture.fbx",
+            "rendererCount": 3,
+            "materialSlotCount": 3,
+            "triangleCount": 138766,
+            "vertexCount": 82036,
+            "boundsSize": {
+                "x": 189.49362182617188,
+                "y": 39.89896774291992,
+                "z": 34.187564849853519
+            },
+            "hasReducedLods": true,
+            "runtimeContractValid": true,
+            "colliderValid": true,
+            "definitionValid": true,
+            "lod0TriangleCount": 117990,
+            "lod1TriangleCount": 13540,
+            "lod2TriangleCount": 7236,
+            "lod1WithinBudget": true,
+            "lod2WithinBudget": true,
+            "calibrationValid": true,
+            "calibrationAuthored": true,
+            "calibrationMassTons": 7.0,
+            "calibrationColliderSize": {
+                "x": 0.018994679674506189,
+                "y": 0.004022191744297743,
+                "z": 0.003450000425800681
+            },
+            "kingpinSocketValid": true,
+            "wheelSocketsValid": true,
+            "axleGeometryValid": true
+        },
+        {
+            "productionId": "TRAILER_FUEL_TANKER_001",
+            "sourceModel": "Assets/TrailerSystem/Imports/Trailers/Batch01/FuelTanker/Meshy_AI_Gas_Combustion_Tanker_0921132427_texture.fbx",
+            "rendererCount": 3,
+            "materialSlotCount": 3,
+            "triangleCount": 116708,
+            "vertexCount": 67035,
+            "boundsSize": {
+                "x": 189.49362182617188,
+                "y": 39.89896774291992,
+                "z": 34.187564849853519
+            },
+            "hasReducedLods": true,
+            "runtimeContractValid": true,
+            "colliderValid": true,
+            "definitionValid": true,
+            "lod0TriangleCount": 95932,
+            "lod1TriangleCount": 13540,
+            "lod2TriangleCount": 7236,
+            "lod1WithinBudget": true,
+            "lod2WithinBudget": true,
+            "calibrationValid": true,
+            "calibrationAuthored": true,
+            "calibrationMassTons": 9.0,
+            "calibrationColliderSize": {
+                "x": 0.0180569626390934,
+                "y": 0.00909685529768467,
+                "z": 0.0051441919058561329
+            },
+            "kingpinSocketValid": true,
+            "wheelSocketsValid": true,
+            "axleGeometryValid": true
+        }
+    ]
+}
