@@ -31,7 +31,7 @@ namespace UltimateTruckEmpire.Truck.Editor
             importer.importBlendShapes = false;
             importer.importCameras = false;
             importer.importLights = false;
-            importer.materialImportMode = ModelImporterMaterialImportMode.None;
+            importer.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
             importer.optimizeMeshPolygons = true;
             importer.optimizeMeshVertices = true;
             importer.weldVertices = true;
@@ -47,7 +47,7 @@ namespace UltimateTruckEmpire.Truck.Editor
             bool data = file.Contains("_metallic") || file.Contains("_roughness") || file.Contains("_normal");
             importer.maxTextureSize = 1024;
             importer.mipmapEnabled = true;
-            importer.textureCompression = TextureImporterCompression.CompressedHQ;
+            importer.textureCompression = TextureImporterCompression.CompressedHQ;\n            importer.streamingMipmaps = true;
             importer.sRGBTexture = !data;
             if (file.Contains("_normal")) importer.textureType = TextureImporterType.NormalMap;
         }
