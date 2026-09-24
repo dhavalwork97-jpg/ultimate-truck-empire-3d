@@ -88,14 +88,20 @@ jobs:
             exit 0
           fi
           git commit -m "Persist generated truck production assets"
+          # Unity can leave transient tracked/untracked changes outside the
+          # production tree. Stash those transient changes before rebasing so
+          # they cannot make git rebase refuse to start.
+          git stash push --include-untracked -m "unity-production-transient"
           for attempt in 1 2 3 4 5; do
             git fetch origin main
             if git rebase origin/main && git push origin HEAD:main; then
+              git stash drop || true
               exit 0
             fi
             git rebase --abort || true
             sleep $((attempt * 5))
           done
+          git stash drop || true
           echo "Failed to persist generated truck production assets after 5 attempts."
           exit 1
 
