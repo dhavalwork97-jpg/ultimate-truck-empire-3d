@@ -94,10 +94,19 @@ namespace UltimateTruckEmpire.Truck.Editor
             string prefabPath = PrefabRoot + "/" + id + ".prefab";
             var instance = PrefabUtility.InstantiatePrefab(model) as GameObject;
             if (instance == null) return false;
+
             try
             {
                 instance.name = id;
-                var body = instance.GetComponent<Rigidbody>() ?? instance.AddComponent<Rigidbody>();
+
+                var body = instance.GetComponent<Rigidbody>();
+                if (body == null)
+                    body = Undo.AddComponent<Rigidbody>(instance);
+                if (body == null)
+                    body = instance.AddComponent<Rigidbody>();
+                if (body == null)
+                    throw new InvalidOperationException("[TruckImport] Failed to add Rigidbody to " + id);
+
                 body.mass = 8000f;
                 body.centerOfMass = new Vector3(0f, -0.65f, 0.15f);
 
