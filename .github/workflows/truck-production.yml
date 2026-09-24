@@ -79,26 +79,18 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # Unity may create additional generated/meta files during preparation.
-          # Stage the complete production tree so no unstaged generated files
-          # block the rebase/push step.
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No generated truck changes to persist."
-            exit 0
-          fi
-          # Preserve the generated outputs outside the git worktree first.
-          # Unity also creates transient files under Assets/Resources, and those
-          # untracked files can prevent rebase/reset from applying a concurrent
-          # production commit. Rebase is unnecessary here because the production
-          # workflows share a concurrency group: refresh main, reset cleanly,
-          # restore only the generated outputs, then commit and push.
-          rm -rf /tmp/generated-truck-production
+
+          # Unity's container can leave generated files owned by root. Never
+          # reset/clean the Unity worktree after generation: those files may be
+          # non-removable by the runner user. Copy only the production outputs
+          # into a fresh host-side git worktree and commit from there.
+          rm -rf /tmp/truck-production-worktree /tmp/generated-truck-production
           mkdir -p /tmp/generated-truck-production
+
           for path in \
             Assets/TruckSystem/Data/Production \
             Assets/TruckSystem/Prefabs/Imported \
-            Assets/Resources/TruckSystem; do
+            Assets/Resources/TruckSystem/Data/Production; do
             if [ -e "$path" ]; then
               mkdir -p "/tmp/generated-truck-production/$(dirname "$path")"
               cp -a "$path" "/tmp/generated-truck-production/$path"
@@ -106,20 +98,21 @@ jobs:
           done
 
           git fetch origin main
-          git reset --hard origin/main
-          git clean -fd
+          git worktree add --detach /tmp/truck-production-worktree origin/main
 
+          cd /tmp/truck-production-worktree
           for path in \
             Assets/TruckSystem/Data/Production \
             Assets/TruckSystem/Prefabs/Imported \
-            Assets/Resources/TruckSystem; do
+            Assets/Resources/TruckSystem/Data/Production; do
             if [ -e "/tmp/generated-truck-production/$path" ]; then
+              rm -rf "$path"
               mkdir -p "$(dirname "$path")"
               cp -a "/tmp/generated-truck-production/$path" "$path"
             fi
           done
 
-          git add -A Assets/TruckSystem Assets/Resources/TruckSystem
+          git add -A Assets/TruckSystem/Data/Production Assets/TruckSystem/Prefabs/Imported Assets/Resources/TruckSystem/Data/Production
           if git diff --cached --quiet; then
             echo "No generated truck changes to persist."
             exit 0
