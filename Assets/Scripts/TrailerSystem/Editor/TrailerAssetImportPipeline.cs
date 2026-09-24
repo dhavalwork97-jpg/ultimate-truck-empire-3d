@@ -169,6 +169,11 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             public bool runtimeContractValid;
             public bool colliderValid;
             public bool definitionValid;
+            public int lod0TriangleCount;
+            public int lod1TriangleCount;
+            public int lod2TriangleCount;
+            public bool lod1WithinBudget;
+            public bool lod2WithinBudget;
         }
 
         private static bool ValidatePreparedProductionAssets()
@@ -198,7 +203,14 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 report.trailers.Add(reportEntry);
                 Debug.Log("[TrailerImport] " + id + " metrics: renderers=" + reportEntry.rendererCount +
                     ", materials=" + reportEntry.materialSlotCount + ", triangles=" + reportEntry.triangleCount +
-                    ", vertices=" + reportEntry.vertexCount + ", reducedLods=" + reportEntry.hasReducedLods);
+                    ", vertices=" + reportEntry.vertexCount + ", LOD0=" + reportEntry.lod0TriangleCount +
+                    ", LOD1=" + reportEntry.lod1TriangleCount + ", LOD2=" + reportEntry.lod2TriangleCount +
+                    ", reducedLods=" + reportEntry.hasReducedLods);
+                if (!reportEntry.lod1WithinBudget || !reportEntry.lod2WithinBudget)
+                {
+                    Debug.LogError("[TrailerImport] Reduced LOD triangle budget exceeded for " + id);
+                    valid = false;
+                }
                 if (prefab.GetComponent<LoadedTrailer>() == null ||
                     prefab.GetComponent<TrailerCargoModule>() == null ||
                     prefab.GetComponent<TrailerSkinApplier>() == null)
@@ -272,6 +284,15 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             }
 
             var lodGroups = prefab.GetComponentsInChildren<LODGroup>(true);
+            if (lodGroups.Length > 0)
+            {
+                var lods = lodGroups[0].GetLODs();
+                entry.lod0TriangleCount = CountLodTriangles(lods, 0);
+                entry.lod1TriangleCount = CountLodTriangles(lods, 1);
+                entry.lod2TriangleCount = CountLodTriangles(lods, 2);
+                entry.lod1WithinBudget = entry.lod1TriangleCount <= 15000;
+                entry.lod2WithinBudget = entry.lod2TriangleCount <= 15000;
+            }
             entry.hasReducedLods = lodGroups.Any(g =>
             {
                 var lods = g.GetLODs();
@@ -621,6 +642,24 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 map[i] = cluster;
             }
             return map;
+        }
+
+        private static int CountLodTriangles(LOD[] lods, int index)
+        {
+            if (lods == null || index < 0 || index >= lods.Length) return 0;
+            int total = 0;
+            foreach (var renderer in lods[index].renderers)
+            {
+                if (renderer is SkinnedMeshRenderer skinned && skinned.sharedMesh != null)
+                    total += skinned.sharedMesh.triangles.Length / 3;
+                else if (renderer is MeshRenderer meshRenderer)
+                {
+                    var filter = meshRenderer.GetComponent<MeshFilter>();
+                    if (filter != null && filter.sharedMesh != null)
+                        total += filter.sharedMesh.triangles.Length / 3;
+                }
+            }
+            return total;
         }
 
         private static void CreateGeneratedPhysicsProxy(GameObject root)
