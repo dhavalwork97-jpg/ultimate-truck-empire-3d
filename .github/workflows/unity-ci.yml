@@ -8,7 +8,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  checks: write
 
 concurrency:
   group: unity-ci-${{ github.workflow }}-${{ github.ref }}
