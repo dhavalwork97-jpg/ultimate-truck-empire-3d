@@ -15,7 +15,7 @@ namespace UltimateTruckEmpire.TrailerSystem
 
         public TrailerProductionCalibration Calibration => calibration;
         public float EmptyMassTons => calibration != null ? calibration.massTons : 0f;
-        public bool HasValidCalibration => calibration != null && calibration.IsValid();
+        public bool HasValidCalibration => calibration != null && calibration.authored && calibration.IsValid();
 
         private void Awake()
         {
@@ -29,9 +29,9 @@ namespace UltimateTruckEmpire.TrailerSystem
                 ? calibration
                 : GetComponent<TrailerProductionCalibration>();
 
-            if (calibration == null || !calibration.IsValid())
+            if (calibration == null || !calibration.authored || !calibration.IsValid())
             {
-                Debug.LogError("[TrailerCalibration] Missing or invalid production calibration on " + name, this);
+                Debug.LogError("[TrailerCalibration] Missing, unauthored, or invalid production calibration on " + name, this);
                 return false;
             }
 
