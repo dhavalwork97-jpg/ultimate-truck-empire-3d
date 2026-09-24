@@ -1,15 +1,10 @@
 name: Truck Production CI
 
 on:
+  # Run on every main push so headless truck preparation cannot be skipped
+  # by path-filter evaluation or changes outside the truck asset folders.
   push:
     branches: [main]
-    paths:
-      - 'Assets/TruckSystem/**'
-      - 'Assets/Scripts/Truck/**'
-      - 'Assets/Scripts/TrailerSystem/**'
-      - 'ProjectSettings/**'
-      - 'Packages/**'
-      - '.github/workflows/truck-production.yml'
   workflow_dispatch:
 
 permissions:
