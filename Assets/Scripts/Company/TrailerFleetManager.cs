@@ -330,10 +330,19 @@ namespace UltimateTruckEmpire.Company
             if (loadedTrailer != null)
                 loadedTrailer.ConfigureEmpty(definition, skin);
 
+            var calibrator = instance.GetComponent<TrailerRuntimeCalibrator>();
+            if (calibrator != null && !calibrator.ApplyCalibration())
+            {
+                UnityEngine.Object.Destroy(instance);
+                return;
+            }
+
             Transform kingpin = FindKingpin(instance.transform);
             if (kingpin != null)
             {
-                float mass = Mathf.Max(1200f, definition.emptyWeightTons * 1000f);
+                float mass = calibrator != null && calibrator.HasValidCalibration
+                    ? calibrator.EmptyMassTons * 1000f
+                    : definition.emptyWeightTons * 1000f;
                 if (!attachment.Attach(instance, kingpin, mass))
                 {
                     UnityEngine.Object.Destroy(instance);
