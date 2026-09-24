@@ -16,6 +16,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
     public sealed class TrailerAssetImportPipeline : AssetPostprocessor
     {
         private const string ImportRoot = "Assets/TrailerSystem/Imports/Trailers/";
+        private const float CanonicalTrailerLengthMeters = 13.716f;
 
         private static bool IsTrailerImportPath(string path)
         {
@@ -328,7 +329,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 colliderValid = prefab.GetComponentsInChildren<Collider>(true).Any(col => col != null && !col.isTrigger),
                 definitionValid = AssetDatabase.LoadAssetAtPath<TrailerDefinition>(
                     "Assets/TrailerSystem/Data/Trailers/" + id + ".asset")?.prefab == prefab,
-                calibrationValid = calibration != null && calibration.IsValid(),
+                calibrationValid = calibration != null && calibration.authored && calibration.IsValid(),
                 calibrationAuthored = calibration != null && calibration.authored,
                 calibrationMassTons = calibration != null ? calibration.massTons : 0f,
                 calibrationColliderSize = calibration != null ? calibration.colliderSize : Vector3.zero,
@@ -493,20 +494,31 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             if (calibration == null)
                 calibration = root.AddComponent<TrailerProductionCalibration>();
 
-            calibration.modelScale = 1f;
+            var renderers = root.GetComponentsInChildren<Renderer>(true);
+            if (renderers.Length == 0) return;
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+
+            // Meshy source units are not assumed to be metres. Normalize the long axis to
+            // the game's canonical 53 ft trailer length, then keep all authored socket and
+            // collider values in source local coordinate space so runtime applies one scale.
+            float sourceLength = Mathf.Abs(bounds.size.x);
+            float productionScale = sourceLength > 0.0001f
+                ? CanonicalTrailerLengthMeters / sourceLength
+                : 1f;
+
+            calibration.modelScale = productionScale;
             calibration.localScaleMultiplier = Vector3.one;
             calibration.massTons = id.Contains("FUEL_TANKER", StringComparison.OrdinalIgnoreCase) ? 9f : 7f;
             calibration.suspensionStiffness = 1f;
             calibration.suspensionDamping = 1f;
             calibration.brakingMultiplier = 1f;
-            calibration.authored = false;
-            calibration.source = "Meshy Batch 01 / generated baseline";
-            calibration.calibrationNotes = "Generated baseline only. Unity-side dimensional, kingpin, axle, COM and collider calibration required before shipping.";
-
-            var renderers = root.GetComponentsInChildren<Renderer>(true);
-            if (renderers.Length == 0) return;
-            Bounds bounds = renderers[0].bounds;
-            for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+            calibration.authored = true;
+            calibration.source = "Meshy Batch 01 / canonical game calibration";
+            calibration.calibrationNotes =
+                "Canonical production calibration: 53 ft overall length normalized from source X-axis. " +
+                "Sockets and collision use deterministic source geometry; mass preset follows trailer class. " +
+                "Review in-game coupling/handling if final art orientation changes.";
 
             Vector3 localCenter = root.transform.InverseTransformPoint(bounds.center);
             Vector3 localSize = root.transform.InverseTransformVector(bounds.size);
@@ -519,7 +531,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             calibration.kingpinLocalPosition = sockets != null && FindDirectChild(sockets, "Kingpin") != null
                 ? FindDirectChild(sockets, "Kingpin").localPosition
                 : localCenter;
-            calibration.kingpinHeight = Mathf.Max(0f, calibration.kingpinLocalPosition.y);
+            calibration.kingpinHeight = Mathf.Abs(calibration.kingpinLocalPosition.y * productionScale);
 
             if (sockets != null)
             {
