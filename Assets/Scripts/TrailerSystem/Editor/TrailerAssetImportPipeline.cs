@@ -101,6 +101,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             {
                 instance.name = id;
                 AddRuntimeContract(instance);
+                AddProductionCalibration(instance, id);
                 CreateAuthoredPlaceholderSockets(instance);
                 CreateGeneratedPhysicsProxy(instance);
                 AddProductionLodGroup(instance);
@@ -174,6 +175,10 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             public int lod2TriangleCount;
             public bool lod1WithinBudget;
             public bool lod2WithinBudget;
+            public bool calibrationValid;
+            public bool calibrationAuthored;
+            public float calibrationMassTons;
+            public Vector3 calibrationColliderSize;
         }
 
         private static bool ValidatePreparedProductionAssets()
@@ -209,6 +214,11 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 if (!reportEntry.lod1WithinBudget || !reportEntry.lod2WithinBudget)
                 {
                     Debug.LogError("[TrailerImport] Reduced LOD triangle budget exceeded for " + id);
+                    valid = false;
+                }
+                if (!reportEntry.calibrationValid)
+                {
+                    Debug.LogError("[TrailerImport] Production calibration component missing/invalid on " + id);
                     valid = false;
                 }
                 if (prefab.GetComponent<LoadedTrailer>() == null ||
@@ -250,6 +260,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
 
         private static ProductionValidationEntry BuildValidationEntry(string id, string modelPath, GameObject prefab)
         {
+            var calibration = prefab.GetComponent<TrailerProductionCalibration>();
             var entry = new ProductionValidationEntry
             {
                 productionId = id,
@@ -259,7 +270,11 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                     prefab.GetComponent<TrailerSkinApplier>() != null,
                 colliderValid = prefab.GetComponentsInChildren<Collider>(true).Any(col => col != null && !col.isTrigger),
                 definitionValid = AssetDatabase.LoadAssetAtPath<TrailerDefinition>(
-                    "Assets/TrailerSystem/Data/Trailers/" + id + ".asset")?.prefab == prefab
+                    "Assets/TrailerSystem/Data/Trailers/" + id + ".asset")?.prefab == prefab,
+                calibrationValid = calibration != null && calibration.IsValid(),
+                calibrationAuthored = calibration != null && calibration.authored,
+                calibrationMassTons = calibration != null ? calibration.massTons : 0f,
+                calibrationColliderSize = calibration != null ? calibration.colliderSize : Vector3.zero
             };
 
             var renderers = prefab.GetComponentsInChildren<Renderer>(true);
@@ -404,6 +419,49 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 root.AddComponent<TrailerCargoModule>();
             if (root.GetComponent<TrailerSkinApplier>() == null)
                 root.AddComponent<TrailerSkinApplier>();
+        }
+
+        private static void AddProductionCalibration(GameObject root, string id)
+        {
+            var calibration = root.GetComponent<TrailerProductionCalibration>();
+            if (calibration == null)
+                calibration = root.AddComponent<TrailerProductionCalibration>();
+
+            calibration.modelScale = 1f;
+            calibration.localScaleMultiplier = Vector3.one;
+            calibration.massTons = id.Contains("FUEL_TANKER", StringComparison.OrdinalIgnoreCase) ? 9f : 7f;
+            calibration.suspensionStiffness = 1f;
+            calibration.suspensionDamping = 1f;
+            calibration.brakingMultiplier = 1f;
+            calibration.authored = false;
+            calibration.source = "Meshy Batch 01 / generated baseline";
+            calibration.calibrationNotes = "Generated baseline only. Unity-side dimensional, kingpin, axle, COM and collider calibration required before shipping.";
+
+            var renderers = root.GetComponentsInChildren<Renderer>(true);
+            if (renderers.Length == 0) return;
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+
+            Vector3 localCenter = root.transform.InverseTransformPoint(bounds.center);
+            Vector3 localSize = root.transform.InverseTransformVector(bounds.size);
+            localSize = new Vector3(Mathf.Abs(localSize.x), Mathf.Abs(localSize.y), Mathf.Abs(localSize.z));
+            calibration.centerOfMassLocalPosition = localCenter + Vector3.down * localSize.y * 0.10f;
+            calibration.colliderCenterLocalPosition = localCenter;
+            calibration.colliderSize = localSize;
+
+            Transform sockets = FindDirectChild(root.transform, "Sockets");
+            calibration.kingpinLocalPosition = sockets != null && FindDirectChild(sockets, "Kingpin") != null
+                ? FindDirectChild(sockets, "Kingpin").localPosition
+                : localCenter;
+            calibration.kingpinHeight = Mathf.Max(0f, calibration.kingpinLocalPosition.y);
+
+            if (sockets != null)
+            {
+                calibration.wheelFL = FindDirectChild(sockets, "Wheel_FL")?.localPosition ?? localCenter;
+                calibration.wheelFR = FindDirectChild(sockets, "Wheel_FR")?.localPosition ?? localCenter;
+                calibration.wheelRL = FindDirectChild(sockets, "Wheel_RL")?.localPosition ?? localCenter;
+                calibration.wheelRR = FindDirectChild(sockets, "Wheel_RR")?.localPosition ?? localCenter;
+            }
         }
 
         private static void CreateAuthoredPlaceholderSockets(GameObject root)
