@@ -125,7 +125,21 @@ namespace UltimateTruckEmpire.Truck
         {
             var attachment = PhysicsAttachment;
             if (attachment == null || Definition == null) return;
-            attachment.SetPayloadWeightTons(CargoWeightTons, Definition.emptyWeightTons);
+
+            // Prefer the production-authored trailer calibration for the empty mass.
+            // This keeps the existing TrailerPhysicsAttachment as the single coupling
+            // authority while preventing catalog defaults from overwriting calibrated
+            // Meshy production physics.
+            float emptyWeightTons = Definition.emptyWeightTons;
+            var attached = attachment.AttachedTrailer;
+            if (attached != null)
+            {
+                var calibrator = attached.GetComponent<TrailerRuntimeCalibrator>();
+                if (calibrator != null && calibrator.HasValidCalibration)
+                    emptyWeightTons = calibrator.EmptyMassTons;
+            }
+
+            attachment.SetPayloadWeightTons(CargoWeightTons, emptyWeightTons);
         }
 
         private static UltimateTruckEmpire.Gameplay.TrailerType FromDefinitionType(TrailerCategory category)
