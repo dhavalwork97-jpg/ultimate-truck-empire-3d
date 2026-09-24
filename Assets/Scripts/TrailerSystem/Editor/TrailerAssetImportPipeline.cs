@@ -306,7 +306,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             Vector3 rearCenter = (rl.localPosition + rr.localPosition) * 0.5f;
             float axleSeparation = Vector3.Distance(frontCenter, rearCenter);
 
-            bool valid = frontTrack > 0.01f && rearTrack > 0.01f && axleSeparation > 0.01f;
+            bool valid = frontTrack > 0.0001f && rearTrack > 0.0001f && axleSeparation > 0.0001f;
             if (!valid)
             {
                 Debug.LogError("[TrailerImport] Axle geometry values: frontTrack=" + frontTrack +
