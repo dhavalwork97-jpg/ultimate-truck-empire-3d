@@ -505,8 +505,8 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
             // Build genuine reduced meshes from the imported geometry. This is intentionally
             // deterministic and editor-only: production LOD meshes are generated once and
             // stored as .asset meshes, while the original imported renderers remain LOD0.
-            var lod1Renderers = CreateReducedLodRenderers(lodHost, sourceRenderers, 0.45f, "LOD1");
-            var lod2Renderers = CreateReducedLodRenderers(lodHost, sourceRenderers, 0.18f, "LOD2");
+            var lod1Renderers = CreateReducedLodRenderers(lodHost, sourceRenderers, 0.10f, "LOD1");
+            var lod2Renderers = CreateReducedLodRenderers(lodHost, sourceRenderers, 0.035f, "LOD2");
 
             var lod0 = new LOD(0.60f, sourceRenderers.Cast<Renderer>().ToArray());
             var lod1 = new LOD(0.25f, lod1Renderers);
