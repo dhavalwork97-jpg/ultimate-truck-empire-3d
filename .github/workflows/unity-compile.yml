@@ -40,6 +40,22 @@ jobs:
             exit 1
           }
 
+      - name: Pre-pull Unity GameCI image with retry
+        shell: bash
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          image="unityci/editor:ubuntu-6000.0.65f1-base-3"
+          for attempt in 1 2 3 4 5; do
+            echo "Pulling $image (attempt $attempt/5)"
+            if docker pull "$image"; then
+              exit 0
+            fi
+            sleep $((attempt * 10))
+          done
+          echo "Failed to pull $image after 5 attempts."
+          exit 1
+
       - name: Unity compile check
         uses: game-ci/unity-builder@v4
         env:
