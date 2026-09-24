@@ -208,6 +208,38 @@ namespace UltimateTruckEmpire.Truck.Editor
             AssetDatabase.CopyAsset(source, destination);
         }
 
+        private static void ApplyProductionCalibration(TruckProductionProfile profile, string id)
+        {
+            if (string.Equals(id, "meshy-ai-volvo-fh-globetrotter-0923130558-texture", StringComparison.OrdinalIgnoreCase))
+            {
+                profile.emptyMassTons = 8f;
+                profile.fuelCapacityLitres = 750f;
+                profile.enginePowerHp = 500f;
+                profile.maxSpeedKph = 120f;
+                profile.fuelEfficiency = 6.5f;
+                profile.drivetrain = "6x4";
+                return;
+            }
+
+            if (string.Equals(id, "meshy-ai-golden-hauler-0923132145-texture", StringComparison.OrdinalIgnoreCase))
+            {
+                profile.emptyMassTons = 8f;
+                profile.fuelCapacityLitres = 900f;
+                profile.enginePowerHp = 600f;
+                profile.maxSpeedKph = 115f;
+                profile.fuelEfficiency = 5.8f;
+                profile.drivetrain = "6x4";
+                return;
+            }
+
+            profile.emptyMassTons = 8f;
+            profile.fuelCapacityLitres = 500f;
+            profile.enginePowerHp = 320f;
+            profile.maxSpeedKph = 110f;
+            profile.fuelEfficiency = 7.2f;
+            profile.drivetrain = "6x4";
+        }
+
         private static void EnsureProductionProfile(string id, GameObject prefab)
         {
             string path = ProfileRoot + "/" + id + ".asset";
@@ -221,6 +253,7 @@ namespace UltimateTruckEmpire.Truck.Editor
             profile.id = id;
             profile.displayName = ToDisplayName(id);
             profile.prefab = prefab;
+            ApplyProductionCalibration(profile, id);
             profile.couplingSocket = FindChild(prefab.transform, "TrailerCoupling");
             profile.wheelSockets = new[]
             {
