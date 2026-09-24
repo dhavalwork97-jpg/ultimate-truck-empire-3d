@@ -472,24 +472,155 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
 
         private static void AddProductionLodGroup(GameObject root)
         {
-            var renderers = root.GetComponentsInChildren<Renderer>(true);
-            if (renderers == null || renderers.Length == 0) return;
+            var sourceRenderers = root.GetComponentsInChildren<MeshRenderer>(true)
+                .Where(r => r.GetComponent<MeshFilter>() != null && r.GetComponent<MeshFilter>().sharedMesh != null)
+                .ToArray();
+            if (sourceRenderers.Length == 0) return;
 
             var lodHost = EnsureChild(root.transform, "LODGroup");
             var group = lodHost.GetComponent<LODGroup>();
             if (group == null) group = lodHost.gameObject.AddComponent<LODGroup>();
 
-            // Until artist-authored reduced meshes exist, all levels intentionally reference
-            // the imported renderer set. This gives the prefab a stable LOD contract without
-            // pretending that a screen-relative switch reduces geometry.
-            var lod0 = new LOD(0.60f, renderers);
-            var lod1 = new LOD(0.25f, renderers);
-            var lod2 = new LOD(0.08f, renderers);
+            // Build genuine reduced meshes from the imported geometry. This is intentionally
+            // deterministic and editor-only: production LOD meshes are generated once and
+            // stored as .asset meshes, while the original imported renderers remain LOD0.
+            var lod1Renderers = CreateReducedLodRenderers(lodHost, sourceRenderers, 0.45f, "LOD1");
+            var lod2Renderers = CreateReducedLodRenderers(lodHost, sourceRenderers, 0.18f, "LOD2");
+
+            var lod0 = new LOD(0.60f, sourceRenderers.Cast<Renderer>().ToArray());
+            var lod1 = new LOD(0.25f, lod1Renderers);
+            var lod2 = new LOD(0.08f, lod2Renderers);
             group.SetLODs(new[] { lod0, lod1, lod2 });
             group.RecalculateBounds();
             group.fadeMode = LODFadeMode.CrossFade;
             group.animateCrossFading = false;
             EditorUtility.SetDirty(group);
+        }
+
+        private static Renderer[] CreateReducedLodRenderers(Transform lodHost, MeshRenderer[] sourceRenderers, float ratio, string lodName)
+        {
+            var container = EnsureChild(lodHost, lodName);
+            var output = new List<Renderer>();
+            string meshFolder = "Assets/TrailerSystem/Production/Meshes/" + lodHost.parent.name;
+            EnsureFolder(meshFolder);
+
+            foreach (var sourceRenderer in sourceRenderers)
+            {
+                var sourceFilter = sourceRenderer.GetComponent<MeshFilter>();
+                var sourceMesh = sourceFilter.sharedMesh;
+                string meshPath = meshFolder + "/" + sourceMesh.name + "_" + lodName + ".asset";
+                var reduced = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+                if (reduced == null)
+                {
+                    reduced = ReduceMeshByVertexClustering(sourceMesh, ratio);
+                    reduced.name = sourceMesh.name + "_" + lodName;
+                    AssetDatabase.CreateAsset(reduced, meshPath);
+                }
+
+                var go = new GameObject(sourceRenderer.name + "_" + lodName);
+                go.transform.SetParent(container, false);
+                go.transform.localPosition = sourceRenderer.transform.localPosition;
+                go.transform.localRotation = sourceRenderer.transform.localRotation;
+                go.transform.localScale = sourceRenderer.transform.localScale;
+
+                var filter = go.AddComponent<MeshFilter>();
+                filter.sharedMesh = reduced;
+                var renderer = go.AddComponent<MeshRenderer>();
+                renderer.sharedMaterials = sourceRenderer.sharedMaterials;
+                output.Add(renderer);
+            }
+            return output.ToArray();
+        }
+
+        private static Mesh ReduceMeshByVertexClustering(Mesh source, float targetRatio)
+        {
+            var srcVertices = source.vertices;
+            var srcTriangles = source.triangles;
+            if (srcVertices.Length < 64 || srcTriangles.Length < 96)
+                return Instantiate(source);
+
+            int targetVertices = Mathf.Clamp(Mathf.RoundToInt(srcVertices.Length * targetRatio), 32, srcVertices.Length - 1);
+            Bounds bounds = source.bounds;
+            Vector3 size = bounds.size;
+            float maxSize = Mathf.Max(size.x, Mathf.Max(size.y, size.z));
+            if (maxSize <= Mathf.Epsilon) return Instantiate(source);
+
+            float low = maxSize / 100000f;
+            float high = maxSize;
+            int[] bestMap = null;
+            int bestCount = srcVertices.Length;
+
+            for (int iteration = 0; iteration < 20; iteration++)
+            {
+                float cell = (low + high) * 0.5f;
+                var map = BuildClusterMap(srcVertices, bounds.min, cell, out int count);
+                if (count > targetVertices)
+                    low = cell;
+                else
+                {
+                    high = cell;
+                    bestMap = map;
+                    bestCount = count;
+                }
+            }
+
+            if (bestMap == null)
+                bestMap = BuildClusterMap(srcVertices, bounds.min, high, out bestCount);
+
+            var sums = new Vector3[bestCount];
+            var counts = new int[bestCount];
+            for (int i = 0; i < srcVertices.Length; i++)
+            {
+                int c = bestMap[i];
+                sums[c] += srcVertices[i];
+                counts[c]++;
+            }
+
+            var vertices = new Vector3[bestCount];
+            for (int i = 0; i < bestCount; i++)
+                vertices[i] = sums[i] / Mathf.Max(1, counts[i]);
+
+            var triangles = new List<int>(srcTriangles.Length);
+            for (int i = 0; i < srcTriangles.Length; i += 3)
+            {
+                int a = bestMap[srcTriangles[i]];
+                int b = bestMap[srcTriangles[i + 1]];
+                int c = bestMap[srcTriangles[i + 2]];
+                if (a == b || b == c || a == c) continue;
+                triangles.Add(a); triangles.Add(b); triangles.Add(c);
+            }
+
+            var result = new Mesh();
+            result.indexFormat = vertices.Length > 65535
+                ? UnityEngine.Rendering.IndexFormat.UInt32
+                : UnityEngine.Rendering.IndexFormat.UInt16;
+            result.vertices = vertices;
+            result.triangles = triangles.ToArray();
+            result.RecalculateBounds();
+            result.RecalculateNormals();
+            return result;
+        }
+
+        private static int[] BuildClusterMap(Vector3[] vertices, Vector3 origin, float cell, out int clusterCount)
+        {
+            var clusters = new Dictionary<Vector3Int, int>();
+            var map = new int[vertices.Length];
+            clusterCount = 0;
+            float inv = 1f / Mathf.Max(cell, 0.000001f);
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                var key = new Vector3Int(
+                    Mathf.FloorToInt((vertices[i].x - origin.x) * inv),
+                    Mathf.FloorToInt((vertices[i].y - origin.y) * inv),
+                    Mathf.FloorToInt((vertices[i].z - origin.z) * inv));
+                if (!clusters.TryGetValue(key, out int cluster))
+                {
+                    cluster = clusterCount++;
+                    clusters.Add(key, cluster);
+                }
+                map[i] = cluster;
+            }
+            return map;
         }
 
         private static void CreateGeneratedPhysicsProxy(GameObject root)
