@@ -181,6 +181,7 @@ namespace UltimateTruckEmpire.TrailerSystem.Editor
                 AddRuntimeContract(instance);
                 CreateAuthoredPlaceholderSockets(instance);
                 CreateGeneratedPhysicsProxy(instance);
+                AddProductionLodGroup(instance);
                 AssignProductionMaterial(instance, modelPath, id);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
