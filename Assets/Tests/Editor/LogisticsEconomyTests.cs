@@ -27,6 +27,20 @@ namespace UltimateTruckEmpire.Tests.Editor
         [Test] public void RouteAcceptsDistinctCities() => Assert.IsTrue(FreightRouteService.IsValidRoute("Ahmedabad", "Vadodara", 110f));
         [Test] public void RouteEtaUsesPositiveSpeed() => Assert.That(FreightRouteService.CalculateEtaHours(550f, 55f, 1f), Is.EqualTo(10f).Within(0.001f));
         [Test] public void TrailerCompatibilityMatchesRequiredClass() => Assert.IsTrue(FreightRouteService.TrailerCompatible(LogisticsTrailerClass.Tanker, LogisticsTrailerClass.Tanker));
+        [Test] public void PhysicalTankerMapsToTankerFreightClass()
+        {
+            Assert.IsTrue(FreightRouteService.TryGetLogisticsTrailerClass(UltimateTruckEmpire.Truck.TrailerType.Tanker, out var logisticsClass));
+            Assert.That(logisticsClass, Is.EqualTo(LogisticsTrailerClass.Tanker));
+        }
+        [Test] public void PhysicalHeavyHaulMapsToOversizedFreightClass()
+        {
+            Assert.IsTrue(FreightRouteService.TryGetLogisticsTrailerClass(UltimateTruckEmpire.Truck.TrailerType.HeavyHaul, out var logisticsClass));
+            Assert.That(logisticsClass, Is.EqualTo(LogisticsTrailerClass.Oversized));
+        }
+        [Test] public void UnsupportedTrailerCannotMapToFreightClass()
+        {
+            Assert.IsFalse(FreightRouteService.TryGetLogisticsTrailerClass(UltimateTruckEmpire.Truck.TrailerType.GrainHopper, out _));
+        }
         [Test] public void TrailerCompatibilityRejectsWrongClass() => Assert.IsFalse(FreightRouteService.TrailerCompatible(LogisticsTrailerClass.Tanker, LogisticsTrailerClass.DryVan));
         [Test] public void CheckpointTrackerDeduplicatesVisits()
         {
