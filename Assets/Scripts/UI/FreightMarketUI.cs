@@ -55,8 +55,7 @@ namespace UltimateTruckEmpire.UI
             scaler.matchWidthOrHeight = 0.5f;
             gameObject.AddComponent<GraphicRaycaster>();
 
-            openButton = AddButton(transform, "FREIGHT
-MARKET", () => SetVisible(true));
+            openButton = AddButton(transform, "FREIGHT MARKET", () => SetVisible(true));
             RectTransform openRect = openButton.GetComponent<RectTransform>();
             openRect.anchorMin = new Vector2(1f, 0.5f);
             openRect.anchorMax = new Vector2(1f, 0.5f);
