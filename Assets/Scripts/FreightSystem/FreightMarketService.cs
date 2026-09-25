@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UltimateTruckEmpire.Economy;
 using UltimateTruckEmpire.Save;
+using UltimateTruckEmpire.Truck;
 
 namespace UltimateTruckEmpire.Freight
 {
@@ -93,6 +94,19 @@ namespace UltimateTruckEmpire.Freight
                    !activeJob.cargoLoaded &&
                    string.Equals(activeJob.originCity, city, StringComparison.OrdinalIgnoreCase) &&
                    MarkPickupComplete();
+        }
+
+        public bool TryPickupAt(string city, TrailerType physicalTrailerType)
+        {
+            if (activeJob == null || !activeJob.accepted || activeJob.cargoLoaded ||
+                !string.Equals(activeJob.originCity, city, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            if (!FreightRouteService.TryGetLogisticsTrailerClass(physicalTrailerType, out LogisticsTrailerClass actualClass) ||
+                !FreightRouteService.TrailerCompatible(activeJob.trailerClass, actualClass))
+                return false;
+
+            return MarkPickupComplete();
         }
 
         public bool CompleteDelivery(out float payout)
