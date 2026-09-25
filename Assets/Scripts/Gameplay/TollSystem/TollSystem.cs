@@ -57,7 +57,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
         public static float Calculate(float baseToll, TruckController truck, UltimateTruckEmpire.Truck.TrailerType trailer, TollPaymentMethod method, float routeFactor = 1f)
         {
             var trailerClass = LogisticsTrailerClass.None;
-            if (!Freight.FreightRouteService.TryGetLogisticsTrailerClass(trailer, out trailerClass))
+            if (!UltimateTruckEmpire.Freight.FreightRouteService.TryGetLogisticsTrailerClass(trailer, out trailerClass))
                 trailerClass = LogisticsTrailerClass.None;
 
             int axleCount = truck != null ? truck.GetAxleCount() : 2;
