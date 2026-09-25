@@ -201,10 +201,36 @@ namespace UltimateTruckEmpire.Bootstrap
                     TrailerFleetManager.Instance.BindPlayerTrailer(activeFleetTruck.id, UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider);
                 TrailerFleetManager.Instance.ApplyToPlayerTruck(controller);
             }
+
+            // If a saved freight job was already loaded into a temporary trailer,
+            // recreate that non-owned trailer after the player truck exists.
+            var restoredFreight = FreightMarketService.Instance?.ActiveJob;
+            if (restoredFreight != null && restoredFreight.accepted && restoredFreight.cargoLoaded &&
+                activeFleetTruck != null && TrailerFleetManager.Instance.GetAssigned(activeFleetTruck.id) == null)
+            {
+                if (TrailerFleetManager.Instance.TrySpawnTemporaryJobTrailer(controller, ToGameplayTrailerType(restoredFreight.trailerClass)))
+                {
+                    var restoredTrailer = controller.GetComponent<TrailerController>();
+                    restoredTrailer?.Load(restoredFreight.weightTons);
+                }
+            }
             TruckCockpitBuilder.Build(truck.transform);
             CreateCameraAnchors(truck.transform);
 
             return truck;
+        }
+
+        private static UltimateTruckEmpire.Gameplay.TrailerType ToGameplayTrailerType(LogisticsTrailerClass trailerClass)
+        {
+            switch (trailerClass)
+            {
+                case LogisticsTrailerClass.Tanker: return UltimateTruckEmpire.Gameplay.TrailerType.Tanker;
+                case LogisticsTrailerClass.Refrigerated: return UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated;
+                case LogisticsTrailerClass.Flatbed: return UltimateTruckEmpire.Gameplay.TrailerType.Flatbed;
+                case LogisticsTrailerClass.Oversized: return UltimateTruckEmpire.Gameplay.TrailerType.Lowboy;
+                case LogisticsTrailerClass.DryVan:
+                default: return UltimateTruckEmpire.Gameplay.TrailerType.Box;
+            }
         }
 
         private static void SetPlayerTruckTag(GameObject truck)
