@@ -93,6 +93,28 @@ namespace UltimateTruckEmpire.Tests.Editor
 
             return builder.ToString();
         }
+        [TestCase("nordic-titan-500", "meshy-ai-volvo-fh-globetrotter-0923130558-texture")]
+        [TestCase("golden-hauler", "meshy-ai-golden-hauler-0923132145-texture")]
+        public void ProductionTruckCatalogLinksToProfile(string definitionId, string profileId)
+        {
+            var definition = UltimateTruckEmpire.Company.TruckCatalog.Find(definitionId);
+            Assert.IsNotNull(definition, "Missing truck catalog definition: " + definitionId);
+            Assert.AreEqual(profileId, definition.productionProfileId);
+        }
+
+        [Test]
+        public void ProductionTruckDealerEntriesMatchCatalogProfiles()
+        {
+            Assert.IsNotNull(UltimateTruckEmpire.Company.TruckCatalog.Find("nordic-titan-500"));
+            Assert.IsNotNull(UltimateTruckEmpire.Company.TruckCatalog.Find("golden-hauler"));
+            Assert.AreEqual(
+                "meshy-ai-volvo-fh-globetrotter-0923130558-texture",
+                UltimateTruckEmpire.Company.TruckCatalog.FindByName("Nordic Titan 500").productionProfileId);
+            Assert.AreEqual(
+                "meshy-ai-golden-hauler-0923132145-texture",
+                UltimateTruckEmpire.Company.TruckCatalog.FindByName("Golden Hauler").productionProfileId);
+        }
+
     }
 }
 #endif
