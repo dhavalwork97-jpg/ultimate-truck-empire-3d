@@ -84,13 +84,13 @@ namespace UltimateTruckEmpire.World
                 reference.y = bounds.center.y;
                 if (bounds.Contains(reference))
                 {
-                    var trailer = playerTruck.GetComponent<TrailerController>();
-                    if (trailer == null || !trailer.CargoLoaded)
+                    var cargoTrailer = playerTruck.GetComponent<TrailerController>();
+                    if (cargoTrailer == null || !cargoTrailer.CargoLoaded)
                     {
                         return;
                     }
 
-                    if (!FreightRouteService.TryGetLogisticsTrailerClass(trailer.Type, out LogisticsTrailerClass actualClass) ||
+                    if (!FreightRouteService.TryGetLogisticsTrailerClass(cargoTrailer.Type, out LogisticsTrailerClass actualClass) ||
                         !FreightRouteService.TrailerCompatible(freight.ActiveJob.trailerClass, actualClass))
                     {
                         return;
@@ -99,7 +99,7 @@ namespace UltimateTruckEmpire.World
                     string jobId = freight.ActiveJob.id;
                     if (freight.TryDeliverAt(CityFromLocation(locationId), out float payout))
                     {
-                        trailer.Unload();
+                        cargoTrailer.Unload();
                         TransactionLedger.Instance?.TryRecordIncome(payout, TransactionType.FreightRevenue, "Freight warehouse delivery", jobId);
                         return;
                     }
