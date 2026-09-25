@@ -72,4 +72,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Assets/Environment/Batch02/Resources/Batch02 Assets/Environment/Batch02/Materials
           git commit -m "chore: generate Batch 02 drivable environment prefabs [skip ci]"
-          git push origin HEAD:${GITHUB_REF_NAME}
+          TARGET_REF="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          git push origin "HEAD:refs/heads/${TARGET_REF}"
