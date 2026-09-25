@@ -36,5 +36,15 @@ namespace UltimateTruckEmpire.Tests
             StringAssert.Contains("TRAILER_DRY_VAN_001", report.text);
             StringAssert.Contains("TRAILER_FUEL_TANKER_001", report.text);
         }
+        [Test]
+        public void ProductionCatalogContainsLaunchTrailers()
+        {
+            var catalog = Resources.Load<TrailerCatalogAsset>("TrailerSystem/Catalog/TrailerCatalog");
+            Assert.IsNotNull(catalog, "Missing runtime trailer catalog.");
+            Assert.IsNotNull(catalog.trailers);
+            Assert.IsTrue(catalog.trailers.Exists(t => t != null && t.id == "TRAILER_DRY_VAN_001"));
+            Assert.IsTrue(catalog.trailers.Exists(t => t != null && t.id == "TRAILER_FUEL_TANKER_001"));
+        }
+
     }
 }
