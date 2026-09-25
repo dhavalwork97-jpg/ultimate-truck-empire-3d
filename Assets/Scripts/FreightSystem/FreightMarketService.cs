@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UltimateTruckEmpire.World;
 using UltimateTruckEmpire.Economy;
 using UltimateTruckEmpire.Save;
 using UltimateTruckEmpire.Truck;
