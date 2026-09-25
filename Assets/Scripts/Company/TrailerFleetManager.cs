@@ -320,7 +320,6 @@ namespace UltimateTruckEmpire.Company
             if (instance != null) UnityEngine.Object.Destroy(instance);
             controller.MarkTemporaryJobTrailer(false);
             controller.Unload();
-            controller.Definition = null;
             UnityEngine.Object.Destroy(controller);
         }
 
