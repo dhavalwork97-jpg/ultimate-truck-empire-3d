@@ -41,7 +41,28 @@ namespace UltimateTruckEmpire.World
             // trigger infrastructure is created; an accepted freight job is loaded
             // when the player reaches its origin city.
             var freight = FreightMarketService.Instance;
-            if (freight != null && freight.TryPickupAt(CityFromLocation(locationId))) return;
+            if (freight != null && freight.ActiveJob != null)
+            {
+                var trailer = other.transform.root.GetComponent<TrailerController>();
+                if (trailer == null)
+                {
+                    Debug.LogWarning("Freight pickup requires a compatible trailer.");
+                    return;
+                }
+
+                if (!FreightRouteService.TryGetLogisticsTrailerClass(trailer.Type, out LogisticsTrailerClass actualClass) ||
+                    !FreightRouteService.TrailerCompatible(freight.ActiveJob.trailerClass, actualClass))
+                {
+                    Debug.LogWarning($"Freight pickup rejected: job requires {freight.ActiveJob.trailerClass}, trailer is {trailer.Type}.");
+                    return;
+                }
+
+                if (freight.TryPickupAt(CityFromLocation(locationId)))
+                {
+                    trailer.Load(freight.ActiveJob != null ? freight.ActiveJob.weightTons : 0f);
+                    return;
+                }
+            }
 
             var delivery = DeliveryManager.Instance;
             if (delivery == null) return;
@@ -63,9 +84,23 @@ namespace UltimateTruckEmpire.World
                 reference.y = bounds.center.y;
                 if (bounds.Contains(reference))
                 {
+                    var trailer = playerTruck.GetComponent<TrailerController>();
+                    if (trailer == null || !trailer.CargoLoaded)
+                    {
+                        return;
+                    }
+
+                    if (!FreightRouteService.TryGetLogisticsTrailerClass(trailer.Type, out LogisticsTrailerClass actualClass) ||
+                        !FreightRouteService.TrailerCompatible(freight.ActiveJob.trailerClass, actualClass))
+                    {
+                        return;
+                    }
+
+                    string jobId = freight.ActiveJob.id;
                     if (freight.TryDeliverAt(CityFromLocation(locationId), out float payout))
                     {
-                        TransactionLedger.Instance?.TryRecordIncome(payout, TransactionType.FreightRevenue, "Freight warehouse delivery", freight.ActiveJob?.id ?? locationId);
+                        trailer.Unload();
+                        TransactionLedger.Instance?.TryRecordIncome(payout, TransactionType.FreightRevenue, "Freight warehouse delivery", jobId);
                         return;
                     }
                 }
