@@ -1,0 +1,67 @@
+name: Batch 02 Environment Road Validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/environment-road-integration
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-and-validate:
+    name: Generate and validate Batch 02 road prefabs
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Unity-Batch02-Library-${{ runner.os }}-${{ hashFiles('Packages/manifest.json', 'Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: |
+            Unity-Batch02-Library-${{ runner.os }}-
+
+      - name: Pre-pull Unity GameCI image
+        run: docker pull unityci/editor:ubuntu-6000.0.65f1-base-3
+
+      - name: Generate prefabs and validate road surfaces
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: .
+          unityVersion: 6000.0.65f1
+          targetPlatform: StandaloneLinux64
+          customImage: unityci/editor:ubuntu-6000.0.65f1-base-3
+          buildMethod: UltimateTruckEmpire.EnvironmentAssets.EnvironmentAssetBatch02ImportPipeline.PrepareAndValidateHeadless
+          manualExit: true
+          versioning: None
+          allowDirtyBuild: true
+
+      - name: Verify generated environment artifacts
+        run: |
+          test "$(find Assets/Environment/Batch02/Resources/Batch02/Prefabs -name '*.prefab' | wc -l)" -eq 10
+          test -f Assets/Environment/Batch02/Materials/EnvironmentBatch02_008.mat
+          test -f Assets/Environment/Batch02/Materials/EnvironmentBatch02_009.mat
+          git status --short
+
+      - name: Commit generated Unity artifacts
+        run: |
+          if [ -z "$(git status --porcelain -- Assets/Environment/Batch02/Resources/Batch02 Assets/Environment/Batch02/Materials)" ]; then
+            echo "No generated Unity artifacts to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Assets/Environment/Batch02/Resources/Batch02 Assets/Environment/Batch02/Materials
+          git commit -m "chore: generate Batch 02 drivable environment prefabs [skip ci]"
+          git push origin HEAD:${GITHUB_REF_NAME}
