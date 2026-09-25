@@ -98,10 +98,7 @@ namespace UltimateTruckEmpire.Bootstrap
             WorldVisualBuilder.Build();
             RestAreaWorldBuilder.Build();
 
-            CreateDeliveryZone(new Vector3(-55, 0, 16), "Ahmedabad Logistics Depot", DeliveryTrigger.TriggerType.Pickup,
-                               new Vector3(-13, 0, 9));
-            CreateDeliveryZone(new Vector3(55, 0, 16), "Vadodara Factory Warehouse", DeliveryTrigger.TriggerType.Destination,
-                               new Vector3(13, 0, 9));
+            FreightWorldBuilder.BuildZones();
 
             var truck = CreateTruck(new Vector3(-20, 1.1f, 0));
             RestorePlayerPosition(truck);
