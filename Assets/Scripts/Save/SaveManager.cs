@@ -7,6 +7,7 @@ using UltimateTruckEmpire.Gameplay.Toll;
 using UltimateTruckEmpire.Gameplay.RestArea;
 using UltimateTruckEmpire.Truck;
 using System.Collections.Generic;
+using UltimateTruckEmpire.Economy;
 
 namespace UltimateTruckEmpire.Save
 {
@@ -23,7 +24,7 @@ namespace UltimateTruckEmpire.Save
 
         private const string FileName = "ute_save.json";
         private const string BackupFileName = "ute_save.json.bak";
-        private const int CurrentSaveVersion = 4;
+        private const int CurrentSaveVersion = 5;
 
         [System.Serializable]
         private sealed class SaveData
@@ -45,6 +46,7 @@ namespace UltimateTruckEmpire.Save
             public SupplyChainSaveState[] supplyChain;
             public FuelPriceRegionState[] fuelPrices;
             public TollSaveState tolls;
+            public LedgerSaveData ledger;
             public RestAreaSaveState restArea;
             public bool hasPlayerTransform;
             public Vector3 playerPosition;
@@ -99,6 +101,7 @@ namespace UltimateTruckEmpire.Save
                     supplyChain = SupplyChainManager.Instance?.CaptureState(),
                     fuelPrices = FuelPriceManager.Instance?.CaptureState(),
                     tolls = TollPlazaManager.Instance?.CaptureState(),
+                    ledger = TransactionLedger.Instance?.CaptureState(),
                     restArea = RestAreaManager.Instance?.CaptureState()
                 };
                 string directory = Application.persistentDataPath;
@@ -207,6 +210,7 @@ namespace UltimateTruckEmpire.Save
                 SupplyChainManager.Instance?.RestoreState(data.supplyChain);
                 FuelPriceManager.Instance?.RestoreState(data.fuelPrices);
                 TollPlazaManager.Instance?.RestoreState(data.tolls);
+                TransactionLedger.Instance?.RestoreState(data.ledger);
                 RestAreaManager.Instance?.RestoreState(data.restArea);
             }
             catch (System.Exception ex)
