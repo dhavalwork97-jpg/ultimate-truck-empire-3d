@@ -291,7 +291,8 @@ namespace UltimateTruckEmpire.Company
                 if (int.TryParse(trailer.id?.Replace("TRL-", ""), out int n))
                     nextId = Mathf.Max(nextId, n + 1);
             }
-            EnsureStarterFleet();
+            // Do not auto-grant a starter trailer on load. A player with no owned trailer
+            // is intentionally eligible for the physical warehouse job-trailer fallback.
         }
 
         public bool TrySpawnTemporaryJobTrailer(TruckController truck, UltimateTruckEmpire.Gameplay.TrailerType jobType)
