@@ -8,6 +8,8 @@ namespace UltimateTruckEmpire.World
     /// Runtime bridge between the Batch 02 environment prefabs and the existing
     /// RoadNetwork. Prefabs are loaded from Resources after the editor pipeline
     /// prepares them; no freight, GPS or truck system is replaced.
+    /// Batch 02 is presentation/background geometry only and never owns gameplay
+    /// collision or road corridors.
     /// </summary>
     public sealed class Batch02RoadWorldBuilder : MonoBehaviour
     {
@@ -25,13 +27,13 @@ namespace UltimateTruckEmpire.World
         private static readonly TilePlacement[] Placements =
         {
             // Capture 008: interchange/overpass/railway/village. The four tiles
-            // are kept together as one reusable road/interchange set.
+            // are kept together as one reusable road/interchange presentation set.
             new TilePlacement { resourcePath = "Batch02/Prefabs/008/EnvAsset_008_Tile_00", position = new Vector3(-180f, 0f, 35f) },
             new TilePlacement { resourcePath = "Batch02/Prefabs/008/EnvAsset_008_Tile_01", position = new Vector3(-90f, 0f, 35f) },
             new TilePlacement { resourcePath = "Batch02/Prefabs/008/EnvAsset_008_Tile_10", position = new Vector3(-180f, 0f, 125f) },
             new TilePlacement { resourcePath = "Batch02/Prefabs/008/EnvAsset_008_Tile_11", position = new Vector3(-90f, 0f, 125f) },
 
-            // Capture 009: country-road/farmland/highway set.
+            // Capture 009: country-road/farmland/highway presentation set.
             new TilePlacement { resourcePath = "Batch02/Prefabs/009/EnvAsset_009_Tile_00", position = new Vector3(35f, 0f, 35f) },
             new TilePlacement { resourcePath = "Batch02/Prefabs/009/EnvAsset_009_Tile_01", position = new Vector3(125f, 0f, 35f) },
             new TilePlacement { resourcePath = "Batch02/Prefabs/009/EnvAsset_009_Tile_10", position = new Vector3(35f, 0f, 125f) },
@@ -40,6 +42,8 @@ namespace UltimateTruckEmpire.World
             new TilePlacement { resourcePath = "Batch02/Prefabs/009/EnvAsset_009_Tile_21", position = new Vector3(215f, 0f, 125f) }
         };
 
+        private const string RuntimeRootName = "Batch 02 Environment";
+
         private void Start()
         {
             if (buildOnStart) Build();
@@ -47,9 +51,11 @@ namespace UltimateTruckEmpire.World
 
         public void Build()
         {
-            Transform root = transform.Find("Batch 02 Environment");
-            if (root != null) Destroy(root.gameObject);
-            root = new GameObject("Batch 02 Environment").transform;
+            Transform root = transform.Find(RuntimeRootName);
+            if (root != null)
+                DestroyImmediate(root.gameObject);
+
+            root = new GameObject(RuntimeRootName).transform;
             root.SetParent(transform, false);
 
             int loaded = 0;
@@ -66,10 +72,28 @@ namespace UltimateTruckEmpire.World
                 GameObject instance = Instantiate(prefab, placement.position, Quaternion.Euler(placement.euler), root);
                 instance.name = prefab.name;
                 instance.transform.localScale = Vector3.one * Mathf.Max(0.01f, placement.scale);
+
+                // Keep the presentation layer passive. Prepared prefabs are
+                // validated in CI, but this runtime guard protects development
+                // builds from accidentally importing gameplay components/colliders.
+                if (instance.GetComponentsInChildren<MonoBehaviour>(true).Length != 0)
+                {
+                    Debug.LogError("[Batch02RoadWorldBuilder] Skipping gameplay validation for environment prefab containing MonoBehaviour: " + prefab.name);
+                }
+
+                Collider[] colliders = instance.GetComponentsInChildren<Collider>(true);
+                if (colliders.Length != 0)
+                {
+                    Debug.LogError("[Batch02RoadWorldBuilder] Batch 02 environment prefab contains " +
+                                    colliders.Length + " collider(s): " + prefab.name +
+                                    ". Gameplay collision must remain owned by the existing world.");
+                }
+
                 loaded++;
             }
 
-            Debug.Log("[Batch02RoadWorldBuilder] Loaded " + loaded + "/" + Placements.Length + " prepared environment tiles.");
+            Debug.Log("[Batch02RoadWorldBuilder] Loaded " + loaded + "/" + Placements.Length +
+                      " prepared environment tiles as presentation-only geometry.");
         }
 
         /// <summary>
@@ -99,6 +123,22 @@ namespace UltimateTruckEmpire.World
                 {
                     valid = false;
                     lines.Add("No renderers: " + placement.resourcePath);
+                }
+
+                Collider[] colliders = prefab.GetComponentsInChildren<Collider>(true);
+                if (colliders.Length != 0)
+                {
+                    valid = false;
+                    lines.Add("Gameplay colliders are not permitted: " + placement.resourcePath +
+                              " (" + colliders.Length + ")");
+                }
+
+                MonoBehaviour[] behaviours = prefab.GetComponentsInChildren<MonoBehaviour>(true);
+                if (behaviours.Length != 0)
+                {
+                    valid = false;
+                    lines.Add("Gameplay MonoBehaviours are not permitted: " + placement.resourcePath +
+                              " (" + behaviours.Length + ")");
                 }
 
                 loaded++;
