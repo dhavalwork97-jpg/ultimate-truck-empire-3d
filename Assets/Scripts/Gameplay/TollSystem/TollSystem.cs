@@ -42,7 +42,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
 
         private void Awake()
         {
-            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+            if (Instance != null && Instance != this) { if (Application.isPlaying) Destroy(gameObject); else DestroyImmediate(gameObject); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
