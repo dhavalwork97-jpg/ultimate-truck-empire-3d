@@ -94,8 +94,18 @@ namespace UltimateTruckEmpire.Tests.Editor
                 {
                     for (int j = 0; j < roadColliders.Length; j++)
                     {
+                        bool overlaps = Physics.ComputePenetration(
+                            roadColliders[j],
+                            roadColliders[j].transform.position,
+                            roadColliders[j].transform.rotation,
+                            triggers[i],
+                            triggers[i].transform.position,
+                            triggers[i].transform.rotation,
+                            out _,
+                            out _);
+
                         Assert.IsFalse(
-                            roadColliders[j].bounds.Intersects(triggers[i].bounds),
+                            overlaps,
                             triggers[i].transform.parent.name + " overlaps " + roadColliders[j].gameObject.name);
                     }
                 }
