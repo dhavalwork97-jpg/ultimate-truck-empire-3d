@@ -8,6 +8,7 @@ using UltimateTruckEmpire.Gameplay.RestArea;
 using UltimateTruckEmpire.Truck;
 using System.Collections.Generic;
 using UltimateTruckEmpire.Economy;
+using UltimateTruckEmpire.Freight;
 
 namespace UltimateTruckEmpire.Save
 {
