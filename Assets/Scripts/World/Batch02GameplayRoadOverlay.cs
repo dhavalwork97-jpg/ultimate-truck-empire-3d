@@ -138,9 +138,6 @@ namespace UltimateTruckEmpire.World
             var go = new GameObject(path.id);
             go.transform.SetParent(root, false);
 
-            var filter = go.AddComponent<MeshFilter>();
-            filter.sharedMesh = mesh;
-
             var collider = go.AddComponent<MeshCollider>();
             collider.sharedMesh = mesh;
 
