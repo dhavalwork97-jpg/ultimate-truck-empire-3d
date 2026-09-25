@@ -1,6 +1,8 @@
 using UnityEngine;
 using UltimateTruckEmpire.Gameplay;
 using UltimateTruckEmpire.Truck;
+using UltimateTruckEmpire.Economy;
+using UltimateTruckEmpire.Freight;
 
 namespace UltimateTruckEmpire.World
 {
@@ -33,8 +35,16 @@ namespace UltimateTruckEmpire.World
         private void OnTriggerEnter(Collider other)
         {
             if (triggerType != TriggerType.Pickup) return;
+            if (!IsPlayerTruck(other)) return;
+
+            // Freight jobs use the existing warehouse/depot trigger. No duplicate
+            // trigger infrastructure is created; an accepted freight job is loaded
+            // when the player reaches its origin city.
+            var freight = FreightMarketService.Instance;
+            if (freight != null && freight.TryPickupAt(CityFromLocation(locationId))) return;
+
             var delivery = DeliveryManager.Instance;
-            if (delivery == null || !IsPlayerTruck(other)) return;
+            if (delivery == null) return;
             if (!string.IsNullOrWhiteSpace(locationId) && !string.Equals(locationId, delivery.Pickup, System.StringComparison.OrdinalIgnoreCase)) return;
             delivery.LoadCargo(transform.position);
         }
@@ -42,6 +52,25 @@ namespace UltimateTruckEmpire.World
         private void FixedUpdate()
         {
             if (triggerType != TriggerType.Destination) return;
+            var freight = FreightMarketService.Instance;
+            if (freight != null && playerTruck == null) playerTruck = FindFirstObjectByType<TruckController>();
+
+            if (freight != null && playerTruck != null && zone != null)
+            {
+                var trailer = playerTruck.GetComponent<TrailerController>();
+                Vector3 reference = trailer != null && trailer.DockingPoint != null ? trailer.DockingPoint.position : playerTruck.transform.position;
+                Bounds bounds = zone.bounds;
+                reference.y = bounds.center.y;
+                if (bounds.Contains(reference))
+                {
+                    if (freight.TryDeliverAt(CityFromLocation(locationId), out float payout))
+                    {
+                        TransactionLedger.Instance?.TryRecordIncome(payout, TransactionType.FreightRevenue, "Freight warehouse delivery", freight.ActiveJob?.id ?? locationId);
+                        return;
+                    }
+                }
+            }
+
             var delivery = DeliveryManager.Instance;
             if (delivery == null || !delivery.ContractAccepted || !delivery.CargoLoaded) return;
             if (!string.IsNullOrWhiteSpace(locationId) && !string.Equals(locationId, delivery.Destination, System.StringComparison.OrdinalIgnoreCase)) return;
@@ -49,14 +78,22 @@ namespace UltimateTruckEmpire.World
             if (playerTruck == null) playerTruck = FindFirstObjectByType<TruckController>();
             if (playerTruck == null || zone == null) return;
 
-            var trailer = playerTruck.GetComponent<TrailerController>();
-            Vector3 reference = trailer != null && trailer.DockingPoint != null ? trailer.DockingPoint.position : playerTruck.transform.position;
-            Bounds bounds = zone.bounds;
-            reference.y = bounds.center.y;
-            if (!bounds.Contains(reference)) { delivery.ResetDocking(); return; }
+            var deliveryTrailer = playerTruck.GetComponent<TrailerController>();
+            Vector3 deliveryReference = deliveryTrailer != null && deliveryTrailer.DockingPoint != null ? deliveryTrailer.DockingPoint.position : playerTruck.transform.position;
+            Bounds deliveryBounds = zone.bounds;
+            deliveryReference.y = deliveryBounds.center.y;
+            if (!deliveryBounds.Contains(deliveryReference)) { delivery.ResetDocking(); return; }
 
             Vector3 dockingAxis = dockTransform != null ? dockTransform.forward : transform.forward;
             delivery.TryCompleteDockedDelivery(playerTruck, transform.position, dockingAxis);
+        }
+
+        private static string CityFromLocation(string location)
+        {
+            if (string.IsNullOrWhiteSpace(location)) return string.Empty;
+            if (location.IndexOf("Ahmedabad", System.StringComparison.OrdinalIgnoreCase) >= 0) return "Ahmedabad";
+            if (location.IndexOf("Vadodara", System.StringComparison.OrdinalIgnoreCase) >= 0) return "Vadodara";
+            return location.Trim();
         }
     }
 }
