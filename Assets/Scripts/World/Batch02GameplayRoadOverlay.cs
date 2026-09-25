@@ -5,9 +5,9 @@ using UnityEngine;
 namespace UltimateTruckEmpire.World
 {
     /// <summary>
-    /// Builds clean gameplay road geometry over the Batch 02 presentation tiles.
-    /// The photogrammetry roads remain visual references; this component owns only
-    /// the lightweight drive surface, collision and RoadNetwork corridor registration.
+    /// Builds clean gameplay road collision over the Batch 02 presentation tiles.
+    /// The photogrammetry roads remain visual references; gameplay road ownership
+    /// stays with the existing WorldVisualBuilder/RoadNetwork graph.
     /// </summary>
     public sealed class Batch02GameplayRoadOverlay : MonoBehaviour
     {
@@ -19,47 +19,50 @@ namespace UltimateTruckEmpire.World
             public Vector3[] points;
         }
 
+        // These paths deliberately follow the authoritative procedural road graph:
+        // the north highway at Z=70 and the existing link road at X=-90.
+        // Batch 02 supplies presentation geometry; this component only supplies
+        // clean collision where that geometry needs a dependable drive surface.
         private static readonly RoadPath[] Paths =
         {
             new RoadPath
             {
-                id = "Batch02-EastWest-Highway",
-                width = 11f,
+                id = "Batch02-North-Highway-Overlay",
+                width = 14f,
                 points = new[]
                 {
-                    new Vector3(-205f, 0.08f, 80f),
-                    new Vector3(-135f, 0.08f, 80f),
-                    new Vector3(-45f, 0.08f, 80f),
-                    new Vector3(45f, 0.08f, 80f),
-                    new Vector3(135f, 0.08f, 80f),
-                    new Vector3(225f, 0.08f, 80f),
-                    new Vector3(315f, 0.08f, 80f)
+                    new Vector3(-205f, 0.08f, 70f),
+                    new Vector3(-135f, 0.08f, 70f),
+                    new Vector3(-45f, 0.08f, 70f),
+                    new Vector3(45f, 0.08f, 70f),
+                    new Vector3(135f, 0.08f, 70f),
+                    new Vector3(220f, 0.08f, 70f)
                 }
             },
             new RoadPath
             {
-                id = "Batch02-NorthSouth-Connector",
-                width = 9f,
+                id = "Batch02-Link-Road-Overlay",
+                width = 14f,
                 points = new[]
                 {
-                    new Vector3(80f, 0.08f, 15f),
-                    new Vector3(80f, 0.08f, 65f),
-                    new Vector3(80f, 0.08f, 80f),
-                    new Vector3(80f, 0.08f, 125f),
-                    new Vector3(80f, 0.08f, 155f)
+                    new Vector3(-90f, 0.08f, -88f),
+                    new Vector3(-90f, 0.08f, -30f),
+                    new Vector3(-90f, 0.08f, 35f),
+                    new Vector3(-90f, 0.08f, 70f),
+                    new Vector3(-90f, 0.08f, 105f),
+                    new Vector3(-90f, 0.08f, 135f)
                 }
             }
         };
 
         [SerializeField] private bool buildOnStart = true;
+        private bool built;
 
         private void Start()
         {
             if (buildOnStart)
                 Build();
         }
-
-        private bool built;
 
         public void Build()
         {
@@ -77,7 +80,8 @@ namespace UltimateTruckEmpire.World
             root = new GameObject("Batch 02 Gameplay Roads").transform;
             root.SetParent(transform, false);
 
-            int corridorCount = 0;
+            int segmentCount = 0;
+            int registeredCount = 0;
 
             foreach (RoadPath path in Paths)
             {
@@ -85,17 +89,18 @@ namespace UltimateTruckEmpire.World
                     continue;
 
                 BuildRoad(path, root);
-                RegisterCorridors(path);
-                corridorCount += Mathf.Max(0, path.points.Length - 1);
+                segmentCount += Mathf.Max(0, path.points.Length - 1);
+                registeredCount += RegisterMissingCorridors(path);
             }
 
             built = true;
             Debug.Log("[Batch02GameplayRoadOverlay] Built " + Paths.Length +
-                      " invisible gameplay road overlays and registered " + corridorCount +
-                      " RoadNetwork corridors. Batch 02 environment remains presentation-only.");
+                      " collision-only road overlays across " + segmentCount +
+                      " segments; registered " + registeredCount +
+                      " previously-missing RoadNetwork corridors.");
         }
 
-        private GameObject BuildRoad(RoadPath path, Transform root)
+        private static GameObject BuildRoad(RoadPath path, Transform root)
         {
             var vertices = new List<Vector3>();
             var triangles = new List<int>();
@@ -126,10 +131,7 @@ namespace UltimateTruckEmpire.World
                 triangles.Add(start + 3);
             }
 
-            var mesh = new Mesh
-            {
-                name = path.id + " Mesh"
-            };
+            var mesh = new Mesh { name = path.id + " Mesh" };
             mesh.SetVertices(vertices);
             mesh.SetTriangles(triangles, 0);
             mesh.RecalculateNormals();
@@ -140,41 +142,63 @@ namespace UltimateTruckEmpire.World
 
             var collider = go.AddComponent<MeshCollider>();
             collider.sharedMesh = mesh;
-
             return go;
         }
 
-        private static void RegisterCorridors(RoadPath path)
+        private static int RegisterMissingCorridors(RoadPath path)
         {
+            int registered = 0;
+
             for (int i = 0; i < path.points.Length - 1; i++)
             {
                 Vector3 a = path.points[i];
                 Vector3 b = path.points[i + 1];
                 Vector3 delta = b - a;
                 bool alongX = Mathf.Abs(delta.x) >= Mathf.Abs(delta.z);
+                float fixedCoordinate = alongX ? (a.z + b.z) * 0.5f : (a.x + b.x) * 0.5f;
+                float min = alongX ? Mathf.Min(a.x, b.x) : Mathf.Min(a.z, b.z);
+                float max = alongX ? Mathf.Max(a.x, b.x) : Mathf.Max(a.z, b.z);
 
-                if (alongX)
-                {
-                    RoadNetwork.RegisterCorridor(
-                        path.id + "-" + i,
-                        true,
-                        (a.z + b.z) * 0.5f,
-                        Mathf.Min(a.x, b.x),
-                        Mathf.Max(a.x, b.x),
-                        path.width);
-                }
-                else
-                {
-                    RoadNetwork.RegisterCorridor(
-                        path.id + "-" + i,
-                        false,
-                        (a.x + b.x) * 0.5f,
-                        Mathf.Min(a.z, b.z),
-                        Mathf.Max(a.z, b.z),
-                        path.width);
-                }
+                if (HasEquivalentCorridor(alongX, fixedCoordinate, min, max, path.width))
+                    continue;
+
+                RoadNetwork.RegisterCorridor(
+                    path.id + "-" + i,
+                    alongX,
+                    fixedCoordinate,
+                    min,
+                    max,
+                    path.width);
+                registered++;
             }
+
+            return registered;
         }
 
+        private static bool HasEquivalentCorridor(
+            bool alongX,
+            float fixedCoordinate,
+            float min,
+            float max,
+            float width)
+        {
+            const float tolerance = 0.05f;
+
+            for (int i = 0; i < RoadNetwork.Corridors.Count; i++)
+            {
+                RoadNetwork.RoadCorridor corridor = RoadNetwork.Corridors[i];
+                if (corridor.AlongX != alongX)
+                    continue;
+                if (Mathf.Abs(corridor.FixedCoordinate - fixedCoordinate) > tolerance)
+                    continue;
+                if (Mathf.Abs(corridor.Min - min) > tolerance || Mathf.Abs(corridor.Max - max) > tolerance)
+                    continue;
+                if (Mathf.Abs(corridor.Width - width) > tolerance)
+                    continue;
+                return true;
+            }
+
+            return false;
+        }
     }
 }
