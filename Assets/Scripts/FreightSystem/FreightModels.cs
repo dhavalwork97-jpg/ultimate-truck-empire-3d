@@ -17,6 +17,12 @@ namespace UltimateTruckEmpire.Freight
     }
 
     [Serializable]
+    public sealed class FreightSaveState
+    {
+        public FreightJob activeJob;
+    }
+
+    [Serializable]
     public sealed class FreightJob
     {
         public string id;
