@@ -191,7 +191,7 @@ namespace UltimateTruckEmpire.World
                     continue;
                 if (Mathf.Abs(corridor.FixedCoordinate - fixedCoordinate) > tolerance)
                     continue;
-                if (Mathf.Abs(corridor.Min - min) > tolerance || Mathf.Abs(corridor.Max - max) > tolerance)
+                if (corridor.Min > min + tolerance || corridor.Max < max - tolerance)
                     continue;
                 if (Mathf.Abs(corridor.Width - width) > tolerance)
                     continue;

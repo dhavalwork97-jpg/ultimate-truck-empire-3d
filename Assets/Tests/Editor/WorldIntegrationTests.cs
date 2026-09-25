@@ -85,18 +85,31 @@ namespace UltimateTruckEmpire.Tests.Editor
                 UltimateTruckEmpire.World.FreightWorldBuilder.BuildZones(freightRoot.transform);
 
                 var roadColliders = overlayGo.GetComponentsInChildren<MeshCollider>();
-                var triggers = freightRoot.GetComponentsInChildren<BoxCollider>();
+                var deliveryTriggers = freightRoot.GetComponentsInChildren<UltimateTruckEmpire.World.DeliveryTrigger>();
 
                 Assert.That(roadColliders.Length, Is.GreaterThan(0));
-                Assert.That(triggers.Length, Is.EqualTo(UltimateTruckEmpire.World.FreightWorldMap.Cities.Count * 2));
+                Assert.That(deliveryTriggers.Length, Is.EqualTo(UltimateTruckEmpire.World.FreightWorldMap.Cities.Count * 2));
 
-                for (int i = 0; i < triggers.Length; i++)
+                for (int i = 0; i < deliveryTriggers.Length; i++)
                 {
+                    var trigger = deliveryTriggers[i].GetComponent<BoxCollider>();
+                    Assert.That(trigger, Is.Not.Null);
+
                     for (int j = 0; j < roadColliders.Length; j++)
                     {
+                        bool overlaps = Physics.ComputePenetration(
+                            roadColliders[j],
+                            roadColliders[j].transform.position,
+                            roadColliders[j].transform.rotation,
+                            trigger,
+                            trigger.transform.position,
+                            trigger.transform.rotation,
+                            out _,
+                            out _);
+
                         Assert.IsFalse(
-                            roadColliders[j].bounds.Intersects(triggers[i].bounds),
-                            triggers[i].transform.parent.name + " overlaps " + roadColliders[j].gameObject.name);
+                            overlaps,
+                            trigger.transform.parent.name + " overlaps " + roadColliders[j].gameObject.name);
                     }
                 }
             }

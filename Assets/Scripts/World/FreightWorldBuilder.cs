@@ -55,7 +55,12 @@ namespace UltimateTruckEmpire.World
             pad.transform.SetParent(zone.transform, false);
             pad.transform.localPosition = new Vector3(0f, -0.92f, 0f);
             pad.transform.localScale = new Vector3(18f, 0.12f, 10f);
-            Object.Destroy(pad.GetComponent<Collider>());
+            var padCollider = pad.GetComponent<Collider>();
+            if (padCollider != null)
+            {
+                if (Application.isPlaying) Object.Destroy(padCollider);
+                else Object.DestroyImmediate(padCollider);
+            }
             var renderer = pad.GetComponent<MeshRenderer>();
             if (renderer != null)
                 renderer.sharedMaterial = TruckMaterialLibrary.MakeLens(
@@ -69,7 +74,7 @@ namespace UltimateTruckEmpire.World
                 pickup ? 0f : 180f,
                 7f, 2f, 3f,
                 pickup ? WorldSurface.SignBlue : WorldSurface.SignGreen,
-                city.ToUpperInvariant() + (pickup ? "\nFREIGHT PICKUP" : "\nFREIGHT DELIVERY"));
+                city.ToUpperInvariant() + "\nFREIGHT " + (pickup ? "PICKUP" : "DELIVERY"));
         }
     }
 }
