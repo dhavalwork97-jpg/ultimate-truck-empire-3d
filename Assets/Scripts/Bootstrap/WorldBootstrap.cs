@@ -64,7 +64,8 @@ namespace UltimateTruckEmpire.Bootstrap
             if (FleetManager.Instance.Trucks.Count == 0)
                 FleetManager.Instance.BuyTruck("UTE Hauler 300", 180000f, 30f);
             FleetManager.Instance.EnsureActiveTruck();
-            TrailerFleetManager.Instance.EnsureStarterFleet();
+            // Do not auto-own a starter trailer. Freight jobs provide a physical,
+            // non-owned trailer at the pickup warehouse when the player has none.
             EnsureEventSystem();
         }
 
@@ -171,13 +172,6 @@ namespace UltimateTruckEmpire.Bootstrap
             visual.transform.localScale = new Vector3(2.8f, 2.3f, 3);
             Object.Destroy(visual.GetComponent<Collider>());
 
-            var trailer = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            trailer.name = "Dry Van Trailer";
-            trailer.transform.SetParent(truck.transform);
-            trailer.transform.localPosition = new Vector3(0, 1.35f, -2.35f);
-            trailer.transform.localScale = new Vector3(2.75f, 2.8f, 4.2f);
-            Object.Destroy(trailer.GetComponent<Collider>());
-
             // There are two TrailerType enums in the project: the gameplay contract
             // catalog type and the physical truck trailer type. This bootstrap creates
             // a physical dry-van trailer, so explicitly select the truck namespace.
@@ -197,8 +191,6 @@ namespace UltimateTruckEmpire.Bootstrap
             var activeFleetTruck = FleetManager.Instance?.EnsureActiveTruck();
             if (activeFleetTruck != null)
             {
-                if (TrailerFleetManager.Instance.GetAssigned(activeFleetTruck.id) == null)
-                    TrailerFleetManager.Instance.BindPlayerTrailer(activeFleetTruck.id, UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider);
                 TrailerFleetManager.Instance.ApplyToPlayerTruck(controller);
             }
 
