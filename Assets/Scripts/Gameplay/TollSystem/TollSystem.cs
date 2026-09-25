@@ -198,7 +198,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             sign.transform.SetParent(root.transform, false);
             sign.transform.localPosition = new Vector3(0f, 4.2f, 8f);
             sign.transform.localScale = new Vector3(10f, 2.2f, .25f);
-            UnityEngine.Object.Destroy(sign.GetComponent<Collider>());
+            UnityEngine.Object.DestroyImmediate(sign.GetComponent<Collider>());
             CreateGate(root.transform, "FastTag Gate", new Vector3(0f,0f,0f), TollPaymentMethod.FastTag);
             return root;
         }
@@ -222,7 +222,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
         private static void CreateGate(Transform root, string name, Vector3 pos, TollPaymentMethod method)
         {
             var go = new GameObject(name); go.transform.SetParent(root,false); go.transform.localPosition=pos;
-            var post=GameObject.CreatePrimitive(PrimitiveType.Cube); post.transform.SetParent(go.transform,false); post.transform.localScale=new Vector3(.3f,3.2f,.3f); post.transform.localPosition=new Vector3(-3f,1.6f,0f); UnityEngine.Object.Destroy(post.GetComponent<Collider>());
+            var post=GameObject.CreatePrimitive(PrimitiveType.Cube); post.transform.SetParent(go.transform,false); post.transform.localScale=new Vector3(.3f,3.2f,.3f); post.transform.localPosition=new Vector3(-3f,1.6f,0f); UnityEngine.Object.DestroyImmediate(post.GetComponent<Collider>());
             var trigger=go.AddComponent<BoxCollider>(); trigger.isTrigger=true; trigger.size=new Vector3(4f,4f,16f);
             go.AddComponent<TollGateTrigger>().Configure("TOLL_AHM_VAD_01",method);
         }
