@@ -57,7 +57,7 @@ namespace UltimateTruckEmpire.World
                     return;
                 }
 
-                if (freight.TryPickupAt(CityFromLocation(locationId)))
+                if (freight.TryPickupAt(CityFromLocation(locationId), trailer.Type))
                 {
                     trailer.Load(freight.ActiveJob != null ? freight.ActiveJob.weightTons : 0f);
                     return;
