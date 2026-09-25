@@ -204,7 +204,6 @@ namespace UltimateTruckEmpire.UI
             return $"{job.cargoId.Replace("_", " ")}  |  {job.originCity} → {job.destinationCity}" +
                    $"\n{job.distanceKm:0} km  |  {job.weightTons:0.0} t  |  {job.trailerClass}  |  ₹{job.reward:0}";
         }
-        }
 
         private Text AddText(Transform parent, string value, int size, TextAnchor anchor)
         {
