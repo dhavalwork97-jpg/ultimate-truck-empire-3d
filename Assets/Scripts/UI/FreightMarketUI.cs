@@ -77,7 +77,7 @@ namespace UltimateTruckEmpire.UI
             Button close = AddButton(root.transform, "CLOSE", () => SetVisible(false));
             Place(close.GetComponent<RectTransform>(), new Vector2(.86f, .92f), new Vector2(.96f, .99f));
 
-            Button refresh = AddButton(root.transform, "REFRESH OFFERS", RefreshOffers);\n            acceptButton = AddButton(root.transform, "ACCEPT SELECTED FREIGHT", AcceptSelected);\n            acceptButton.gameObject.SetActive(false);
+            Button refresh = AddButton(root.transform, "REFRESH OFFERS", RefreshOffers);\n            acceptButton = AddButton(root.transform, "ACCEPT SELECTED FREIGHT", AcceptSelected);\n            Place(acceptButton.GetComponent<RectTransform>(), new Vector2(.28f, .08f), new Vector2(.52f, .14f));\n            acceptButton.gameObject.SetActive(false);
             Place(refresh.GetComponent<RectTransform>(), new Vector2(.04f, .84f), new Vector2(.25f, .90f));
 
             details = AddText(root.transform, "Select a freight offer to inspect it.", 15, TextAnchor.UpperLeft);
