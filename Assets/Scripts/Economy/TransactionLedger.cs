@@ -66,6 +66,11 @@ namespace UltimateTruckEmpire.Economy
             if (amount > 0f) RecordInternal(amount, type, description, referenceId, true);
         }
 
+        public void RecordExpenseWithoutWallet(float amount, TransactionType type, string description, string referenceId = "")
+        {
+            if (amount > 0f) RecordInternal(amount, type, description, referenceId, false);
+        }
+
         private void RecordInternal(float amount, TransactionType type, string description, string referenceId, bool income)
         {
             var record = new TransactionRecord
