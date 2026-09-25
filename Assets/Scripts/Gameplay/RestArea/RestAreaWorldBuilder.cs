@@ -65,6 +65,5 @@ namespace UltimateTruckEmpire.Gameplay.RestArea
             trigger.size = new Vector3(22f, 3f, 8f);
             station.AddComponent<UltimateTruckEmpire.Economy.FuelStationEconomy>().Configure("Ahmedabad");
         }
-        }
     }
 }
