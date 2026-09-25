@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UltimateTruckEmpire.Economy;
 
 namespace UltimateTruckEmpire.Company
 {
@@ -97,6 +98,8 @@ namespace UltimateTruckEmpire.Company
             };
 
             trucks.Add(truck);
+            TransactionLedger.Instance?.RecordIncomeWithoutWallet(0f, TransactionType.OtherExpense, "");
+            if (TransactionLedger.Instance != null) TransactionLedger.Instance.RecordIncomeWithoutWallet(truck.purchasePrice, TransactionType.OtherExpense, "Truck purchase", truck.id);
             FinanceManager.Instance?.RecordCapitalExpense(truck.purchasePrice);
             if (ActiveTruck == null) ActiveTruck = truck;
             return truck;
@@ -176,7 +179,8 @@ namespace UltimateTruckEmpire.Company
             if (!game.TrySpendMoney(cost)) return false;
 
             truck.fuel += litres;
-            FinanceManager.Instance?.RecordFuelExpense(cost);
+            if (TransactionLedger.Instance != null) TransactionLedger.Instance.TryRecordExpense(cost, TransactionType.FuelPurchase, "Truck refuel", truck.id);
+            else FinanceManager.Instance?.RecordFuelExpense(cost);
             return true;
         }
 
@@ -194,7 +198,8 @@ namespace UltimateTruckEmpire.Company
             if (!game.TrySpendMoney(cost)) return false;
 
             truck.condition = target;
-            FinanceManager.Instance?.RecordMaintenance(cost);
+            if (TransactionLedger.Instance != null) TransactionLedger.Instance.TryRecordExpense(cost, TransactionType.Repair, "Truck repair", truck.id);
+            else FinanceManager.Instance?.RecordMaintenance(cost);
             return true;
         }
 
@@ -208,7 +213,8 @@ namespace UltimateTruckEmpire.Company
             if (Core.GameManager.Instance == null || !Core.GameManager.Instance.TrySpendMoney(cost)) return false;
 
             truck.engineUpgradeLevel++;
-            FinanceManager.Instance?.RecordCapitalExpense(cost);
+            if (TransactionLedger.Instance != null) TransactionLedger.Instance.TryRecordExpense(cost, TransactionType.Upgrade, "Truck upgrade", truck.id);
+            else FinanceManager.Instance?.RecordCapitalExpense(cost);
             truck.enginePower += 35f;
             truck.maxSpeedKph += 2f;
             return true;
