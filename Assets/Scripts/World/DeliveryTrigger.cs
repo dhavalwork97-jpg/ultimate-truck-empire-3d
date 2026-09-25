@@ -35,56 +35,72 @@ namespace UltimateTruckEmpire.World
 
         private void OnTriggerEnter(Collider other)
         {
-            if (triggerType != TriggerType.Pickup) return;
-            if (!IsPlayerTruck(other)) return;
+            if (triggerType != TriggerType.Pickup || !IsPlayerTruck(other)) return;
+            ProcessFreightPickup(other.transform.root.GetComponent<TruckController>());
+        }
 
-            // Freight jobs use the existing warehouse/depot trigger. No duplicate
-            // trigger infrastructure is created; an accepted freight job is loaded
-            // when the player reaches its origin city.
+        private void OnTriggerStay(Collider other)
+        {
+            if (triggerType != TriggerType.Pickup || !IsPlayerTruck(other)) return;
+            ProcessFreightPickup(other.transform.root.GetComponent<TruckController>());
+        }
+
+        private void ProcessFreightPickup(TruckController playerTruck)
+        {
             var freight = FreightMarketService.Instance;
-            if (freight != null && freight.ActiveJob != null)
+            if (freight == null || freight.ActiveJob == null || playerTruck == null) return;
+
+            var job = freight.ActiveJob;
+            if (!job.accepted || job.cargoLoaded) return;
+            if (!string.Equals(job.originCity, CityFromLocation(locationId), System.StringComparison.OrdinalIgnoreCase)) return;
+
+            var fleet = TrailerFleetManager.Instance;
+            var activeFleetTruck = FleetManager.Instance?.ActiveTruck;
+            if (fleet == null || activeFleetTruck == null) return;
+
+            var trailer = playerTruck.GetComponent<TrailerController>();
+            var attachment = playerTruck.GetComponent<TrailerPhysicsAttachment>();
+            bool physicallyAttached = attachment != null && attachment.IsAttached && trailer != null;
+            bool hasOwnedTrailer = fleet.GetAssigned(activeFleetTruck.id) != null;
+
+            if (!physicallyAttached)
             {
-                var trailer = other.transform.root.GetComponent<TrailerController>();
-                var playerTruck = other.transform.root.GetComponent<TruckController>();
-                var fleet = TrailerFleetManager.Instance;
-                var activeFleetTruck = FleetManager.Instance?.ActiveTruck;
-                bool hasOwnedTrailer = playerTruck != null && activeFleetTruck != null && fleet != null &&
-                                       fleet.GetAssigned(activeFleetTruck.id) != null;
-
-                if (!hasOwnedTrailer && playerTruck != null && activeFleetTruck != null && fleet != null)
+                // If the player owns a trailer but it is not attached, do not silently
+                // replace it. They must attach the correct owned trailer first.
+                if (hasOwnedTrailer)
                 {
-                    if (!fleet.TrySpawnTemporaryJobTrailer(playerTruck, trailerTypeFromJob(freight.ActiveJob.trailerClass)))
-                    {
-                        Debug.LogWarning($"Freight pickup could not provide a temporary {freight.ActiveJob.trailerClass} trailer.");
-                        return;
-                    }
-                    trailer = playerTruck.GetComponent<TrailerController>();
-                }
-
-                if (trailer == null)
-                {
-                    Debug.LogWarning("Freight pickup requires a compatible trailer.");
+                    Debug.Log("Freight pickup waiting for the player's assigned trailer to be attached.");
                     return;
                 }
 
-                if (!FreightRouteService.TryGetLogisticsTrailerClass(trailer.Type, out LogisticsTrailerClass actualClass) ||
-                    !FreightRouteService.TrailerCompatible(freight.ActiveJob.trailerClass, actualClass))
+                // No owned trailer: provide the job trailer physically in the warehouse
+                // yard. It remains parked until the player backs into the kingpin zone.
+                Vector3 spawnPosition = transform.position + transform.right * 8f + transform.forward * 1f;
+                spawnPosition.y = transform.position.y;
+                if (!fleet.TrySpawnTemporaryJobTrailerAtWarehouse(
+                        job.id,
+                        playerTruck,
+                        trailerTypeFromJob(job.trailerClass),
+                        spawnPosition,
+                        transform.rotation))
                 {
-                    Debug.LogWarning($"Freight pickup rejected: job requires {freight.ActiveJob.trailerClass}, trailer is {trailer.Type}.");
-                    return;
+                    Debug.LogWarning($"Freight pickup could not provide a temporary {job.trailerClass} trailer at {locationId}.");
                 }
-
-                if (freight.TryPickupAt(CityFromLocation(locationId), trailer.Type))
-                {
-                    trailer.Load(freight.ActiveJob != null ? freight.ActiveJob.weightTons : 0f);
-                    return;
-                }
+                return;
             }
 
-            var delivery = DeliveryManager.Instance;
-            if (delivery == null) return;
-            if (!string.IsNullOrWhiteSpace(locationId) && !string.Equals(locationId, delivery.Pickup, System.StringComparison.OrdinalIgnoreCase)) return;
-            delivery.LoadCargo(transform.position);
+            if (!FreightRouteService.TryGetLogisticsTrailerClass(trailer.Type, out LogisticsTrailerClass actualClass) ||
+                !FreightRouteService.TrailerCompatible(job.trailerClass, actualClass))
+            {
+                Debug.LogWarning($"Freight pickup rejected: job requires {job.trailerClass}, trailer is {trailer.Type}.");
+                return;
+            }
+
+            if (freight.TryPickupAt(CityFromLocation(locationId), trailer.Type))
+            {
+                trailer.Load(job.weightTons);
+                return;
+            }
         }
 
         private void FixedUpdate()
