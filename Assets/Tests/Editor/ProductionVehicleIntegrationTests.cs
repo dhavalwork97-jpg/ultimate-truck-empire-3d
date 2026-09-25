@@ -64,8 +64,10 @@ namespace UltimateTruckEmpire.Tests.Editor
             }
 
             Assert.IsTrue(hasSolidCollider, "Production trailer has no solid collider: " + id);
-            Assert.IsNotNull(prefab.transform.Find("Kingpin"));
-            Assert.IsNotNull(prefab.transform.Find("CargoSocket"));
+            Assert.IsNotNull(definition.kingpinSocket, "Missing Kingpin socket reference: " + id);
+            Assert.IsNotNull(definition.cargoSocket, "Missing CargoSocket reference: " + id);
+            Assert.IsNotNull(FindChild(prefab.transform, "Kingpin"), "Missing Kingpin transform: " + id);
+            Assert.IsNotNull(FindChild(prefab.transform, "CargoSocket"), "Missing CargoSocket transform: " + id);
         }
 
         [Test]
@@ -80,6 +82,21 @@ namespace UltimateTruckEmpire.Tests.Editor
             Assert.IsNotNull(trailerAttribution);
             StringAssert.Contains("CC BY 4.0", trailerAudit.text);
             StringAssert.Contains("CC BY 4.0", trailerAttribution.text);
+        }
+
+        private static Transform FindChild(Transform root, string name)
+        {
+            if (root == null) return null;
+            if (string.Equals(root.name, name, System.StringComparison.Ordinal))
+                return root;
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                var result = FindChild(root.GetChild(i), name);
+                if (result != null) return result;
+            }
+
+            return null;
         }
     }
 }
