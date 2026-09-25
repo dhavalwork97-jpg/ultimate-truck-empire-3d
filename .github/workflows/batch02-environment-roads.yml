@@ -1,4 +1,4 @@
-name: Batch 02 Environment Road Validation
+name: Batch 02 Environment Validation
 
 on:
   workflow_dispatch:
@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   prepare-and-validate:
-    name: Generate and validate Batch 02 road prefabs
+    name: Generate and validate Batch 02 environment prefabs
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -39,7 +39,7 @@ jobs:
       - name: Pre-pull Unity GameCI image
         run: docker pull unityci/editor:ubuntu-6000.0.65f1-base-3
 
-      - name: Generate prefabs and validate road surfaces
+      - name: Generate prefabs and validate environment surfaces
         uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -71,6 +71,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Assets/Environment/Batch02/Resources/Batch02 Assets/Environment/Batch02/Materials
-          git commit -m "chore: generate Batch 02 drivable environment prefabs [skip ci]"
+          git commit -m "chore: generate Batch 02 environment prefabs [skip ci]"
           TARGET_REF="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
           git push origin "HEAD:refs/heads/${TARGET_REF}"
