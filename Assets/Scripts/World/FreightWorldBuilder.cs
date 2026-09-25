@@ -17,11 +17,13 @@ namespace UltimateTruckEmpire.World
                 if (string.Equals(city.name, "Ahmedabad", System.StringComparison.OrdinalIgnoreCase))
                 {
                     CreateZone(new Vector3(-55f, 0f, 16f), "Ahmedabad", DeliveryTrigger.TriggerType.Pickup, parent, true);
+                    CreateZone(new Vector3(-55f, 0f, -16f), "Ahmedabad", DeliveryTrigger.TriggerType.Destination, parent, false);
                     continue;
                 }
 
                 if (string.Equals(city.name, "Vadodara", System.StringComparison.OrdinalIgnoreCase))
                 {
+                    CreateZone(new Vector3(55f, 0f, 28f), "Vadodara", DeliveryTrigger.TriggerType.Pickup, parent, true);
                     CreateZone(new Vector3(55f, 0f, 16f), "Vadodara", DeliveryTrigger.TriggerType.Destination, parent, false);
                     continue;
                 }
