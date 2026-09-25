@@ -54,7 +54,7 @@ namespace UltimateTruckEmpire.Truck
         {
             if (couplingTrigger == null || other == null) return;
             var truck = other.transform.root.GetComponent<TruckController>();
-            if (truck == null || FleetManager.Instance == null) return;
+            if (truck == null || TrailerFleetManager.Instance == null) return;
 
             var body = truck.GetComponent<Rigidbody>();
             if (body != null && body.linearVelocity.magnitude > 1.5f) return;
@@ -74,7 +74,7 @@ namespace UltimateTruckEmpire.Truck
             Vector3 trailerForward = transform.forward;
             if (Vector3.Dot(truckForward, trailerForward) < 0.72f) return;
 
-            if (FleetManager.Instance.TryAttachParkedTemporaryJobTrailer(truck, gameObject, definition, skin))
+            if (TrailerFleetManager.Instance.TryAttachParkedTemporaryJobTrailer(truck, gameObject, definition, skin))
             {
                 RemoveCouplingTrigger();
                 Destroy(this);
