@@ -221,9 +221,19 @@ namespace UltimateTruckEmpire.EnvironmentAssets
                 }
             }
 
-            if (prefab.GetComponentsInChildren<MonoBehaviour>(true).Length > 0)
+            foreach (var behaviour in prefab.GetComponentsInChildren<MonoBehaviour>(true))
             {
-                Debug.LogError("[EnvironmentBatch02] Environment prefab contains gameplay MonoBehaviour(s): " + prefab.name);
+                if (!(behaviour is UltimateTruckEmpire.World.Batch02DriveableSurface))
+                {
+                    Debug.LogError("[EnvironmentBatch02] Environment prefab contains unexpected MonoBehaviour: " +
+                                   behaviour.GetType().FullName + " on " + prefab.name);
+                    valid = false;
+                }
+            }
+
+            if (prefab.GetComponentsInChildren<UltimateTruckEmpire.World.Batch02DriveableSurface>(true).Length == 0)
+            {
+                Debug.LogError("[EnvironmentBatch02] Prefab has no Batch02DriveableSurface: " + prefab.name);
                 valid = false;
             }
 
@@ -234,6 +244,33 @@ namespace UltimateTruckEmpire.EnvironmentAssets
         {
             foreach (var collider in root.GetComponentsInChildren<Collider>(true))
                 UnityEngine.Object.DestroyImmediate(collider, true);
+        }
+
+        private static void AddDriveableSurfaceColliders(GameObject root)
+        {
+            int surfaceCount = 0;
+
+            foreach (var meshFilter in root.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (meshFilter.sharedMesh == null)
+                    continue;
+
+                var meshObject = meshFilter.gameObject;
+                var meshCollider = meshObject.GetComponent<MeshCollider>();
+                if (meshCollider == null)
+                    meshCollider = meshObject.AddComponent<MeshCollider>();
+
+                meshCollider.sharedMesh = meshFilter.sharedMesh;
+                meshCollider.convex = false;
+
+                if (meshObject.GetComponent<UltimateTruckEmpire.World.Batch02DriveableSurface>() == null)
+                    meshObject.AddComponent<UltimateTruckEmpire.World.Batch02DriveableSurface>();
+
+                surfaceCount++;
+            }
+
+            if (surfaceCount == 0)
+                throw new InvalidOperationException("[EnvironmentBatch02] No mesh surfaces found for driveable collision generation: " + root.name);
         }
 
         private static void MarkStatic(GameObject root)
