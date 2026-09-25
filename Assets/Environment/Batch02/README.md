@@ -21,10 +21,14 @@ The supplied raw photogrammetry meshes are large monolithic OBJs. For repository
 
 The tile files are derived from the two supplied ZIPs; they were not present in the original ZIPs.
 
+## Attribution
+
+See [ATTRIBUTION.md](./ATTRIBUTION.md) for the required Creative Commons Attribution 4.0 credits for both Metazeon source works.
+
 ## World usage
 
 The assets are reusable regional/background environment tiles, not replacements for the procedural freight world. They should be placed only in visually appropriate open/background areas and kept clear of existing freight triggers and drivable road ownership.
 
 ## Validation status
 
-Binary source tiles have been prepared locally from the supplied ZIPs. They are not yet present in the GitHub repository because the available GitHub integration does not provide a binary/LFS upload operation. Unity import, prefab generation, compilation, and CI therefore remain pending until the binary assets are uploaded through a suitable Git/LFS path.
+Binary source tiles are now present in the feature branch. Unity import, prefab generation, compilation, tests, and CI remain pending target-project validation.
