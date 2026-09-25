@@ -52,7 +52,6 @@ namespace UltimateTruckEmpire.World
         };
 
         [SerializeField] private bool buildOnStart = true;
-        [SerializeField] private float roadThickness = 0.18f;
 
         private void Start()
         {
@@ -60,16 +59,24 @@ namespace UltimateTruckEmpire.World
                 Build();
         }
 
+        private bool built;
+
         public void Build()
         {
+            if (built)
+                return;
+
             Transform root = transform.Find("Batch 02 Gameplay Roads");
             if (root != null)
-                DestroyImmediate(root.gameObject);
+            {
+                Debug.LogWarning("[Batch02GameplayRoadOverlay] Gameplay road overlay already exists; leaving it intact.");
+                built = true;
+                return;
+            }
 
             root = new GameObject("Batch 02 Gameplay Roads").transform;
             root.SetParent(transform, false);
 
-            Material roadMaterial = CreateRoadMaterial();
             int corridorCount = 0;
 
             foreach (RoadPath path in Paths)
@@ -77,17 +84,18 @@ namespace UltimateTruckEmpire.World
                 if (path.points == null || path.points.Length < 2)
                     continue;
 
-                GameObject road = BuildRoad(path, root, roadMaterial);
+                BuildRoad(path, root);
                 RegisterCorridors(path);
                 corridorCount += Mathf.Max(0, path.points.Length - 1);
             }
 
+            built = true;
             Debug.Log("[Batch02GameplayRoadOverlay] Built " + Paths.Length +
-                      " clean gameplay road paths and registered " + corridorCount +
+                      " invisible gameplay road overlays and registered " + corridorCount +
                       " RoadNetwork corridors. Batch 02 environment remains presentation-only.");
         }
 
-        private GameObject BuildRoad(RoadPath path, Transform root, Material material)
+        private GameObject BuildRoad(RoadPath path, Transform root)
         {
             var vertices = new List<Vector3>();
             var triangles = new List<int>();
@@ -133,9 +141,6 @@ namespace UltimateTruckEmpire.World
             var filter = go.AddComponent<MeshFilter>();
             filter.sharedMesh = mesh;
 
-            var renderer = go.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = material;
-
             var collider = go.AddComponent<MeshCollider>();
             collider.sharedMesh = mesh;
 
@@ -174,16 +179,5 @@ namespace UltimateTruckEmpire.World
             }
         }
 
-        private static Material CreateRoadMaterial()
-        {
-            Shader shader = Shader.Find("Standard");
-            var material = new Material(shader)
-            {
-                name = "Batch02 Gameplay Road"
-            };
-            material.SetFloat("_Glossiness", 0.15f);
-            material.SetColor("_Color", new Color(0.075f, 0.075f, 0.075f, 1f));
-            return material;
-        }
     }
 }
