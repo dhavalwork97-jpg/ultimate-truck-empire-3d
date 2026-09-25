@@ -33,7 +33,7 @@ namespace UltimateTruckEmpire.Freight
         public void Refresh(string currentCity = "Ahmedabad")
         {
             offers.Clear();
-            string[] cities = { "Ahmedabad", "Vadodara", "Surat", "Mumbai", "Pune", "Jaipur", "Delhi", "Indore", "Rajkot", "Kandla" };
+            string[] cities = FreightWorldMap.CityNames();
             string[] cargo = { "General Freight", "Steel", "Cement", "Food", "Fuel", "Machinery" };
             for (int i = 0; i < Mathf.Max(1, offersPerRefresh); i++)
             {
@@ -44,7 +44,7 @@ namespace UltimateTruckEmpire.Freight
                     : cities[(i * 3 + 2) % cities.Length];
                 if (string.Equals(destination, currentCity, StringComparison.OrdinalIgnoreCase))
                     destination = cities[(i * 3 + 3) % cities.Length];
-                float distance = Mathf.Clamp(120f + i * 145f, 100f, maxDistanceKm);
+                float distance = Mathf.Clamp(FreightWorldMap.RouteDistanceKm(currentCity, destination), 100f, maxDistanceKm);
                 LogisticsTrailerClass trailer = (LogisticsTrailerClass)(i % 5 + 1);
                 float weight = 8f + i * 2.5f;
                 int difficulty = Mathf.Clamp(1 + i / 2, 1, 5);
