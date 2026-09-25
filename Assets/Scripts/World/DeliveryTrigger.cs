@@ -3,6 +3,7 @@ using UltimateTruckEmpire.Gameplay;
 using UltimateTruckEmpire.Truck;
 using UltimateTruckEmpire.Economy;
 using UltimateTruckEmpire.Freight;
+using UltimateTruckEmpire.Company;
 
 namespace UltimateTruckEmpire.World
 {
@@ -44,6 +45,22 @@ namespace UltimateTruckEmpire.World
             if (freight != null && freight.ActiveJob != null)
             {
                 var trailer = other.transform.root.GetComponent<TrailerController>();
+                var playerTruck = other.transform.root.GetComponent<TruckController>();
+                var fleet = TrailerFleetManager.Instance;
+                var activeFleetTruck = FleetManager.Instance?.ActiveTruck;
+                bool hasOwnedTrailer = playerTruck != null && activeFleetTruck != null && fleet != null &&
+                                       fleet.GetAssigned(activeFleetTruck.id) != null;
+
+                if (!hasOwnedTrailer && playerTruck != null && activeFleetTruck != null && fleet != null)
+                {
+                    if (!fleet.TrySpawnTemporaryJobTrailer(playerTruck, trailerTypeFromJob(freight.ActiveJob.trailerClass)))
+                    {
+                        Debug.LogWarning($"Freight pickup could not provide a temporary {freight.ActiveJob.trailerClass} trailer.");
+                        return;
+                    }
+                    trailer = playerTruck.GetComponent<TrailerController>();
+                }
+
                 if (trailer == null)
                 {
                     Debug.LogWarning("Freight pickup requires a compatible trailer.");
@@ -97,10 +114,13 @@ namespace UltimateTruckEmpire.World
                     }
 
                     string jobId = freight.ActiveJob.id;
+                    bool temporaryTrailer = cargoTrailer.IsTemporaryJobTrailer;
                     if (freight.TryDeliverAt(CityFromLocation(locationId), out float payout))
                     {
                         cargoTrailer.Unload();
                         TransactionLedger.Instance?.TryRecordIncome(payout, TransactionType.FreightRevenue, "Freight warehouse delivery", jobId);
+                        if (temporaryTrailer)
+                            TrailerFleetManager.Instance?.RemoveTemporaryJobTrailer(playerTruck);
                         return;
                     }
                 }
@@ -121,6 +141,19 @@ namespace UltimateTruckEmpire.World
 
             Vector3 dockingAxis = dockTransform != null ? dockTransform.forward : transform.forward;
             delivery.TryCompleteDockedDelivery(playerTruck, transform.position, dockingAxis);
+        }
+
+        private static UltimateTruckEmpire.Gameplay.TrailerType trailerTypeFromJob(LogisticsTrailerClass trailerClass)
+        {
+            switch (trailerClass)
+            {
+                case LogisticsTrailerClass.Tanker: return UltimateTruckEmpire.Gameplay.TrailerType.Tanker;
+                case LogisticsTrailerClass.Refrigerated: return UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated;
+                case LogisticsTrailerClass.Flatbed: return UltimateTruckEmpire.Gameplay.TrailerType.Flatbed;
+                case LogisticsTrailerClass.Oversized: return UltimateTruckEmpire.Gameplay.TrailerType.Lowboy;
+                case LogisticsTrailerClass.DryVan:
+                default: return UltimateTruckEmpire.Gameplay.TrailerType.Box;
+            }
         }
 
         private static string CityFromLocation(string location)
