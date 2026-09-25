@@ -13,7 +13,7 @@ namespace UltimateTruckEmpire.EnvironmentAssets
     public sealed class EnvironmentAssetBatch02ImportPipeline : AssetPostprocessor
     {
         private const string SourceRoot = "Assets/Environment/Batch02/Source/";
-        private const string PrefabRoot = "Assets/Environment/Batch02/Prefabs/";
+        private const string PrefabRoot = "Assets/Environment/Batch02/Resources/Batch02/Prefabs/";
         private const string MaterialRoot = "Assets/Environment/Batch02/Materials/";
 
         private static bool IsBatch02Model(string path)
@@ -101,6 +101,10 @@ namespace UltimateTruckEmpire.EnvironmentAssets
             {
                 PrepareAllEnvironmentTiles();
                 bool valid = Validate();
+                string geometryReport;
+                bool geometryValid = UltimateTruckEmpire.World.Batch02RoadWorldBuilder.ValidatePreparedGeometry(out geometryReport);
+                Debug.Log(geometryReport);
+                valid &= geometryValid;
                 Debug.Log("[EnvironmentBatch02] Headless validation: " + (valid ? "PASS" : "FAIL"));
                 EditorApplication.Exit(valid ? 0 : 1);
             }
@@ -124,7 +128,6 @@ namespace UltimateTruckEmpire.EnvironmentAssets
             {
                 instance.name = fileName;
                 MarkStatic(instance);
-                RemoveUnwantedColliders(instance);
                 ApplySharedMaterial(instance, capture);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
@@ -220,19 +223,16 @@ namespace UltimateTruckEmpire.EnvironmentAssets
                 }
             }
 
-            if (prefab.GetComponentsInChildren<MonoBehaviour>(true).Length > 0)
+            // Batch 02 is presentation/background geometry only. It deliberately
+            // contains no gameplay MonoBehaviours, colliders, or driveable markers.
+            foreach (var behaviour in prefab.GetComponentsInChildren<MonoBehaviour>(true))
             {
-                Debug.LogError("[EnvironmentBatch02] Environment prefab contains gameplay MonoBehaviour(s): " + prefab.name);
+                Debug.LogError("[EnvironmentBatch02] Environment prefab contains unexpected MonoBehaviour: " +
+                               behaviour.GetType().FullName + " on " + prefab.name);
                 valid = false;
             }
 
             return valid;
-        }
-
-        private static void RemoveUnwantedColliders(GameObject root)
-        {
-            foreach (var collider in root.GetComponentsInChildren<Collider>(true))
-                UnityEngine.Object.DestroyImmediate(collider, true);
         }
 
         private static void MarkStatic(GameObject root)

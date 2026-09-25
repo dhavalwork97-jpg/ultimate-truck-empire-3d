@@ -50,6 +50,8 @@ namespace UltimateTruckEmpire.Bootstrap
             if (TollPlazaManager.Instance == null) new GameObject("Toll Plaza Manager").AddComponent<TollPlazaManager>();
             if (RestAreaManager.Instance == null) new GameObject("Rest Area Manager").AddComponent<RestAreaManager>();
             WorldImmersionFX.Ensure();
+            if (FindFirstObjectByType<Batch02RoadWorldBuilder>() == null)
+                new GameObject("Batch 02 Road Environment").AddComponent<Batch02RoadWorldBuilder>();
             if (AutoDispatcher.Instance == null) new GameObject("AutoDispatcher").AddComponent<AutoDispatcher>();
 
             var saveManager = FindFirstObjectByType<SaveManager>();
