@@ -52,6 +52,8 @@ namespace UltimateTruckEmpire.Bootstrap
             WorldImmersionFX.Ensure();
             if (FindFirstObjectByType<Batch02RoadWorldBuilder>() == null)
                 new GameObject("Batch 02 Road Environment").AddComponent<Batch02RoadWorldBuilder>();
+            if (FindFirstObjectByType<Batch02GameplayRoadOverlay>() == null)
+                new GameObject("Batch 02 Gameplay Roads").AddComponent<Batch02GameplayRoadOverlay>();
             if (AutoDispatcher.Instance == null) new GameObject("AutoDispatcher").AddComponent<AutoDispatcher>();
 
             var saveManager = FindFirstObjectByType<SaveManager>();
