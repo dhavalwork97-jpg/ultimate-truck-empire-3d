@@ -64,6 +64,23 @@ namespace UltimateTruckEmpire.Tests.Editor
             try { var market = go.AddComponent<FreightMarketService>(); market.Refresh("Ahmedabad"); Assert.That(market.Offers[0].destinationCity, Is.EqualTo("Vadodara")); }
             finally { Object.DestroyImmediate(go); }
         }
+        [Test] public void MarketPickupRejectsIncompatiblePhysicalTrailer()
+        {
+            var go = new GameObject("FreightMarketTest");
+            try
+            {
+                var market = go.AddComponent<FreightMarketService>();
+                market.Refresh("Ahmedabad");
+                var job = market.Offers[0];
+                Assert.IsTrue(market.Accept(job.id));
+                Assert.That(job.trailerClass, Is.EqualTo(LogisticsTrailerClass.DryVan));
+                Assert.IsFalse(market.TryPickupAt("Ahmedabad", UltimateTruckEmpire.Truck.TrailerType.Tanker));
+                Assert.IsFalse(market.ActiveJob.cargoLoaded);
+                Assert.IsTrue(market.TryPickupAt("Ahmedabad", UltimateTruckEmpire.Truck.TrailerType.DryVan));
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
         [Test] public void MarketPickupAndDeliveryRespectWarehouseCities()
         {
             var go = new GameObject("FreightMarketTest");
