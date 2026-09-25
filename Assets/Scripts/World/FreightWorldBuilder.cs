@@ -1,4 +1,5 @@
 using UnityEngine;
+using UltimateTruckEmpire.Visuals;
 using UltimateTruckEmpire.Gameplay;
 
 namespace UltimateTruckEmpire.World
