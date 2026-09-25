@@ -21,7 +21,9 @@ namespace UltimateTruckEmpire.World
         }
 
         [SerializeField] private bool buildOnStart = true;
-        [SerializeField] private bool registerExistingRoadNetwork = true;
+        // Keep uncalibrated Batch 02 corridor coordinates out of the authoritative
+        // RoadNetwork until they are physically aligned against the source geometry.
+        [SerializeField] private bool registerExistingRoadNetwork = false;
 
         private static readonly TilePlacement[] Placements =
         {
