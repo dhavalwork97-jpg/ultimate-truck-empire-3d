@@ -2,6 +2,8 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UltimateTruckEmpire.TrailerSystem;
+using UltimateTruckEmpire.Company;
+using UltimateTruckEmpire.Gameplay;
 
 namespace UltimateTruckEmpire.Tests
 {
@@ -36,5 +38,33 @@ namespace UltimateTruckEmpire.Tests
             StringAssert.Contains("TRAILER_DRY_VAN_001", report.text);
             StringAssert.Contains("TRAILER_FUEL_TANKER_001", report.text);
         }
+        [Test]
+        public void ProductionCatalogContainsLaunchTrailers()
+        {
+            var catalog = Resources.Load<TrailerCatalogAsset>("TrailerSystem/Catalog/TrailerCatalog");
+            Assert.IsNotNull(catalog, "Missing runtime trailer catalog.");
+            Assert.IsNotNull(catalog.trailers);
+            Assert.IsTrue(catalog.trailers.Exists(t => t != null && t.id == "TRAILER_DRY_VAN_001"));
+            Assert.IsTrue(catalog.trailers.Exists(t => t != null && t.id == "TRAILER_FUEL_TANKER_001"));
+        }
+
+        [Test]
+        public void TemporaryDryVanFallbackResolvesProductionTrailer()
+        {
+            var definition = TrailerFleetManager.FindTemporaryJobTrailerDefinition(TrailerType.Box);
+            Assert.IsNotNull(definition, "No production trailer available for temporary dry-van freight.");
+            Assert.AreEqual(TrailerCategory.DryVan, definition.category);
+            Assert.IsNotNull(definition.prefab);
+        }
+
+        [Test]
+        public void TemporaryTankerFallbackResolvesProductionTrailer()
+        {
+            var definition = TrailerFleetManager.FindTemporaryJobTrailerDefinition(TrailerType.Tanker);
+            Assert.IsNotNull(definition, "No production trailer available for temporary tanker freight.");
+            Assert.AreEqual(TrailerCategory.FuelTanker, definition.category);
+            Assert.IsNotNull(definition.prefab);
+        }
+
     }
 }

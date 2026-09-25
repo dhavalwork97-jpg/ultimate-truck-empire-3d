@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UltimateTruckEmpire.Economy;
 
 namespace UltimateTruckEmpire.Company
 {
@@ -97,7 +98,8 @@ namespace UltimateTruckEmpire.Company
             };
 
             trucks.Add(truck);
-            FinanceManager.Instance?.RecordCapitalExpense(truck.purchasePrice);
+            if (TransactionLedger.Instance != null) TransactionLedger.Instance.RecordExpenseWithoutWallet(truck.purchasePrice, TransactionType.OtherExpense, "Truck purchase", truck.id);
+            else FinanceManager.Instance?.RecordCapitalExpense(truck.purchasePrice);
             if (ActiveTruck == null) ActiveTruck = truck;
             return truck;
         }
@@ -176,7 +178,8 @@ namespace UltimateTruckEmpire.Company
             if (!game.TrySpendMoney(cost)) return false;
 
             truck.fuel += litres;
-            FinanceManager.Instance?.RecordFuelExpense(cost);
+            if (TransactionLedger.Instance != null) TransactionLedger.Instance.RecordExpenseWithoutWallet(cost, TransactionType.FuelPurchase, "Truck refuel", truck.id);
+            else FinanceManager.Instance?.RecordFuelExpense(cost);
             return true;
         }
 
@@ -194,7 +197,8 @@ namespace UltimateTruckEmpire.Company
             if (!game.TrySpendMoney(cost)) return false;
 
             truck.condition = target;
-            FinanceManager.Instance?.RecordMaintenance(cost);
+            if (TransactionLedger.Instance != null) TransactionLedger.Instance.RecordExpenseWithoutWallet(cost, TransactionType.Repair, "Truck repair", truck.id);
+            else FinanceManager.Instance?.RecordMaintenance(cost);
             return true;
         }
 
@@ -208,7 +212,8 @@ namespace UltimateTruckEmpire.Company
             if (Core.GameManager.Instance == null || !Core.GameManager.Instance.TrySpendMoney(cost)) return false;
 
             truck.engineUpgradeLevel++;
-            FinanceManager.Instance?.RecordCapitalExpense(cost);
+            if (TransactionLedger.Instance != null) TransactionLedger.Instance.RecordExpenseWithoutWallet(cost, TransactionType.Upgrade, "Truck upgrade", truck.id);
+            else FinanceManager.Instance?.RecordCapitalExpense(cost);
             truck.enginePower += 35f;
             truck.maxSpeedKph += 2f;
             return true;
@@ -225,7 +230,8 @@ namespace UltimateTruckEmpire.Company
 
             float oldCapacity = truck.fuelCapacity;
             truck.fuelUpgradeLevel++;
-            FinanceManager.Instance?.RecordCapitalExpense(cost);
+            if (TransactionLedger.Instance != null) TransactionLedger.Instance.RecordExpenseWithoutWallet(cost, TransactionType.Upgrade, "Fuel tank upgrade", truck.id);
+            else FinanceManager.Instance?.RecordCapitalExpense(cost);
             truck.fuelCapacity += 100f;
             truck.fuel += truck.fuelCapacity - oldCapacity;
             return true;
@@ -241,7 +247,8 @@ namespace UltimateTruckEmpire.Company
             if (Core.GameManager.Instance == null || !Core.GameManager.Instance.TrySpendMoney(cost)) return false;
 
             truck.reliabilityUpgradeLevel++;
-            FinanceManager.Instance?.RecordCapitalExpense(cost);
+            if (TransactionLedger.Instance != null) TransactionLedger.Instance.RecordExpenseWithoutWallet(cost, TransactionType.Upgrade, "Reliability upgrade", truck.id);
+            else FinanceManager.Instance?.RecordCapitalExpense(cost);
             truck.reliability = Mathf.Min(100f, truck.reliability + 7.5f);
             truck.maintenanceCostPerKm = Mathf.Max(1f, truck.maintenanceCostPerKm - 0.75f);
             return true;
@@ -272,7 +279,8 @@ namespace UltimateTruckEmpire.Company
             float cost = litres * GetFuelPricePerLitre(region);
             if (!game.TrySpendMoney(cost)) return false;
             truck.fuel += litres;
-            FinanceManager.Instance?.RecordFuelExpense(cost);
+            if (TransactionLedger.Instance != null) TransactionLedger.Instance.RecordExpenseWithoutWallet(cost, TransactionType.FuelPurchase, "Regional truck refuel", truck.id);
+            else FinanceManager.Instance?.RecordFuelExpense(cost);
             return true;
         }
 

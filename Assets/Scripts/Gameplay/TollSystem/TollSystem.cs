@@ -6,26 +6,27 @@ using UltimateTruckEmpire.Company;
 using UltimateTruckEmpire.Gameplay;
 using UltimateTruckEmpire.Truck;
 using UltimateTruckEmpire.Save;
+using UltimateTruckEmpire.Economy;
 
 namespace UltimateTruckEmpire.Gameplay.Toll
 {
     public enum TollPaymentMethod { FastTag, Cash }
     public enum TollTruckClass { Light, Medium, Heavy, ExtraHeavy }
     public enum TollCrossingState { Detected, PaymentPending, Paid, Failed }
-    
+
     [Serializable] public sealed class TollPlazaDefinition
     {
         public string id, displayName, roadId, region = "Ahmedabad";
-        public float distanceKm = 14f, baseToll = 220f;
+        public float distanceKm = 14f, baseToll = 220f, routeFactor = 1f;
         public bool active = true, fastTag = true, cash = true;
     }
-    
+
     [Serializable] public sealed class TollPaymentRecord
     {
         public string transactionId, plazaId, vehicleKey, method;
         public float amount, time;
     }
-    
+
     [Serializable] public sealed class TollSaveState
     {
         public float fastTagBalance = 1500f;
@@ -38,11 +39,14 @@ namespace UltimateTruckEmpire.Gameplay.Toll
         public static FastTagWallet Instance { get; private set; }
         [SerializeField] private float balance = 1500f;
         public float Balance => balance;
+
         private void Awake()
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-            Instance = this; DontDestroyOnLoad(gameObject);
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
+
         public bool TryPay(float amount) { if (amount <= 0f) return true; if (balance < amount) return false; balance -= amount; return true; }
         public void Add(float amount) { balance += Mathf.Max(0f, amount); }
         public void Restore(float value) { balance = Mathf.Max(0f, value); }
@@ -50,20 +54,23 @@ namespace UltimateTruckEmpire.Gameplay.Toll
 
     public static class TollPricingEngine
     {
-        public static float Calculate(float baseToll, TruckController truck, UltimateTruckEmpire.Truck.TrailerType trailer, TollPaymentMethod method)
+        public static float Calculate(float baseToll, TruckController truck, UltimateTruckEmpire.Truck.TrailerType trailer, TollPaymentMethod method, float routeFactor = 1f)
         {
-            float truckFactor = 1f;
-            if (truck != null)
-            {
-                var fleet = FleetManager.Instance?.ActiveTruck;
-                float tons = fleet != null ? fleet.capacityTons : 18f;
-                truckFactor = tons >= 30f ? 1.45f : tons >= 20f ? 1.15f : tons <= 10f ? .65f : 1f;
-            }
-            float trailerFactor = trailer == UltimateTruckEmpire.Truck.TrailerType.Tanker ? 1.25f :
-                                  trailer == UltimateTruckEmpire.Truck.TrailerType.Flatbed ? 1.15f :
-                                  trailer == UltimateTruckEmpire.Truck.TrailerType.Refrigerated ? 1.20f : 1.10f;
-            float paymentFactor = method == TollPaymentMethod.FastTag ? .90f : 1f;
-            return Mathf.Max(10f, Mathf.Round(baseToll * truckFactor * trailerFactor * paymentFactor));
+            var trailerClass = LogisticsTrailerClass.None;
+            if (!UltimateTruckEmpire.Freight.FreightRouteService.TryGetLogisticsTrailerClass(trailer, out trailerClass))
+                trailerClass = LogisticsTrailerClass.None;
+
+            int axleCount = truck != null ? truck.GetAxleCount() : 2;
+            var trailerController = truck != null ? truck.GetComponent<TrailerController>() : null;
+            if (trailerController != null && trailerController.Definition != null)
+                axleCount += Mathf.Max(1, trailerController.Definition.axleCount);
+            else if (trailerController != null)
+                axleCount += 3;
+
+            float fee = TollEconomyService.CalculateFee(baseToll, trailerClass, axleCount, routeFactor);
+            if (method == TollPaymentMethod.FastTag)
+                fee = Mathf.Round(fee * 0.90f);
+            return Mathf.Max(10f, fee);
         }
     }
 
@@ -87,7 +94,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             Instance = this; DontDestroyOnLoad(gameObject);
             Plazas = new[]
             {
-                new TollPlazaDefinition { id="TOLL_AHM_VAD_01", displayName="Ahmedabad Expressway", roadId="ROAD_AHM_VAD", region="Ahmedabad", distanceKm=14f, baseToll=220f }
+                new TollPlazaDefinition { id="TOLL_AHM_VAD_01", displayName="Ahmedabad Expressway", roadId="ROAD_AHM_VAD", region="Ahmedabad", distanceKm=14f, baseToll=220f, routeFactor=1f }
             };
             if (FastTagWallet.Instance == null) new GameObject("FASTag Wallet").AddComponent<FastTagWallet>();
         }
@@ -111,17 +118,22 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             if (p == null || !p.active || truck == null) return false;
             string key = plazaId + "|" + (string.IsNullOrEmpty(vehicleKey) ? truck.GetInstanceID().ToString() : vehicleKey);
             if (paidKeys.ContainsKey(key)) return true;
+
             var trailer = truck.GetComponent<TrailerController>();
-            float amount = TollPricingEngine.Calculate(p.baseToll, truck, trailer != null ? trailer.Type : default(UltimateTruckEmpire.Truck.TrailerType), method);
+            float amount = TollPricingEngine.Calculate(p.baseToll, truck,
+                trailer != null ? trailer.Type : default(UltimateTruckEmpire.Truck.TrailerType), method, p.routeFactor);
+
             bool charged = method == TollPaymentMethod.FastTag ? FastTagWallet.Instance != null && FastTagWallet.Instance.TryPay(amount)
                                                                : GameManager.Instance != null && GameManager.Instance.TrySpendMoney(amount);
             if (!charged) { PaymentFailed?.Invoke(method == TollPaymentMethod.FastTag ? "FASTag balance too low" : "Insufficient cash"); return false; }
+
             paidKeys[key] = Time.time;
             string tx = "TOLL-" + nextTransaction.ToString("00000"); nextTransaction++;
             var record = new TollPaymentRecord { transactionId=tx, plazaId=p.id, vehicleKey=key, method=method.ToString(), amount=amount, time=Time.time };
             payments.Add(record);
             if (payments.Count > 50) payments.RemoveAt(0);
-            FinanceManager.Instance?.RecordTollExpense(amount);
+            if (TransactionLedger.Instance != null) TransactionLedger.Instance.RecordExpenseWithoutWallet(amount, TransactionType.TollFee, "Toll fee", p.id);
+            else FinanceManager.Instance?.RecordTollExpense(amount);
             PaymentSucceeded?.Invoke(record);
             SaveManager.Instance?.Save();
             return true;
@@ -131,12 +143,19 @@ namespace UltimateTruckEmpire.Gameplay.Toll
         {
             return new TollSaveState { fastTagBalance = FastTagWallet.Instance?.Balance ?? 0f, nextTransaction = nextTransaction, payments = payments.ToArray() };
         }
+
         public void RestoreState(TollSaveState state)
         {
             if (state == null) return;
             nextTransaction = Mathf.Max(1, state.nextTransaction);
             payments.Clear(); paidKeys.Clear();
-            if (state.payments != null) foreach (var p in state.payments) if (p != null) { payments.Add(p); if (!string.IsNullOrEmpty(p.vehicleKey)) paidKeys[p.vehicleKey] = p.time; }
+            if (state.payments != null)
+                foreach (var p in state.payments)
+                    if (p != null)
+                    {
+                        payments.Add(p);
+                        if (!string.IsNullOrEmpty(p.vehicleKey)) paidKeys[p.vehicleKey] = p.time;
+                    }
             if (FastTagWallet.Instance != null) FastTagWallet.Instance.Restore(state.fastTagBalance);
         }
     }
@@ -147,7 +166,9 @@ namespace UltimateTruckEmpire.Gameplay.Toll
         [SerializeField] private string plazaId = "TOLL_AHM_VAD_01";
         [SerializeField] private TollPaymentMethod method = TollPaymentMethod.FastTag;
         private readonly HashSet<int> inside = new HashSet<int>();
+
         public void Configure(string id, TollPaymentMethod paymentMethod) { plazaId=id; method=paymentMethod; }
+
         private void OnTriggerEnter(Collider other)
         {
             var truck = other.GetComponentInParent<TruckController>();
@@ -155,6 +176,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             TollPlazaManager.Instance?.AnnounceApproach(plazaId);
             TollPlazaManager.Instance?.TryPay(plazaId, method, truck, truck.GetInstanceID().ToString());
         }
+
         private void OnTriggerExit(Collider other)
         {
             var truck = other.GetComponentInParent<TruckController>();
@@ -170,7 +192,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             if (parent != null) root.transform.SetParent(parent, false);
             root.transform.position = Vector3.zero;
             CreateRoadDeck(root.transform);
-            
+
             var sign = GameObject.CreatePrimitive(PrimitiveType.Cube);
             sign.name = "TOLL - FASTag";
             sign.transform.SetParent(root.transform, false);
@@ -180,6 +202,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             CreateGate(root.transform, "FastTag Gate", new Vector3(0f,0f,0f), TollPaymentMethod.FastTag);
             return root;
         }
+
         private static void CreateRoadDeck(Transform root)
         {
             var deck = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -187,6 +210,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             deck.transform.localScale = new Vector3(30f,.25f,16f);
             deck.transform.localPosition = new Vector3(0f,-.1f,0f);
         }
+
         private static void CreateLane(Transform root, int lane)
         {
             var island = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -194,6 +218,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             island.transform.localPosition = new Vector3(lane*9f,.15f,0f);
             island.transform.localScale = new Vector3(.22f,.3f,16f);
         }
+
         private static void CreateGate(Transform root, string name, Vector3 pos, TollPaymentMethod method)
         {
             var go = new GameObject(name); go.transform.SetParent(root,false); go.transform.localPosition=pos;

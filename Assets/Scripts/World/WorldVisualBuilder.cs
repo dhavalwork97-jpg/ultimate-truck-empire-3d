@@ -113,6 +113,8 @@ namespace UltimateTruckEmpire.World
             RoadBuilder.BuildNorthSouth("Truck Stop Access", -17f, -RoadHalfWidth, 28f, 12f, access);
             RoadBuilder.BuildNorthSouth("Service Access", -18f, -RoadHalfWidth, -30f, 12f, access);
 
+            BuildRegionalFreightRoads(root);
+
             // Painted turn arrows on the approaches to each site.
             MeshBuilder paint = new MeshBuilder();
             RoadBuilder.AddArrow(paint, new Vector3(-70f, 0f, -3.5f), 0f);
@@ -300,6 +302,12 @@ namespace UltimateTruckEmpire.World
             BuildCityGateway(root, "SURAT", new Vector3(95f, 0f, -88f), BuildingStyle.Warehouse, 6202);
             BuildCityGateway(root, "RAJKOT", new Vector3(-110f, 0f, -88f), BuildingStyle.Warehouse, 6203);
             BuildCityGateway(root, "UDAIPUR", new Vector3(-120f, 0f, 98f), BuildingStyle.Office, 6204);
+            BuildCityGateway(root, "KANDLA", new Vector3(-205f, 0f, -30f), BuildingStyle.Warehouse, 6205);
+            BuildCityGateway(root, "MUMBAI", new Vector3(190f, 0f, -130f), BuildingStyle.Warehouse, 6206);
+            BuildCityGateway(root, "PUNE", new Vector3(250f, 0f, -190f), BuildingStyle.Office, 6207);
+            BuildCityGateway(root, "JAIPUR", new Vector3(-205f, 0f, 150f), BuildingStyle.Office, 6208);
+            BuildCityGateway(root, "DELHI", new Vector3(-60f, 0f, 250f), BuildingStyle.Office, 6209);
+            BuildCityGateway(root, "INDORE", new Vector3(80f, 0f, 150f), BuildingStyle.Warehouse, 6210);
 
             for (int i = 0; i < 10; i++)
             {
@@ -316,6 +324,41 @@ namespace UltimateTruckEmpire.World
                 8f, 2.2f, 3.8f, WorldSurface.SignGreen, "RAJKOT  ->");
             PropBuilder.CreateSign(root, new Vector3(-105f, 0f, 80f), 270f,
                 8f, 2.2f, 3.8f, WorldSurface.SignGreen, "UDAIPUR  ->");
+        }
+
+        private static void BuildRegionalFreightRoads(Transform root)
+        {
+            RoadBuilder.RoadOptions highway = RoadBuilder.RoadOptions.Highway();
+
+            // The master map is intentionally a compact road graph. These
+            // orthogonal corridors keep the procedural world performant while
+            // physically linking every freight city to the launch network.
+            RoadBuilder.BuildNorthSouth("Kandla Connector", -88f, -22f, -205f, 12f, highway);
+            RoadBuilder.BuildEastWest("Kandla Rajkot", -205f, -110f, -30f, 12f, highway);
+            RoadBuilder.BuildNorthSouth("Rajkot Connector", -88f, -30f, -110f, 12f, highway);
+
+            RoadBuilder.BuildNorthSouth("Jaipur Connector", 0f, 150f, -205f, 12f, highway);
+            RoadBuilder.BuildEastWest("Jaipur Ahmedabad", -205f, -55f, 150f, 12f, highway);
+            RoadBuilder.BuildNorthSouth("Delhi Connector", 150f, 250f, -60f, 12f, highway);
+            RoadBuilder.BuildEastWest("Jaipur Delhi", -205f, -60f, 150f, 12f, highway);
+            RoadBuilder.BuildEastWest("Delhi Indore", -60f, 80f, 250f, 12f, highway);
+
+            RoadBuilder.BuildNorthSouth("Indore Connector", 0f, 150f, 80f, 12f, highway);
+            RoadBuilder.BuildEastWest("Ahmedabad Indore", -55f, 80f, 150f, 12f, highway);
+
+            RoadBuilder.BuildNorthSouth("Surat Connector", -88f, -70f, 95f, 12f, highway);
+            RoadBuilder.BuildEastWest("Surat Mumbai", 95f, 190f, -130f, 12f, highway);
+            RoadBuilder.BuildNorthSouth("Mumbai Connector", -130f, -88f, 190f, 12f, highway);
+            RoadBuilder.BuildEastWest("Mumbai Pune", 190f, 250f, -130f, 12f, highway);
+            RoadBuilder.BuildNorthSouth("Pune Connector", -190f, -130f, 250f, 12f, highway);
+
+            RoadNetwork.RegisterCorridor("Kandla Rajkot Freight", true, -30f, -205f, -110f, 12f);
+            RoadNetwork.RegisterCorridor("Jaipur Ahmedabad Freight", true, 150f, -205f, -55f, 12f);
+            RoadNetwork.RegisterCorridor("Jaipur Delhi Freight", true, 150f, -205f, -60f, 12f);
+            RoadNetwork.RegisterCorridor("Delhi Indore Freight", true, 250f, -60f, 80f, 12f);
+            RoadNetwork.RegisterCorridor("Ahmedabad Indore Freight", true, 150f, -55f, 80f, 12f);
+            RoadNetwork.RegisterCorridor("Surat Mumbai Freight", true, -130f, 95f, 190f, 12f);
+            RoadNetwork.RegisterCorridor("Mumbai Pune Freight", true, -130f, 190f, 250f, 12f);
         }
 
         private static void BuildCityGateway(Transform root, string city, Vector3 position,

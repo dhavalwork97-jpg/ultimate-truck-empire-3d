@@ -1,4 +1,5 @@
 using UnityEngine;
+using UltimateTruckEmpire.Economy;
 using UltimateTruckEmpire.Core;
 using UltimateTruckEmpire.Company;
 using UltimateTruckEmpire.Save;
@@ -261,6 +262,7 @@ namespace UltimateTruckEmpire.Gameplay
             LastDeliveryBonus = evaluation.payoutAdjustment - cargoDamagePenalty;
             float payment = Mathf.Max(0f, Reward + LastDeliveryBonus);
             FinanceManager.Instance?.RecordDelivery(payment, fuelUsed * (fleet?.GetFuelPricePerLitre() ?? EconomyConfig.FuelPricePerLitre), 0f);
+            TransactionLedger.Instance?.RecordIncomeWithoutWallet(payment, TransactionType.FreightRevenue, "Freight delivery", ContractId);
             CompanyManager.Instance?.AddRevenue(payment); GameManager.Instance?.AddXp(RewardXp + evaluation.bonusXp);
             SupplyChainManager.Instance?.RecordShipment(
                 ActiveOriginIndustryId, ActiveDestinationIndustryId, CargoId, ContractWeightTons);

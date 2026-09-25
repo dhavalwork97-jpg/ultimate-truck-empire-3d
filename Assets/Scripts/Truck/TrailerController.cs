@@ -12,6 +12,7 @@ namespace UltimateTruckEmpire.Truck
         public UltimateTruckEmpire.Gameplay.TrailerType ContractTrailerType { get; private set; } = UltimateTruckEmpire.Gameplay.TrailerType.Curtainsider;
         public float CargoWeightTons { get; private set; }
         public bool CargoLoaded { get; private set; }
+        public bool IsTemporaryJobTrailer { get; private set; }
         public TrailerDefinition Definition { get; private set; }
         public CargoDefinition LoadedCargo { get; private set; }
         public Transform DockingPoint { get; private set; }
@@ -27,6 +28,8 @@ namespace UltimateTruckEmpire.Truck
                     { socket = child; break; }
             DockingPoint = socket != null ? socket : trailerRoot;
         }
+
+        public void MarkTemporaryJobTrailer(bool value) => IsTemporaryJobTrailer = value;
 
         public void Configure(TrailerType type, float weightTons = 0f)
         {

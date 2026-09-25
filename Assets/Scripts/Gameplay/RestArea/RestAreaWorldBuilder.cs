@@ -34,6 +34,36 @@ namespace UltimateTruckEmpire.Gameplay.RestArea
             }
 
             zone.Configure("rest-ahmedabad", "Ahmedabad Highway Rest Area", bays, 8f, 35f);
+            BuildFuelStation(root.transform);
+        }
+
+        private static void BuildFuelStation(Transform root)
+        {
+            var station = new GameObject("Fuel Station - Ahmedabad");
+            station.transform.SetParent(root, false);
+            station.transform.localPosition = new Vector3(0f, 0f, 11f);
+
+            var canopy = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            canopy.name = "Fuel Canopy";
+            canopy.transform.SetParent(station.transform, false);
+            canopy.transform.localPosition = new Vector3(0f, 3.5f, 0f);
+            canopy.transform.localScale = new Vector3(22f, .35f, 8f);
+            Object.Destroy(canopy.GetComponent<Collider>());
+
+            for (int i = 0; i < 3; i++)
+            {
+                var pump = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                pump.name = "Fuel Pump " + (i + 1);
+                pump.transform.SetParent(station.transform, false);
+                pump.transform.localPosition = new Vector3(-7f + i * 7f, 1.1f, 0f);
+                pump.transform.localScale = new Vector3(1.2f, 2.2f, 1.6f);
+                Object.Destroy(pump.GetComponent<Collider>());
+            }
+
+            var trigger = station.AddComponent<BoxCollider>();
+            trigger.isTrigger = true;
+            trigger.size = new Vector3(22f, 3f, 8f);
+            station.AddComponent<UltimateTruckEmpire.Economy.FuelStationEconomy>().Configure("Ahmedabad");
         }
     }
 }
