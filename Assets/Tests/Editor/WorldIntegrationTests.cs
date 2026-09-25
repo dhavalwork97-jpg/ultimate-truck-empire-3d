@@ -85,7 +85,7 @@ namespace UltimateTruckEmpire.Tests.Editor
                 UltimateTruckEmpire.World.FreightWorldBuilder.BuildZones(freightRoot.transform);
 
                 var roadColliders = overlayGo.GetComponentsInChildren<MeshCollider>();
-                var deliveryTriggers = freightRoot.GetComponentsInChildren<UltimateTruckEmpire.Gameplay.DeliveryTrigger>();
+                var deliveryTriggers = freightRoot.GetComponentsInChildren<UltimateTruckEmpire.World.DeliveryTrigger>();
 
                 Assert.That(roadColliders.Length, Is.GreaterThan(0));
                 Assert.That(deliveryTriggers.Length, Is.EqualTo(UltimateTruckEmpire.World.FreightWorldMap.Cities.Count * 2));
