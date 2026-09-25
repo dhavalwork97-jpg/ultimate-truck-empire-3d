@@ -72,7 +72,6 @@ namespace UltimateTruckEmpire.World
             Debug.Log("[Batch02RoadWorldBuilder] Loaded " + loaded + "/" + Placements.Length + " prepared environment tiles.");
         }
 
-
         /// <summary>
         /// Editor/CI validation for the generated Batch 02 presentation tiles.
         /// Batch 02 remains an environment/background layer; the authoritative
@@ -113,5 +112,5 @@ namespace UltimateTruckEmpire.World
             report = string.Join("\n", lines);
             return valid;
         }
-
-    }\n}\n
+    }
+}
