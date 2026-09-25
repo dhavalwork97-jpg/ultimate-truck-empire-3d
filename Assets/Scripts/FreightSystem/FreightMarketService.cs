@@ -23,6 +23,11 @@ namespace UltimateTruckEmpire.Freight
             DontDestroyOnLoad(gameObject);
         }
 
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+        }
+
         public void Refresh(string currentCity = "Ahmedabad")
         {
             offers.Clear();
