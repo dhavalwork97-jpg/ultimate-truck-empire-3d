@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UltimateTruckEmpire.Economy;
+using UltimateTruckEmpire.Truck;
 
 namespace UltimateTruckEmpire.Freight
 {
@@ -20,6 +21,34 @@ namespace UltimateTruckEmpire.Freight
 
         public static bool TrailerCompatible(LogisticsTrailerClass required, LogisticsTrailerClass actual)
             => required == LogisticsTrailerClass.None || required == actual;
+
+        public static bool TryGetLogisticsTrailerClass(TrailerType physicalType, out LogisticsTrailerClass logisticsClass)
+        {
+            switch (physicalType)
+            {
+                case TrailerType.DryVan:
+                case TrailerType.Container:
+                    logisticsClass = LogisticsTrailerClass.DryVan;
+                    return true;
+                case TrailerType.Tanker:
+                case TrailerType.CementTanker:
+                    logisticsClass = LogisticsTrailerClass.Tanker;
+                    return true;
+                case TrailerType.Refrigerated:
+                    logisticsClass = LogisticsTrailerClass.Refrigerated;
+                    return true;
+                case TrailerType.Flatbed:
+                case TrailerType.HeavyFlatbed:
+                    logisticsClass = LogisticsTrailerClass.Flatbed;
+                    return true;
+                case TrailerType.HeavyHaul:
+                    logisticsClass = LogisticsTrailerClass.Oversized;
+                    return true;
+                default:
+                    logisticsClass = LogisticsTrailerClass.None;
+                    return false;
+            }
+        }
     }
 
     public sealed class FreightCheckpointTracker
