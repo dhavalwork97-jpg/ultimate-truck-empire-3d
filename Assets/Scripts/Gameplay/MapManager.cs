@@ -30,12 +30,8 @@ namespace UltimateTruckEmpire.Gameplay
         private void Build()
         {
             cities.Clear();
-            cities.Add(new CityNode("Ahmedabad", new Vector3(-55,0,0), true, true, true));
-            cities.Add(new CityNode("Gandhinagar", new Vector3(-25,0,70), true, false, true));
-            cities.Add(new CityNode("Vadodara", new Vector3(55,0,0), true, true, true));
-            cities.Add(new CityNode("Surat", new Vector3(95,0,-70), true, false, true));
-            cities.Add(new CityNode("Rajkot", new Vector3(-110,0,-70), true, false, true));
-            cities.Add(new CityNode("Udaipur", new Vector3(-120,0,80), true, false, true));
+            foreach (var city in FreightWorldMap.Cities)
+                cities.Add(new CityNode(city.name, city.worldPosition, city.hasPickup, city.name == "Ahmedabad" || city.name == "Vadodara", true));
         }
 
         public CityNode Find(string city) => cities.Find(c => string.Equals(c.name, city, StringComparison.OrdinalIgnoreCase));
