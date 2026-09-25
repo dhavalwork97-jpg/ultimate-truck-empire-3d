@@ -68,9 +68,18 @@ jobs:
             echo "No generated Unity artifacts to commit."
             exit 0
           fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Assets/Environment/Batch02/Resources/Batch02 Assets/Environment/Batch02/Materials
           git commit -m "chore: generate Batch 02 environment prefabs [skip ci]"
+
           TARGET_REF="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          if [ -z "$TARGET_REF" ]; then
+            echo "Unable to determine target branch for generated artifacts." >&2
+            exit 1
+          fi
+
+          git fetch origin "refs/heads/${TARGET_REF}:refs/remotes/origin/${TARGET_REF}"
+          git rebase "origin/${TARGET_REF}"
           git push origin "HEAD:refs/heads/${TARGET_REF}"
