@@ -6,6 +6,7 @@ using UltimateTruckEmpire.Company;
 using UltimateTruckEmpire.Gameplay;
 using UltimateTruckEmpire.Truck;
 using UltimateTruckEmpire.Save;
+using UltimateTruckEmpire.Economy;
 
 namespace UltimateTruckEmpire.Gameplay.Toll
 {
@@ -121,7 +122,8 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             var record = new TollPaymentRecord { transactionId=tx, plazaId=p.id, vehicleKey=key, method=method.ToString(), amount=amount, time=Time.time };
             payments.Add(record);
             if (payments.Count > 50) payments.RemoveAt(0);
-            FinanceManager.Instance?.RecordTollExpense(amount);
+            if (TransactionLedger.Instance != null) TransactionLedger.Instance.RecordExpenseWithoutWallet(amount, TransactionType.TollFee, "Toll fee", p.id);
+            else FinanceManager.Instance?.RecordTollExpense(amount);
             PaymentSucceeded?.Invoke(record);
             SaveManager.Instance?.Save();
             return true;
