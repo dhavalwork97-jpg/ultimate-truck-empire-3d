@@ -1,1 +1,18 @@
-using UnityEngine;\n#if UNITY_EDITOR\nusing UnityEditor;\n#endif\n\nnamespace UltimateTruckEmpire.EnvironmentAssets\n{\n    public static class EnvironmentAssetBatch02ImportPipeline\n    {\n#if UNITY_EDITOR\n        [MenuItem("Ultimate Truck Empire/Environment/Batch 02/Prepare All Environment Tiles")]\n        public static void PrepareAllEnvironmentTiles()\n        {\n            Debug.Log("[EnvironmentBatch02] Import bridge ready for Batch 02 source tiles.");\n        }\n#endif\n    }\n}\n
+using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+namespace UltimateTruckEmpire.EnvironmentAssets
+{
+    public static class EnvironmentAssetBatch02ImportPipeline
+    {
+#if UNITY_EDITOR
+        [MenuItem("Ultimate Truck Empire/Environment/Batch 02/Prepare All Environment Tiles")]
+        public static void PrepareAllEnvironmentTiles()
+        {
+            Debug.Log("[EnvironmentBatch02] Import bridge ready for Batch 02 source tiles.");
+        }
+#endif
+    }
+}
