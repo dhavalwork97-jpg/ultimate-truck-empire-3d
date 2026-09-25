@@ -110,11 +110,15 @@ namespace UltimateTruckEmpire.UI
         {
             switch (city)
             {
-                case "Gandhinagar": return 1;
                 case "Vadodara": return 2;
                 case "Surat": return 4;
                 case "Rajkot": return 6;
-                case "Udaipur": return 8;
+                case "Indore": return 8;
+                case "Kandla": return 10;
+                case "Jaipur": return 12;
+                case "Mumbai": return 14;
+                case "Pune": return 16;
+                case "Delhi": return 20;
                 default: return 999;
             }
         }
