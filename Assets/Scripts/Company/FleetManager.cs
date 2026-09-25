@@ -98,8 +98,7 @@ namespace UltimateTruckEmpire.Company
             };
 
             trucks.Add(truck);
-            TransactionLedger.Instance?.RecordIncomeWithoutWallet(0f, TransactionType.OtherExpense, "");
-            if (TransactionLedger.Instance != null) TransactionLedger.Instance.RecordIncomeWithoutWallet(truck.purchasePrice, TransactionType.OtherExpense, "Truck purchase", truck.id);
+            TransactionLedger.Instance?.RecordExpenseWithoutWallet(truck.purchasePrice, TransactionType.OtherExpense, "Truck purchase", truck.id);
             FinanceManager.Instance?.RecordCapitalExpense(truck.purchasePrice);
             if (ActiveTruck == null) ActiveTruck = truck;
             return truck;
