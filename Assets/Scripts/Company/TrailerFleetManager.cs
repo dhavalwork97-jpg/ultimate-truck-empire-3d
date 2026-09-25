@@ -294,6 +294,87 @@ namespace UltimateTruckEmpire.Company
             EnsureStarterFleet();
         }
 
+        public bool TrySpawnTemporaryJobTrailer(TruckController truck, UltimateTruckEmpire.Gameplay.TrailerType jobType)
+        {
+            if (truck == null) return false;
+            var definition = FindTemporaryJobTrailerDefinition(jobType);
+            if (definition == null || definition.prefab == null) return false;
+
+            var controller = truck.GetComponent<TrailerController>();
+            if (controller == null) controller = truck.gameObject.AddComponent<TrailerController>();
+            if (!controller.ConfigureDefinition(definition, null, 0f, definition.defaultSkin)) return false;
+            controller.MarkTemporaryJobTrailer(true);
+            ReplaceTrailerVisual(truck.transform, controller, definition, definition.defaultSkin);
+            return controller.PhysicsAttachment != null && controller.PhysicsAttachment.IsAttached;
+        }
+
+        public void RemoveTemporaryJobTrailer(TruckController truck)
+        {
+            if (truck == null) return;
+            var controller = truck.GetComponent<TrailerController>();
+            if (controller == null || !controller.IsTemporaryJobTrailer) return;
+
+            var attachment = controller.PhysicsAttachment;
+            var instance = attachment != null ? attachment.AttachedTrailer : null;
+            attachment?.Detach(false);
+            if (instance != null) UnityEngine.Object.Destroy(instance);
+            controller.MarkTemporaryJobTrailer(false);
+            controller.Unload();
+            controller.Definition = null;
+            UnityEngine.Object.Destroy(controller);
+        }
+
+        public static TrailerDefinition FindTemporaryJobTrailerDefinition(UltimateTruckEmpire.Gameplay.TrailerType jobType)
+        {
+            var catalog = TrailerCatalogRuntime.Catalog;
+            if (catalog == null || catalog.trailers == null) return null;
+
+            TrailerCategory required;
+            switch (jobType)
+            {
+                case UltimateTruckEmpire.Gameplay.TrailerType.Tanker:
+                    required = TrailerCategory.FuelTanker;
+                    break;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Refrigerated:
+                    required = TrailerCategory.Refrigerated;
+                    break;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Flatbed:
+                    required = TrailerCategory.Flatbed;
+                    break;
+                case UltimateTruckEmpire.Gameplay.TrailerType.HeavyFlatbed:
+                    required = TrailerCategory.HeavyFlatbed;
+                    break;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Container:
+                    required = TrailerCategory.ContainerChassis;
+                    break;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Lowboy:
+                    required = TrailerCategory.Lowboy;
+                    break;
+                case UltimateTruckEmpire.Gameplay.TrailerType.GrainHopper:
+                    required = TrailerCategory.GrainHopper;
+                    break;
+                case UltimateTruckEmpire.Gameplay.TrailerType.CementTanker:
+                    required = TrailerCategory.CementTanker;
+                    break;
+                case UltimateTruckEmpire.Gameplay.TrailerType.Dump:
+                    required = TrailerCategory.DumpTrailer;
+                    break;
+                case UltimateTruckEmpire.Gameplay.TrailerType.AgriculturalBulk:
+                    required = TrailerCategory.AgriculturalBulk;
+                    break;
+                default:
+                    required = TrailerCategory.DryVan;
+                    break;
+            }
+
+            for (int i = 0; i < catalog.trailers.Count; i++)
+            {
+                var candidate = catalog.trailers[i];
+                if (candidate != null && candidate.category == required) return candidate;
+            }
+            return null;
+        }
+
         public TrailerController ApplyToPlayerTruck(TruckController truck)
         {
             if (truck == null) return null;
