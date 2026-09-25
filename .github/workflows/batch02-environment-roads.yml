@@ -5,6 +5,14 @@ on:
   push:
     branches:
       - feature/environment-road-integration
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Assets/Environment/Batch02/**'
+      - 'Assets/Scripts/World/Batch02**'
+      - 'Assets/Scripts/Bootstrap/WorldBootstrap.cs'
+      - '.github/workflows/batch02-environment-roads.yml'
 
 permissions:
   contents: write
