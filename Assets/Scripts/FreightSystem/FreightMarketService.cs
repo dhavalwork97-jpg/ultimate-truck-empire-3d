@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UltimateTruckEmpire.Economy;
+using UltimateTruckEmpire.Save;
 
 namespace UltimateTruckEmpire.Freight
 {
@@ -72,6 +73,7 @@ namespace UltimateTruckEmpire.Freight
                 if (!string.Equals(offers[i].id, jobId, StringComparison.OrdinalIgnoreCase)) continue;
                 activeJob = offers[i].Clone();
                 activeJob.accepted = true;
+                SaveManager.Instance?.Save();
                 return true;
             }
             return false;
@@ -81,6 +83,7 @@ namespace UltimateTruckEmpire.Freight
         {
             if (activeJob == null || !activeJob.accepted || activeJob.cargoLoaded) return false;
             activeJob.cargoLoaded = true;
+            SaveManager.Instance?.Save();
             return true;
         }
 
@@ -98,6 +101,7 @@ namespace UltimateTruckEmpire.Freight
             if (activeJob == null || !activeJob.accepted || !activeJob.cargoLoaded) return false;
             payout = activeJob.reward;
             activeJob = null;
+            SaveManager.Instance?.Save();
             return true;
         }
 
@@ -107,6 +111,13 @@ namespace UltimateTruckEmpire.Freight
             if (activeJob == null || !activeJob.accepted || !activeJob.cargoLoaded ||
                 !string.Equals(activeJob.destinationCity, city, StringComparison.OrdinalIgnoreCase)) return false;
             return CompleteDelivery(out payout);
+        }
+
+        public FreightSaveState CaptureState() => new FreightSaveState { activeJob = activeJob?.Clone() };
+
+        public void RestoreState(FreightSaveState state)
+        {
+            activeJob = state?.activeJob?.Clone();
         }
 
         public void ClearActiveJob() => activeJob = null;
