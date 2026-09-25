@@ -47,6 +47,7 @@ namespace UltimateTruckEmpire.Save
             public FuelPriceRegionState[] fuelPrices;
             public TollSaveState tolls;
             public LedgerSaveData ledger;
+            public FreightSaveState freight;
             public RestAreaSaveState restArea;
             public bool hasPlayerTransform;
             public Vector3 playerPosition;
@@ -102,6 +103,7 @@ namespace UltimateTruckEmpire.Save
                     fuelPrices = FuelPriceManager.Instance?.CaptureState(),
                     tolls = TollPlazaManager.Instance?.CaptureState(),
                     ledger = TransactionLedger.Instance?.CaptureState(),
+                    freight = UltimateTruckEmpire.Freight.FreightMarketService.Instance?.CaptureState(),
                     restArea = RestAreaManager.Instance?.CaptureState()
                 };
                 string directory = Application.persistentDataPath;
@@ -211,6 +213,7 @@ namespace UltimateTruckEmpire.Save
                 FuelPriceManager.Instance?.RestoreState(data.fuelPrices);
                 TollPlazaManager.Instance?.RestoreState(data.tolls);
                 TransactionLedger.Instance?.RestoreState(data.ledger);
+                UltimateTruckEmpire.Freight.FreightMarketService.Instance?.RestoreState(data.freight);
                 RestAreaManager.Instance?.RestoreState(data.restArea);
             }
             catch (System.Exception ex)
