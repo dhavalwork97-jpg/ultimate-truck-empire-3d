@@ -16,7 +16,8 @@ namespace UltimateTruckEmpire.UI
         private Transform offersRoot;
         private Text details;
         private Text active;
-        private Button openButton;\n        private Button acceptButton;
+        private Button openButton;
+        private Button acceptButton;
         private Font font;
 
         private void Start()
@@ -54,7 +55,8 @@ namespace UltimateTruckEmpire.UI
             scaler.matchWidthOrHeight = 0.5f;
             gameObject.AddComponent<GraphicRaycaster>();
 
-            openButton = AddButton(transform, "FREIGHT\nMARKET", () => SetVisible(true));
+            openButton = AddButton(transform, "FREIGHT
+MARKET", () => SetVisible(true));
             RectTransform openRect = openButton.GetComponent<RectTransform>();
             openRect.anchorMin = new Vector2(1f, 0.5f);
             openRect.anchorMax = new Vector2(1f, 0.5f);
@@ -77,7 +79,10 @@ namespace UltimateTruckEmpire.UI
             Button close = AddButton(root.transform, "CLOSE", () => SetVisible(false));
             Place(close.GetComponent<RectTransform>(), new Vector2(.86f, .92f), new Vector2(.96f, .99f));
 
-            Button refresh = AddButton(root.transform, "REFRESH OFFERS", RefreshOffers);\n            acceptButton = AddButton(root.transform, "ACCEPT SELECTED FREIGHT", AcceptSelected);\n            Place(acceptButton.GetComponent<RectTransform>(), new Vector2(.28f, .08f), new Vector2(.52f, .14f));\n            acceptButton.gameObject.SetActive(false);
+            Button refresh = AddButton(root.transform, "REFRESH OFFERS", RefreshOffers);
+            acceptButton = AddButton(root.transform, "ACCEPT SELECTED FREIGHT", AcceptSelected);
+            Place(acceptButton.GetComponent<RectTransform>(), new Vector2(.28f, .08f), new Vector2(.52f, .14f));
+            acceptButton.gameObject.SetActive(false);
             Place(refresh.GetComponent<RectTransform>(), new Vector2(.04f, .84f), new Vector2(.25f, .90f));
 
             details = AddText(root.transform, "Select a freight offer to inspect it.", 15, TextAnchor.UpperLeft);
@@ -146,7 +151,8 @@ namespace UltimateTruckEmpire.UI
                       $"{(job.cargoLoaded ? "CARGO LOADED" : "GO TO PICKUP")} | ₹{job.reward:0}";
             }
 
-            if (acceptButton != null) acceptButton.gameObject.SetActive(false);\n            if (offersRoot == null) return;
+            if (acceptButton != null) acceptButton.gameObject.SetActive(false);
+            if (offersRoot == null) return;
             for (int i = offersRoot.childCount - 1; i >= 0; i--)
                 Destroy(offersRoot.GetChild(i).gameObject);
 
@@ -186,9 +192,18 @@ namespace UltimateTruckEmpire.UI
             details.text = s.ToString();
         }
 
-        private void AcceptSelected() { }\n\n        private void AcceptJob(string jobId)\n        {\n            if (FreightMarketService.Instance != null && FreightMarketService.Instance.Accept(jobId))\n                Refresh();\n        }\n\n        private static string FormatJob(FreightJob job)
+        private void AcceptSelected() { }
+
+        private void AcceptJob(string jobId)
         {
-            return $"{job.cargoId.Replace("_", " ")}  |  {job.originCity} → {job.destinationCity}\n" +
+            if (FreightMarketService.Instance != null && FreightMarketService.Instance.Accept(jobId))
+                Refresh();
+        }
+
+        private static string FormatJob(FreightJob job)
+        {
+            return $"{job.cargoId.Replace("_", " ")}  |  {job.originCity} → {job.destinationCity}
+" +
                    $"{job.distanceKm:0} km  |  {job.weightTons:0.0} t  |  {job.trailerClass}  |  ₹{job.reward:0}";
         }
 
