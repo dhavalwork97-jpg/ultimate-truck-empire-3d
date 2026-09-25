@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UltimateTruckEmpire.Economy;
 
 namespace UltimateTruckEmpire.Freight
 {
