@@ -11,6 +11,8 @@ using UltimateTruckEmpire.Save;
 using UltimateTruckEmpire.UI;
 using UltimateTruckEmpire.Gameplay.Toll;
 using UltimateTruckEmpire.Gameplay.RestArea;
+using UltimateTruckEmpire.Economy;
+using UltimateTruckEmpire.Freight;
 
 namespace UltimateTruckEmpire.Bootstrap
 {
@@ -43,6 +45,8 @@ namespace UltimateTruckEmpire.Bootstrap
             if (TruckDealer.Instance == null) new GameObject("Truck Dealer").AddComponent<TruckDealer>();
             if (AutomatedDeliveryManager.Instance == null) new GameObject("AutomatedDeliveryManager").AddComponent<AutomatedDeliveryManager>();
             if (FinanceManager.Instance == null) new GameObject("FinanceManager").AddComponent<FinanceManager>();
+            if (TransactionLedger.Instance == null) new GameObject("Transaction Ledger").AddComponent<TransactionLedger>();
+            if (FreightMarketService.Instance == null) new GameObject("Freight Market Service").AddComponent<FreightMarketService>();
             if (TollPlazaManager.Instance == null) new GameObject("Toll Plaza Manager").AddComponent<TollPlazaManager>();
             if (RestAreaManager.Instance == null) new GameObject("Rest Area Manager").AddComponent<RestAreaManager>();
             WorldImmersionFX.Ensure();
@@ -80,6 +84,7 @@ namespace UltimateTruckEmpire.Bootstrap
             if (FindFirstObjectByType<TruckDealerUI>() == null) new GameObject("Truck Dealership UI").AddComponent<TruckDealerUI>();
             if (FindFirstObjectByType<TrailerDealerUI>() == null) new GameObject("Trailer Dealership UI").AddComponent<TrailerDealerUI>();
             if (FindFirstObjectByType<GarageUI>() == null) new GameObject("Garage UI").AddComponent<GarageUI>();
+            if (FindFirstObjectByType<GarageEconomyController>() == null) new GameObject("Garage Economy").AddComponent<GarageEconomyController>();
             if (FindFirstObjectByType<TrafficSpawner>() == null) new GameObject("Traffic Spawner").AddComponent<TrafficSpawner>();
             if (FindFirstObjectByType<RestAreaUI>() == null) new GameObject("Rest Area UI").AddComponent<RestAreaUI>();
             if (FindFirstObjectByType<MainMenuUI>() == null) new GameObject("Main Menu UI").AddComponent<MainMenuUI>();
