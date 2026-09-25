@@ -128,8 +128,6 @@ namespace UltimateTruckEmpire.EnvironmentAssets
             {
                 instance.name = fileName;
                 MarkStatic(instance);
-                RemoveUnwantedColliders(instance);
-                AddDriveableSurfaceColliders(instance);
                 ApplySharedMaterial(instance, capture);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
@@ -233,12 +231,6 @@ namespace UltimateTruckEmpire.EnvironmentAssets
                                    behaviour.GetType().FullName + " on " + prefab.name);
                     valid = false;
                 }
-            }
-
-            if (prefab.GetComponentsInChildren<UltimateTruckEmpire.World.Batch02DriveableSurface>(true).Length == 0)
-            {
-                Debug.LogError("[EnvironmentBatch02] Prefab has no Batch02DriveableSurface: " + prefab.name);
-                valid = false;
             }
 
             return valid;
