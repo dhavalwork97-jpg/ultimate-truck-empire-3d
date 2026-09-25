@@ -21,9 +21,6 @@ namespace UltimateTruckEmpire.World
         }
 
         [SerializeField] private bool buildOnStart = true;
-        // Keep uncalibrated Batch 02 corridor coordinates out of the authoritative
-        // RoadNetwork until they are physically aligned against the source geometry.
-        [SerializeField] private bool registerExistingRoadNetwork = false;
 
         private static readonly TilePlacement[] Placements =
         {
@@ -72,18 +69,14 @@ namespace UltimateTruckEmpire.World
                 loaded++;
             }
 
-            if (registerExistingRoadNetwork)
-                RegisterBatch02RoadCorridors();
-
             Debug.Log("[Batch02RoadWorldBuilder] Loaded " + loaded + "/" + Placements.Length + " prepared environment tiles.");
         }
 
 
         /// <summary>
-        /// Editor/CI validation for the generated Batch 02 tile bounds. This does not
-        /// assume that a photogrammetry tile is exactly one corridor width; it verifies
-        /// that the generated geometry occupies the expected world region and that each
-        /// registered corridor intersects at least one prepared tile.
+        /// Editor/CI validation for the generated Batch 02 presentation tiles.
+        /// Batch 02 remains an environment/background layer; the authoritative
+        /// gameplay road network owns drivable surfaces and collision.
         /// </summary>
         public static bool ValidatePreparedGeometry(out string report)
         {
@@ -103,22 +96,10 @@ namespace UltimateTruckEmpire.World
                 }
 
                 Renderer[] renderers = prefab.GetComponentsInChildren<Renderer>(true);
-                Collider[] colliders = prefab.GetComponentsInChildren<Collider>(true);
-                Batch02DriveableSurface[] surfaces =
-                    prefab.GetComponentsInChildren<Batch02DriveableSurface>(true);
-
                 if (renderers.Length == 0)
                 {
                     valid = false;
                     lines.Add("No renderers: " + placement.resourcePath);
-                }
-
-                if (colliders.Length == 0 || surfaces.Length == 0)
-                {
-                    valid = false;
-                    lines.Add("No driveable collision surface: " + placement.resourcePath +
-                              " colliders=" + colliders.Length +
-                              " markers=" + surfaces.Length);
                 }
 
                 loaded++;
@@ -127,31 +108,10 @@ namespace UltimateTruckEmpire.World
             lines.Add("Prepared tile validation: " + (valid ? "PASS" : "FAIL") +
                       " (" + loaded + "/" + Placements.Length + " tiles).");
 
-            // Placement/corridor alignment is intentionally reported, not made a
-            // release gate yet. The source captures are photogrammetry assets and
-            // their road centerlines must be calibrated against the existing world
-            // before hard-coded corridor coordinates can be treated as authoritative.
-            lines.Add("Road corridor placement: REVIEW REQUIRED; not used as a CI failure gate.");
-            lines.Add("Registered corridors: " + RoadNetwork.Corridors.Count);
+            lines.Add("Gameplay road ownership: existing RoadNetwork remains authoritative; Batch 02 registers no corridors.");
 
             report = string.Join("\n", lines);
             return valid;
         }
 
-        private static void RegisterBatch02RoadCorridors()
-        {
-            RegisterIfMissing("B02_WEST_INTERCHANGE", true, 0f, -220f, -45f, 14f);
-            RegisterIfMissing("B02_NORTH_CONNECTOR", false, -90f, 0f, 190f, 14f);
-            RegisterIfMissing("B02_EAST_HIGHWAY", true, 70f, -45f, 250f, 14f);
-            RegisterIfMissing("B02_FARMLAND_CONNECTOR", false, 160f, 35f, 160f, 12f);
-        }
-
-        private static void RegisterIfMissing(string id, bool alongX, float fixedCoordinate, float min, float max, float width)
-        {
-            for (int i = 0; i < RoadNetwork.Corridors.Count; i++)
-                if (string.Equals(RoadNetwork.Corridors[i].Id, id, StringComparison.OrdinalIgnoreCase))
-                    return;
-            RoadNetwork.RegisterCorridor(id, alongX, fixedCoordinate, min, max, width);
-        }
-    }
-}
+    }\n}\n
