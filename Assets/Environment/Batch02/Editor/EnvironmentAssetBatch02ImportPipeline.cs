@@ -13,7 +13,7 @@ namespace UltimateTruckEmpire.EnvironmentAssets
     public sealed class EnvironmentAssetBatch02ImportPipeline : AssetPostprocessor
     {
         private const string SourceRoot = "Assets/Environment/Batch02/Source/";
-        private const string PrefabRoot = "Assets/Environment/Batch02/Prefabs/";
+        private const string PrefabRoot = "Assets/Environment/Batch02/Resources/Batch02/Prefabs/";
         private const string MaterialRoot = "Assets/Environment/Batch02/Materials/";
 
         private static bool IsBatch02Model(string path)
@@ -125,6 +125,7 @@ namespace UltimateTruckEmpire.EnvironmentAssets
                 instance.name = fileName;
                 MarkStatic(instance);
                 RemoveUnwantedColliders(instance);
+                AddDriveableSurfaceColliders(instance);
                 ApplySharedMaterial(instance, capture);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
