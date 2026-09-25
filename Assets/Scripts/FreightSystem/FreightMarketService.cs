@@ -35,7 +35,11 @@ namespace UltimateTruckEmpire.Freight
             string[] cargo = { "General Freight", "Steel", "Cement", "Food", "Fuel", "Machinery" };
             for (int i = 0; i < Mathf.Max(1, offersPerRefresh); i++)
             {
-                string destination = cities[(i * 3 + 2) % cities.Length];
+                // Keep the first generated offer aligned with the existing playable
+                // Ahmedabad depot -> Vadodara warehouse route.
+                string destination = i == 0 && string.Equals(currentCity, "Ahmedabad", StringComparison.OrdinalIgnoreCase)
+                    ? "Vadodara"
+                    : cities[(i * 3 + 2) % cities.Length];
                 if (string.Equals(destination, currentCity, StringComparison.OrdinalIgnoreCase))
                     destination = cities[(i * 3 + 3) % cities.Length];
                 float distance = Mathf.Clamp(120f + i * 145f, 100f, maxDistanceKm);
@@ -80,6 +84,14 @@ namespace UltimateTruckEmpire.Freight
             return true;
         }
 
+        public bool TryPickupAt(string city)
+        {
+            return activeJob != null && activeJob.accepted &&
+                   !activeJob.cargoLoaded &&
+                   string.Equals(activeJob.originCity, city, StringComparison.OrdinalIgnoreCase) &&
+                   MarkPickupComplete();
+        }
+
         public bool CompleteDelivery(out float payout)
         {
             payout = 0f;
@@ -87,6 +99,14 @@ namespace UltimateTruckEmpire.Freight
             payout = activeJob.reward;
             activeJob = null;
             return true;
+        }
+
+        public bool TryDeliverAt(string city, out float payout)
+        {
+            payout = 0f;
+            if (activeJob == null || !activeJob.accepted || !activeJob.cargoLoaded ||
+                !string.Equals(activeJob.destinationCity, city, StringComparison.OrdinalIgnoreCase)) return false;
+            return CompleteDelivery(out payout);
         }
 
         public void ClearActiveJob() => activeJob = null;
