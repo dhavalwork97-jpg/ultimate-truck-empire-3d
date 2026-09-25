@@ -56,23 +56,26 @@ namespace UltimateTruckEmpire.Truck
         public void ApplyFleetConfiguration(FleetTruckData truck)
         {
             if (truck == null) return;
-
             FleetTruckId = truck.id ?? "";
             FuelCapacity = Mathf.Max(1f, truck.fuelCapacity);
             Fuel = Mathf.Clamp(truck.fuel, 0f, FuelCapacity);
             FuelEfficiency = Mathf.Max(0.1f, truck.fuelEfficiency);
             Condition = Mathf.Clamp(truck.condition, 0f, 100f);
-
-            // 300 HP is the baseline for the existing chassis tuning.
             motorTorque = Mathf.Max(800f, 2200f * (truck.enginePower / 300f));
             maxForwardKph = Mathf.Max(30f, truck.maxSpeedKph);
         }
 
         public float GetFuelLitres() => Fuel;
+        public void SetFleetFuel(float litres) => Fuel = Mathf.Clamp(litres, 0f, FuelCapacity);
 
-        public void SetFleetFuel(float litres)
+        public int GetAxleCount()
         {
-            Fuel = Mathf.Clamp(litres, 0f, FuelCapacity);
+            int wheelCount = 0;
+            if (frontLeft != null) wheelCount++;
+            if (frontRight != null) wheelCount++;
+            if (rearLeft != null) wheelCount++;
+            if (rearRight != null) wheelCount++;
+            return Mathf.Max(1, Mathf.CeilToInt(wheelCount * 0.5f));
         }
 
         public string GearLabel
@@ -105,8 +108,6 @@ namespace UltimateTruckEmpire.Truck
 
         public void AttachLights(TruckLights truckLights) => lights = truckLights;
 
-        // Key presses are read in Update. Reading GetKeyDown from FixedUpdate drops
-        // or repeats presses depending on the frame/step ratio.
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.I) || MobileInputState.ConsumeEngineToggle()) engineRunning = !engineRunning;
@@ -117,7 +118,6 @@ namespace UltimateTruckEmpire.Truck
         private void FixedUpdate()
         {
             float dt = Time.fixedDeltaTime;
-
             ReadInput(dt);
             UpdateAutoShift(dt);
             ApplySteering();
@@ -136,10 +136,8 @@ namespace UltimateTruckEmpire.Truck
             float rawSteer = Mathf.Clamp(Input.GetAxisRaw("Horizontal") + MobileInputState.Steering, -1f, 1f);
             float rate = Mathf.Abs(rawSteer) > 0.01f ? steerRate : steerReturnRate;
             steerInput = Mathf.MoveTowards(steerInput, rawSteer, rate * dt);
-
             throttleInput = Mathf.Clamp(Input.GetAxisRaw("Vertical") + MobileInputState.Throttle, -1f, 1f);
             brakingInput = Input.GetKey(KeyCode.Space) || MobileInputState.Brake;
-
             if (brakingInput || (CruiseActive && throttleInput < -0.1f)) CruiseActive = false;
         }
 
@@ -153,7 +151,6 @@ namespace UltimateTruckEmpire.Truck
                 case GearState.Neutral: Gear = GearState.Drive; break;
                 default: Gear = stopped ? GearState.Park : GearState.Neutral; break;
             }
-            // Selecting P or R at speed is refused and falls back to neutral.
             if (!stopped && (Gear == GearState.Park || Gear == GearState.Reverse)) Gear = GearState.Neutral;
             CruiseActive = false;
             autoShiftTimer = 0f;
@@ -167,8 +164,6 @@ namespace UltimateTruckEmpire.Truck
             CruiseActive = true;
         }
 
-        /// Keeps the familiar "hold back to reverse" behaviour: from a standstill,
-        /// sustained opposite input swaps between D and R automatically.
         private void UpdateAutoShift(float dt)
         {
             if (SpeedKph > shiftSpeedLimitKph || Gear == GearState.Park || Gear == GearState.Neutral)
@@ -183,7 +178,6 @@ namespace UltimateTruckEmpire.Truck
 
             autoShiftTimer += dt;
             if (autoShiftTimer < autoShiftHoldTime) return;
-
             Gear = wantsReverse ? GearState.Reverse : GearState.Drive;
             autoShiftTimer = 0f;
             CruiseActive = false;
@@ -201,16 +195,8 @@ namespace UltimateTruckEmpire.Truck
         private void ApplyDrive()
         {
             LimiterActive = false;
-
-            if (Gear == GearState.Park)
-            {
-                SetMotor(0f); SetBrake(brakeTorque); return;
-            }
-
-            if (!engineRunning || Gear == GearState.Neutral)
-            {
-                SetMotor(0f); SetBrake(brakingInput ? brakeTorque : 0f); return;
-            }
+            if (Gear == GearState.Park) { SetMotor(0f); SetBrake(brakeTorque); return; }
+            if (!engineRunning || Gear == GearState.Neutral) { SetMotor(0f); SetBrake(brakingInput ? brakeTorque : 0f); return; }
 
             float speedFactor = Mathf.InverseLerp(0f, maxForwardKph, SpeedKph);
             float torque = 0f;
@@ -223,22 +209,14 @@ namespace UltimateTruckEmpire.Truck
                     float error = cruiseSpeedKph - SpeedKph;
                     torque = Mathf.Max(0f, Mathf.Clamp(error * 0.12f, -0.2f, 1f)) * motorTorque * (1f - speedFactor * 0.5f);
                 }
-                else if (throttleInput > 0.05f)
-                {
-                    torque = throttleInput * motorTorque * (1f - speedFactor);
-                }
-                else if (throttleInput < -0.05f)
-                {
-                    brake = Mathf.Max(brake, brakeTorque * 0.85f * -throttleInput);
-                }
-
+                else if (throttleInput > 0.05f) torque = throttleInput * motorTorque * (1f - speedFactor);
+                else if (throttleInput < -0.05f) brake = Mathf.Max(brake, brakeTorque * 0.85f * -throttleInput);
                 if (SpeedKph >= maxForwardKph) { torque = 0f; LimiterActive = true; }
             }
             else
             {
                 if (throttleInput < -0.05f) torque = throttleInput * motorTorque * reverseTorqueMultiplier;
                 else if (throttleInput > 0.05f) brake = Mathf.Max(brake, brakeTorque * 0.85f * throttleInput);
-
                 if (SpeedKph >= maxForwardKph * 0.35f) { torque = 0f; LimiterActive = true; }
             }
 
@@ -261,8 +239,10 @@ namespace UltimateTruckEmpire.Truck
 
         private void SetBrake(float torque)
         {
-            if (frontLeft) frontLeft.brakeTorque = torque; if (frontRight) frontRight.brakeTorque = torque;
-            if (rearLeft) rearLeft.brakeTorque = torque; if (rearRight) rearRight.brakeTorque = torque;
+            if (frontLeft) frontLeft.brakeTorque = torque;
+            if (frontRight) frontRight.brakeTorque = torque;
+            if (rearLeft) rearLeft.brakeTorque = torque;
+            if (rearRight) rearRight.brakeTorque = torque;
         }
     }
 }
