@@ -297,15 +297,132 @@ namespace UltimateTruckEmpire.Company
         public bool TrySpawnTemporaryJobTrailer(TruckController truck, UltimateTruckEmpire.Gameplay.TrailerType jobType)
         {
             if (truck == null) return false;
+            var attachment = truck.GetComponent<TrailerPhysicsAttachment>();
+            if (attachment != null && attachment.IsAttached) return false;
+
             var definition = FindTemporaryJobTrailerDefinition(jobType);
             if (definition == null || definition.prefab == null) return false;
 
             var controller = truck.GetComponent<TrailerController>();
             if (controller == null) controller = truck.gameObject.AddComponent<TrailerController>();
-            if (!controller.ConfigureDefinition(definition, null, 0f, definition.defaultSkin)) return false;
+            var previous = controller.IsTemporaryJobTrailer ? attachment?.AttachedTrailer : null;
+            if (previous != null) UnityEngine.Object.Destroy(previous);
+
+            var temp = UnityEngine.Object.Instantiate(definition.prefab);
+            temp.name = definition.displayName + " Temporary Trailer";
+            var skin = definition.defaultSkin;
+            var calibrator = temp.GetComponent<TrailerRuntimeCalibrator>();
+            if (calibrator != null && !calibrator.ApplyCalibration())
+            {
+                UnityEngine.Object.Destroy(temp);
+                return false;
+            }
+
+            var loaded = temp.GetComponentInChildren<LoadedTrailer>(true);
+            if (loaded != null) loaded.ConfigureEmpty(definition, skin);
+
+            var kingpin = FindKingpin(temp.transform);
+            if (kingpin == null)
+            {
+                UnityEngine.Object.Destroy(temp);
+                return false;
+            }
+
+            if (!AttachProductionTrailerToTruck(truck, controller, temp, kingpin, definition, skin))
+                return false;
+
             controller.MarkTemporaryJobTrailer(true);
-            ReplaceTrailerVisual(truck.transform, controller, definition, definition.defaultSkin);
-            return controller.PhysicsAttachment != null && controller.PhysicsAttachment.IsAttached;
+            return true;
+        }
+
+        public bool TrySpawnTemporaryJobTrailerAtWarehouse(
+            string jobId,
+            TruckController truck,
+            UltimateTruckEmpire.Gameplay.TrailerType jobType,
+            Vector3 warehousePosition,
+            Quaternion warehouseRotation)
+        {
+            if (truck == null || string.IsNullOrWhiteSpace(jobId)) return false;
+
+            var existing = UnityEngine.Object.FindFirstObjectByType<TemporaryJobTrailerPickup>();
+            if (existing != null && string.Equals(existing.JobId, jobId, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            var definition = FindTemporaryJobTrailerDefinition(jobType);
+            if (definition == null || definition.prefab == null) return false;
+
+            var temp = UnityEngine.Object.Instantiate(definition.prefab);
+            temp.name = definition.displayName + " Job Trailer - " + jobId;
+            temp.transform.SetPositionAndRotation(warehousePosition, warehouseRotation);
+
+            var calibrator = temp.GetComponent<TrailerRuntimeCalibrator>();
+            if (calibrator != null && !calibrator.ApplyCalibration())
+            {
+                UnityEngine.Object.Destroy(temp);
+                return false;
+            }
+
+            var loaded = temp.GetComponentInChildren<LoadedTrailer>(true);
+            if (loaded != null) loaded.ConfigureEmpty(definition, definition.defaultSkin);
+
+            var body = temp.GetComponent<Rigidbody>();
+            if (body == null) body = temp.AddComponent<Rigidbody>();
+            body.isKinematic = false;
+            body.useGravity = true;
+            body.interpolation = RigidbodyInterpolation.Interpolate;
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            float emptyMass = calibrator != null && calibrator.HasValidCalibration
+                ? calibrator.EmptyMassTons * 1000f
+                : definition.emptyWeightTons * 1000f;
+            body.mass = Mathf.Clamp(emptyMass, 1200f, 40000f);
+
+            var kingpin = FindKingpin(temp.transform);
+            if (kingpin == null)
+            {
+                UnityEngine.Object.Destroy(temp);
+                return false;
+            }
+
+            var pickup = temp.AddComponent<TemporaryJobTrailerPickup>();
+            pickup.Initialize(jobId, definition, definition.defaultSkin, jobType);
+            return true;
+        }
+
+        public bool TryAttachParkedTemporaryJobTrailer(
+            TruckController truck,
+            GameObject trailerInstance,
+            TrailerDefinition definition,
+            TrailerSkinDefinition skin)
+        {
+            if (truck == null || trailerInstance == null || definition == null) return false;
+
+            var attachment = truck.GetComponent<TrailerPhysicsAttachment>();
+            if (attachment == null) attachment = truck.gameObject.AddComponent<TrailerPhysicsAttachment>();
+            if (attachment.IsAttached) return false;
+
+            var kingpin = FindKingpin(trailerInstance.transform);
+            if (kingpin == null) return false;
+
+            var calibrator = trailerInstance.GetComponent<TrailerRuntimeCalibrator>();
+            float mass = calibrator != null && calibrator.HasValidCalibration
+                ? calibrator.EmptyMassTons * 1000f
+                : definition.emptyWeightTons * 1000f;
+
+            if (!attachment.Attach(trailerInstance, kingpin, mass))
+                return false;
+
+            var controller = truck.GetComponent<TrailerController>();
+            if (controller == null) controller = truck.gameObject.AddComponent<TrailerController>();
+
+            if (!controller.ConfigureDefinition(definition, null, 0f, skin))
+            {
+                attachment.Detach(false);
+                return false;
+            }
+
+            controller.MarkTemporaryJobTrailer(true);
+            controller.SetAuthoredDockingPoint(trailerInstance.transform);
+            return true;
         }
 
         public void RemoveTemporaryJobTrailer(TruckController truck)
@@ -472,6 +589,42 @@ namespace UltimateTruckEmpire.Company
                 instance.transform.SetParent(truck, true);
                 controller.SetAuthoredDockingPoint(instance.transform);
             }
+        }
+
+        private static bool AttachProductionTrailerToTruck(
+            TruckController truck,
+            TrailerController controller,
+            GameObject instance,
+            Transform kingpin,
+            TrailerDefinition definition,
+            TrailerSkinDefinition skin)
+        {
+            if (truck == null || controller == null || instance == null || kingpin == null || definition == null)
+                return false;
+
+            var attachment = truck.GetComponent<TrailerPhysicsAttachment>();
+            if (attachment == null) attachment = truck.gameObject.AddComponent<TrailerPhysicsAttachment>();
+
+            float mass = definition.emptyWeightTons * 1000f;
+            var calibrator = instance.GetComponent<TrailerRuntimeCalibrator>();
+            if (calibrator != null && calibrator.HasValidCalibration)
+                mass = calibrator.EmptyMassTons * 1000f;
+
+            if (!attachment.Attach(instance, kingpin, mass))
+            {
+                UnityEngine.Object.Destroy(instance);
+                return false;
+            }
+
+            if (!controller.ConfigureDefinition(definition, null, 0f, skin))
+            {
+                attachment.Detach(false);
+                UnityEngine.Object.Destroy(instance);
+                return false;
+            }
+
+            controller.SetAuthoredDockingPoint(instance.transform);
+            return true;
         }
 
         private static Transform FindKingpin(Transform root)
