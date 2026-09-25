@@ -24,6 +24,12 @@ namespace UltimateTruckEmpire.Bootstrap
             // selected quality level already disabled it.
             if (QualitySettings.antiAliasing > 2)
                 QualitySettings.antiAliasing = 2;
+#else
+            // Keep the serialized mobile tuning values referenced when compiling
+            // non-mobile editor/CI assemblies, where the mobile branch is excluded.
+            _ = targetFrameRate;
+            _ = maxShadowDistance;
+            _ = maxPixelLights;
 #endif
         }
     }
