@@ -101,6 +101,10 @@ namespace UltimateTruckEmpire.EnvironmentAssets
             {
                 PrepareAllEnvironmentTiles();
                 bool valid = Validate();
+                string geometryReport;
+                bool geometryValid = UltimateTruckEmpire.World.Batch02RoadWorldBuilder.ValidatePreparedGeometry(out geometryReport);
+                Debug.Log(geometryReport);
+                valid &= geometryValid;
                 Debug.Log("[EnvironmentBatch02] Headless validation: " + (valid ? "PASS" : "FAIL"));
                 EditorApplication.Exit(valid ? 0 : 1);
             }
