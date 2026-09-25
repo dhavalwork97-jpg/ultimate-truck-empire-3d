@@ -1,0 +1,6 @@
+newmtl EnvAsset_009_Albedo
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+illum 2
+map_Kd EnvAsset_009_Albedo.png
