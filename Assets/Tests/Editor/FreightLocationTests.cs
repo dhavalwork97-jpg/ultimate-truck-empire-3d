@@ -1,5 +1,9 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using UltimateTruckEmpire.FreightLocations;
 using UltimateTruckEmpire.World;
 
@@ -49,5 +53,22 @@ namespace UltimateTruckEmpire.Tests.Editor
                 Assert.That(locations.Count, Is.GreaterThan(0), city.name);
             }
         }
+
+#if UNITY_EDITOR
+        [Test]
+        public void ProductionPrefabsExistForEveryCatalogLocation()
+        {
+            var missing = new List<string>();
+            foreach (var location in FreightLocationRegistry.All)
+            {
+                string prefabPath = "Assets/FreightLocations/Prefabs/" +
+                    location.prefabResourcePath.Substring("FreightLocations/Prefabs/".Length) + ".prefab";
+                if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) == null)
+                    missing.Add(location.id + " -> " + prefabPath);
+            }
+
+            Assert.That(missing, Is.Empty, string.Join("\n", missing));
+        }
+#endif
     }
 }
