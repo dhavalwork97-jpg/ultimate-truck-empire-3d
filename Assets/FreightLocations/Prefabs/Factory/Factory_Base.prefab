@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4269566806355763545}
   - component: {fileID: 3836745877855156612}
   - component: {fileID: 8654940553273837664}
+  - component: {fileID: 1000002003}
   m_Layer: 0
   m_Name: obj73
   m_TagString: Untagged
@@ -875,7 +876,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 240286295407801024}
-  - component: {fileID: 1000002003}
   m_Layer: 0
   m_Name: Factory_Base
   m_TagString: Untagged
@@ -7386,7 +7386,7 @@ LODGroup:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 917893439203644547}
+  m_GameObject: {fileID: 45605287061929744}
   serializedVersion: 2
   m_LODs:
   - serializedVersion: 2
