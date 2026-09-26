@@ -11,6 +11,7 @@ namespace UltimateTruckEmpire.FreightLocations
     public sealed class FreightLocationSpawner : MonoBehaviour
     {
         private const string CatalogResourcePath = "FreightLocations/FreightLocationPrefabCatalog";
+        private static readonly string[] RequiredAnchors = { "LoadingDock_A", "LoadingDock_B", "TrailerSpawn", "CargoSpawn", "DeliveryTrigger", "ParkingSlot_01", "ParkingSlot_02", "CompanySign", "EnvironmentCollision" };
 
         [SerializeField] private string locationId;
         [SerializeField] private Transform visualRoot;
@@ -66,7 +67,26 @@ namespace UltimateTruckEmpire.FreightLocations
                 }
             }
 
+            ValidatePrefabAnchors(instance, definition.id);
             return true;
+        }
+
+        private static void ValidatePrefabAnchors(GameObject instance, string id)
+        {
+            for (int i = 0; i < RequiredAnchors.Length; i++)
+                if (FindChild(instance.transform, RequiredAnchors[i]) == null)
+                    Debug.LogWarning($"Freight location '{id}' is missing required anchor '{RequiredAnchors[i]}'.", instance);
+        }
+
+        private static Transform FindChild(Transform root, string name)
+        {
+            if (root.name == name) return root;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                var found = FindChild(root.GetChild(i), name);
+                if (found != null) return found;
+            }
+            return null;
         }
 
         private static GameObject ResolvePrefab(FreightLocationDefinition definition)
