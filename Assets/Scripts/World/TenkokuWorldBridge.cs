@@ -21,6 +21,9 @@ namespace UltimateTruckEmpire.World
 
         public static bool Ensure()
         {
+            // Tenkoku's publisher documents it for desktop/console, not mobile.
+            // Keep the existing lightweight atmosphere on Android/iOS.
+            if (Application.isMobilePlatform) return false;
             if (attempted) return IsActive;
             attempted = true;
 
