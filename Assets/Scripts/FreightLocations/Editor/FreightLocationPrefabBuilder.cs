@@ -193,7 +193,14 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
             // game should use. Upgrade them in place when possible.
             var existing = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             if (existing != null && HasVisualRenderers(existing))
-                return UpgradeExistingPrefab(spec, prefabPath);
+            {
+                // Existing production prefabs are authoritative. Do not round-trip
+                // authored prefab YAML through SaveAsPrefabAsset: Unity can rewrite
+                // valid production fileIDs during an automated/headless import and
+                // produce duplicate identifiers. Contract validation is handled by
+                // the production prefab tests; only missing prefabs use the FBX fallback.
+                return true;
+            }
 
             // FBX is a fallback only when the production prefab is missing or empty.
             var source = LoadModel(sourcePath);
