@@ -394,43 +394,71 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
             Vector3 center = bounds.center;
             Vector3 size = bounds.size;
 
-            // Keep anchors outside the visual mesh where a truck can actually use them.
             float groundY = bounds.min.y;
             float frontZ = bounds.min.z;
             float rearZ = bounds.max.z;
             float sideX = Mathf.Max(size.x * 0.35f, 2.5f);
             float truckClearance = Mathf.Max(size.z * 0.12f, 3.0f);
 
-            NewAnchor(root, "LoadingDock_A",
+            EnsureAnchor(root, "LoadingDock_A",
                 new Vector3(center.x - sideX, groundY, frontZ - truckClearance));
-            NewAnchor(root, "LoadingDock_B",
+            EnsureAnchor(root, "LoadingDock_B",
                 new Vector3(center.x + sideX, groundY, frontZ - truckClearance));
 
-            NewAnchor(root, "TrailerSpawn",
+            EnsureAnchor(root, "TrailerSpawn",
                 new Vector3(center.x, groundY, frontZ - truckClearance * 2.0f));
 
-            NewAnchor(root, "CargoSpawn",
+            EnsureAnchor(root, "CargoSpawn",
                 new Vector3(center.x, groundY + Mathf.Min(1.0f, size.y * 0.25f), center.z));
 
-            NewAnchor(root, "DeliveryTrigger",
+            EnsureAnchor(root, "DeliveryTrigger",
                 new Vector3(center.x, groundY + 0.5f, frontZ - truckClearance * 1.5f));
 
-            NewAnchor(root, "ParkingSlot_01",
+            EnsureAnchor(root, "ParkingSlot_01",
                 new Vector3(center.x - sideX, groundY, rearZ + truckClearance));
-            NewAnchor(root, "ParkingSlot_02",
+            EnsureAnchor(root, "ParkingSlot_02",
                 new Vector3(center.x + sideX, groundY, rearZ + truckClearance));
 
-            NewAnchor(root, "CompanySign",
+            EnsureAnchor(root, "CompanySign",
                 new Vector3(center.x, bounds.max.y, rearZ));
 
-            // DeliveryTrigger is an anchor/marker only. The authoritative runtime
-            // DeliveryTrigger component is added by the existing world builder.
             var delivery = FindChild(root, "DeliveryTrigger");
-            delivery.gameObject.isStatic = false;
+            if (delivery != null)
+                delivery.gameObject.isStatic = false;
+        }
+
+        private static Transform EnsureAnchor(Transform root, string name, Vector3 worldPosition)
+        {
+            var existing = FindChild(root, name);
+            if (existing != null)
+            {
+                if (name == "DeliveryTrigger")
+                    existing.gameObject.isStatic = false;
+                return existing;
+            }
+
+            return NewAnchor(root, name, worldPosition);
         }
 
         private static void CreateEnvironmentCollision(Transform root, Bounds bounds)
         {
+            var existing = FindChild(root, "EnvironmentCollision");
+            if (existing != null)
+            {
+                var existingCollider = existing.GetComponent<BoxCollider>();
+                if (existingCollider == null)
+                    existingCollider = existing.gameObject.AddComponent<BoxCollider>();
+
+                existingCollider.center = Vector3.zero;
+                existingCollider.size = new Vector3(
+                    Mathf.Max(bounds.size.x, 1f),
+                    Mathf.Max(bounds.size.y, 1f),
+                    Mathf.Max(bounds.size.z, 1f));
+                existingCollider.isTrigger = false;
+                existing.gameObject.isStatic = true;
+                return;
+            }
+
             var go = NewAnchor(root, "EnvironmentCollision", bounds.center);
             var collider = go.gameObject.AddComponent<BoxCollider>();
             collider.center = Vector3.zero;
@@ -438,7 +466,6 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
                 Mathf.Max(bounds.size.x, 1f),
                 Mathf.Max(bounds.size.y, 1f),
                 Mathf.Max(bounds.size.z, 1f));
-
             collider.isTrigger = false;
             go.gameObject.isStatic = true;
         }
