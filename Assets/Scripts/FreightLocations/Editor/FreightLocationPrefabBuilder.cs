@@ -88,7 +88,15 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
 
         private static void BuildProductionPrefabsIfMissing()
         {
-            if (!EditorApplication.isPlayingOrWillChangePlaymode)
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                return;
+
+            // Do not rebuild seven large FBX-based prefabs on every domain reload.
+            // Rebuild only when the production assets are absent or are still contract shells.
+            EnsureSourceImported(WarehouseSource);
+            EnsureSourceImported(FactorySource);
+
+            if (!HasValidProductionPrefabs())
                 BuildProductionPrefabsInternal(true);
         }
 
@@ -98,19 +106,22 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
             EnsureFolder(WarehousePrefabRoot);
             EnsureFolder(FactoryPrefabRoot);
 
-            AssetDatabase.ImportAsset(WarehouseSource, ImportAssetOptions.ForceUpdate);
-            AssetDatabase.ImportAsset(FactorySource, ImportAssetOptions.ForceUpdate);
+            EnsureSourceImported(WarehouseSource);
+            EnsureSourceImported(FactorySource);
 
             var missingSources = new List<string>();
             if (LoadModel(WarehouseSource) == null) missingSources.Add(WarehouseSource);
             if (LoadModel(FactorySource) == null) missingSources.Add(FactorySource);
 
-            if (missingSources.Count > 0 && !allowContractFallback)
+            if (missingSources.Count > 0)
             {
+                // The source files are committed to the repository. Never silently
+                // replace an existing FBX with a placeholder just because Unity has
+                // not finished importing it yet.
                 Debug.LogError(
-                    "[FreightLocationPrefabBuilder] Missing source FBX files:\n" +
+                    "[FreightLocationPrefabBuilder] Source FBX import is unavailable:\n" +
                     string.Join("\n", missingSources) +
-                    "\nImport the supplied FBX files under Assets/FreightLocations/Source.");
+                    "\nThe files exist in the project; wait for Unity import to finish and run the builder again.");
                 return;
             }
 
@@ -197,9 +208,10 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
             var source = LoadModel(sourcePath);
             if (source == null)
             {
-                if (!allowContractFallback)
-                    return false;
-                return BuildContractShell(spec, prefabPath);
+                Debug.LogError(
+                    "[FreightLocationPrefabBuilder] Cannot build " + spec.Name +
+                    " because the source model is not imported: " + sourcePath);
+                return false;
             }
 
             if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null)
@@ -402,7 +414,53 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
 
         private static GameObject LoadModel(string path)
         {
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (model != null)
+                return model;
+
+            EnsureSourceImported(path);
             return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        }
+
+        private static void EnsureSourceImported(string path)
+        {
+            if (!File.Exists(path))
+                return;
+
+            // ForceSynchronousImport is important here: the builder can run from
+            // InitializeOnLoad before Unity has completed the FBX import.
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+        }
+
+        private static bool HasValidProductionPrefabs()
+        {
+            foreach (var spec in Specs)
+            {
+                string folder = spec.IsFactory ? FactoryPrefabRoot : WarehousePrefabRoot;
+                string path = folder + "/" + spec.Name + ".prefab";
+                var root = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+
+                if (root == null)
+                    return false;
+
+                var lod = root.GetComponent<LODGroup>();
+                if (lod == null || lod.lodCount != 3)
+                    return false;
+
+                var meshRoot = FindChild(root.transform, "MeshRoot");
+                if (meshRoot == null || meshRoot.GetComponentsInChildren<Renderer>(true).Length == 0)
+                    return false;
+
+                foreach (var anchor in RequiredAnchors)
+                    if (FindChild(root.transform, anchor) == null)
+                        return false;
+
+                var delivery = FindChild(root.transform, "DeliveryTrigger");
+                if (delivery == null || delivery.gameObject.isStatic)
+                    return false;
+            }
+
+            return true;
         }
 
         private static void UpdateRuntimeCatalog()
