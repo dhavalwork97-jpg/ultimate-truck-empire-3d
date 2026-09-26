@@ -100,8 +100,9 @@ namespace UltimateTruckEmpire.Tests.Editor
                 foreach (var anchor in anchors)
                     Assert.That(FindChild(root.transform, anchor), Is.Not.Null, $"{prefabName} missing {anchor}");
 
-                var lod = root.GetComponent<LODGroup>();
-                Assert.That(lod, Is.Not.Null, $"{prefabName} missing LODGroup");
+                var lodGroups = root.GetComponentsInChildren<LODGroup>(true);
+                Assert.That(lodGroups.Length, Is.EqualTo(1), $"{prefabName} must contain exactly one LODGroup");
+                var lod = lodGroups[0];
                 Assert.That(lod.lodCount, Is.EqualTo(3), $"{prefabName} must have 3 LOD levels");
 
                 var delivery = FindChild(root.transform, "DeliveryTrigger");
