@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31f5c5bdd5154b6b96907642d5698579, type: 3}
+  m_Name: FreightLocationPrefabCatalog
+  m_EditorClassIdentifier: 
+  entries:
+  - id: AMD-TEXTILE-01
+    prefab: {fileID: 100100000, guid: ad1f417595fe1124cbef1114002f7700, type: 3}
+  - id: AMD-WH-01
+    prefab: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  - id: VAD-CHEM-01
+    prefab: {fileID: 100100000, guid: 43b6ec73c2aa53541ab3adfb32ac15d9, type: 3}
+  - id: VAD-WH-01
+    prefab: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  - id: SUR-FAB-01
+    prefab: {fileID: 100100000, guid: ad1f417595fe1124cbef1114002f7700, type: 3}
+  - id: SUR-WH-01
+    prefab: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  - id: RJK-ENG-01
+    prefab: {fileID: 100100000, guid: ac1788dd7e2c4c34a8adb7505753c9b3, type: 3}
+  - id: RJK-WH-01
+    prefab: {fileID: 100100000, guid: a2cc85767e304c1448a9698a31d05369, type: 3}
+  - id: KDL-PORT-01
+    prefab: {fileID: 100100000, guid: e90b3fd3182140a4294bb76147293f2a, type: 3}
+  - id: KDL-PORT-02
+    prefab: {fileID: 100100000, guid: e90b3fd3182140a4294bb76147293f2a, type: 3}
+  - id: MUM-IMP-01
+    prefab: {fileID: 100100000, guid: e90b3fd3182140a4294bb76147293f2a, type: 3}
+  - id: MUM-IND-01
+    prefab: {fileID: 100100000, guid: ac1788dd7e2c4c34a8adb7505753c9b3, type: 3}
+  - id: PUN-AUTO-01
+    prefab: {fileID: 100100000, guid: e17525cd4f06c784b8adc08c79d7823e, type: 3}
+  - id: PUN-WH-01
+    prefab: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  - id: JAI-WH-01
+    prefab: {fileID: 100100000, guid: a2cc85767e304c1448a9698a31d05369, type: 3}
+  - id: JAI-FAC-01
+    prefab: {fileID: 100100000, guid: ac1788dd7e2c4c34a8adb7505753c9b3, type: 3}
+  - id: DEL-WH-01
+    prefab: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  - id: DEL-FAC-01
+    prefab: {fileID: 100100000, guid: ac1788dd7e2c4c34a8adb7505753c9b3, type: 3}
+  - id: IND-FOOD-01
+    prefab: {fileID: 100100000, guid: ac1788dd7e2c4c34a8adb7505753c9b3, type: 3}
+  - id: IND-WH-01
+    prefab: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  - id: AMD-WH-02
+    prefab: {fileID: 100100000, guid: a2cc85767e304c1448a9698a31d05369, type: 3}
+  - id: VAD-FAC-02
+    prefab: {fileID: 100100000, guid: ac1788dd7e2c4c34a8adb7505753c9b3, type: 3}
+  - id: SUR-WH-02
+    prefab: {fileID: 100100000, guid: a2cc85767e304c1448a9698a31d05369, type: 3}
+  - id: RJK-FAC-02
+    prefab: {fileID: 100100000, guid: e17525cd4f06c784b8adc08c79d7823e, type: 3}
+  - id: KDL-WH-03
+    prefab: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  - id: MUM-WH-02
+    prefab: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  - id: PUN-FAC-02
+    prefab: {fileID: 100100000, guid: ac1788dd7e2c4c34a8adb7505753c9b3, type: 3}
+  - id: JAI-WH-02
+    prefab: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  - id: DEL-WH-02
+    prefab: {fileID: 100100000, guid: a2cc85767e304c1448a9698a31d05369, type: 3}
+  - id: IND-FAC-02
+    prefab: {fileID: 100100000, guid: ac1788dd7e2c4c34a8adb7505753c9b3, type: 3}

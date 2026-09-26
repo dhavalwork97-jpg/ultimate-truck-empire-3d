@@ -52,6 +52,25 @@ namespace UltimateTruckEmpire.Truck
         public float FuelEfficiency { get; private set; } = 3.2f;
         public float Condition { get; private set; } = 100f;
         public string FleetTruckId { get; private set; } = "";
+        private static long nextRuntimeEntityId;
+        private string runtimeEntityId;
+
+        /// <summary>
+        /// Returns the stable identity used by gameplay systems for this truck.
+        /// Fleet-backed trucks use their persisted fleet ID. Runtime-only trucks
+        /// receive a process-local ID when they awaken, without relying on
+        /// UnityEngine.Object.GetInstanceID().
+        /// </summary>
+        public string GetEntityId()
+        {
+            if (!string.IsNullOrEmpty(FleetTruckId))
+                return FleetTruckId;
+
+            if (string.IsNullOrEmpty(runtimeEntityId))
+                runtimeEntityId = "runtime-truck-" + (++nextRuntimeEntityId);
+
+            return runtimeEntityId;
+        }
 
         /// <summary>
         /// Returns the stable identity used by systems that need to associate

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f4e1b4a1b5c4f9f8a2e7c3d6b901234, type: 3}
+  m_Name: Surat_Export_Warehouse
+  m_EditorClassIdentifier: 
+  companyName: Surat Export Warehouse
+  city: Surat
+  prefabReference: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  cargoTypes:
+  - FABRIC_ROLLS
+  - MACHINERY
+  - GENERAL_FREIGHT
+  pickupEnabled: 1
+  deliveryEnabled: 1

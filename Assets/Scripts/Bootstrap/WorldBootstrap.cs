@@ -103,6 +103,7 @@ namespace UltimateTruckEmpire.Bootstrap
             RestAreaWorldBuilder.Build();
 
             FreightWorldBuilder.BuildZones();
+            FreightLocationWorldBuilder.BuildLocations();
 
             var truck = CreateTruck(new Vector3(-20, 1.1f, 0));
             RestorePlayerPosition(truck);

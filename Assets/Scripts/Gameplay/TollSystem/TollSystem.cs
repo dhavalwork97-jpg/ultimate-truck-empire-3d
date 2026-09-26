@@ -116,7 +116,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
         {
             var p = FindPlaza(plazaId);
             if (p == null || !p.active || truck == null) return false;
-            string key = plazaId + "|" + (string.IsNullOrEmpty(vehicleKey) ? truck.GetInstanceID().ToString() : vehicleKey);
+            string key = plazaId + "|" + (string.IsNullOrEmpty(vehicleKey) ? truck.GetEntityId().ToString() : vehicleKey);
             if (paidKeys.ContainsKey(key)) return true;
 
             var trailer = truck.GetComponent<TrailerController>();
@@ -165,22 +165,22 @@ namespace UltimateTruckEmpire.Gameplay.Toll
     {
         [SerializeField] private string plazaId = "TOLL_AHM_VAD_01";
         [SerializeField] private TollPaymentMethod method = TollPaymentMethod.FastTag;
-        private readonly HashSet<int> inside = new HashSet<int>();
+        private readonly HashSet<string> inside = new HashSet<string>();
 
         public void Configure(string id, TollPaymentMethod paymentMethod) { plazaId=id; method=paymentMethod; }
 
         private void OnTriggerEnter(Collider other)
         {
             var truck = other.GetComponentInParent<TruckController>();
-            if (truck == null || !inside.Add(truck.GetInstanceID())) return;
+            if (truck == null || !inside.Add(truck.GetEntityId().ToString())) return;
             TollPlazaManager.Instance?.AnnounceApproach(plazaId);
-            TollPlazaManager.Instance?.TryPay(plazaId, method, truck, truck.GetInstanceID().ToString());
+            TollPlazaManager.Instance?.TryPay(plazaId, method, truck, truck.GetEntityId().ToString());
         }
 
         private void OnTriggerExit(Collider other)
         {
             var truck = other.GetComponentInParent<TruckController>();
-            if (truck != null) inside.Remove(truck.GetInstanceID());
+            if (truck != null) inside.Remove(truck.GetEntityId().ToString());
         }
     }
 
