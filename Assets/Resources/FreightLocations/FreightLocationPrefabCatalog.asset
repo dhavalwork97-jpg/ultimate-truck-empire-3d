@@ -53,3 +53,23 @@ MonoBehaviour:
     prefab: {fileID: 100100000, guid: ac1788dd7e2c4c34a8adb7505753c9b3, type: 3}
   - id: IND-WH-01
     prefab: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  - id: AMD-WH-02
+    prefab: {fileID: 100100000, guid: a2cc85767e304c1448a9698a31d05369, type: 3}
+  - id: VAD-FAC-02
+    prefab: {fileID: 100100000, guid: ac1788dd7e2c4c34a8adb7505753c9b3, type: 3}
+  - id: SUR-WH-02
+    prefab: {fileID: 100100000, guid: a2cc85767e304c1448a9698a31d05369, type: 3}
+  - id: RJK-FAC-02
+    prefab: {fileID: 100100000, guid: e17525cd4f06c784b8adc08c79d7823e, type: 3}
+  - id: KDL-WH-03
+    prefab: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  - id: MUM-WH-02
+    prefab: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  - id: PUN-FAC-02
+    prefab: {fileID: 100100000, guid: ac1788dd7e2c4c34a8adb7505753c9b3, type: 3}
+  - id: JAI-WH-02
+    prefab: {fileID: 100100000, guid: 82f53adbfe396344da163d98a3bcf4c3, type: 3}
+  - id: DEL-WH-02
+    prefab: {fileID: 100100000, guid: a2cc85767e304c1448a9698a31d05369, type: 3}
+  - id: IND-FAC-02
+    prefab: {fileID: 100100000, guid: ac1788dd7e2c4c34a8adb7505753c9b3, type: 3}
