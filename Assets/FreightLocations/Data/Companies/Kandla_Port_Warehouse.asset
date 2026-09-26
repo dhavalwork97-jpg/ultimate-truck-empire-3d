@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f4e1b4a1b5c4f9f8a2e7c3d6b901234, type: 3}
+  m_Name: Kandla_Port_Warehouse
+  m_EditorClassIdentifier: 
+  companyName: Kandla Port Logistics
+  city: Kandla
+  prefabReference: {fileID: 100100000, guid: e90b3fd3182140a4294bb76147293f2a, type: 3}
+  cargoTypes:
+  - CONTAINERS
+  - STEEL
+  - MACHINERY
+  pickupEnabled: 1
+  deliveryEnabled: 1
