@@ -24,7 +24,6 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
     /// </summary>
     public static class FreightLocationPrefabBuilder
     {
-        private const string SourceRoot = "Assets/FreightLocations/Source";
         private const string WarehouseSource =
             "Assets/FreightLocations/Source/Warehouse/warehouseupload2.fbx";
         private const string FactorySource =
@@ -75,8 +74,25 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
             }
         }
 
+        [InitializeOnLoadMethod]
+        private static void EnsureProductionPrefabsAtEditorStartup()
+        {
+            EditorApplication.delayCall += BuildProductionPrefabsIfMissing;
+        }
+
         [MenuItem("Ultimate Truck Empire/Freight Locations/Build Production Prefabs")]
         public static void BuildProductionPrefabs()
+        {
+            BuildProductionPrefabsInternal(false);
+        }
+
+        private static void BuildProductionPrefabsIfMissing()
+        {
+            if (!EditorApplication.isPlayingOrWillChangePlaymode)
+                BuildProductionPrefabsInternal(true);
+        }
+
+        private static void BuildProductionPrefabsInternal(bool allowContractFallback)
         {
             EnsureFolder(PrefabRoot);
             EnsureFolder(WarehousePrefabRoot);
@@ -89,11 +105,12 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
             if (LoadModel(WarehouseSource) == null) missingSources.Add(WarehouseSource);
             if (LoadModel(FactorySource) == null) missingSources.Add(FactorySource);
 
-            if (missingSources.Count > 0)
+            if (missingSources.Count > 0 && !allowContractFallback)
             {
                 Debug.LogError(
                     "[FreightLocationPrefabBuilder] Missing source FBX files:\n" +
-                    string.Join("\n", missingSources));
+                    string.Join("\n", missingSources) +
+                    "\nImport the supplied FBX files under Assets/FreightLocations/Source.");
                 return;
             }
 
@@ -104,7 +121,7 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
                 string folder = spec.IsFactory ? FactoryPrefabRoot : WarehousePrefabRoot;
                 string prefabPath = folder + "/" + spec.Name + ".prefab";
 
-                if (BuildOne(spec, sourcePath, prefabPath))
+                if (BuildOne(spec, sourcePath, prefabPath, allowContractFallback))
                     created++;
             }
 
@@ -175,11 +192,15 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
                     : "[FreightLocationPrefabBuilder] Validation found " + errors + " issue(s).");
         }
 
-        private static bool BuildOne(PrefabSpec spec, string sourcePath, string prefabPath)
+        private static bool BuildOne(PrefabSpec spec, string sourcePath, string prefabPath, bool allowContractFallback)
         {
             var source = LoadModel(sourcePath);
             if (source == null)
-                return false;
+            {
+                if (!allowContractFallback)
+                    return false;
+                return BuildContractShell(spec, prefabPath);
+            }
 
             if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null)
                 AssetDatabase.DeleteAsset(prefabPath);
@@ -248,6 +269,40 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
                     " (" + renderers.Length + " renderers).");
 
                 return true;
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        private static bool BuildContractShell(PrefabSpec spec, string prefabPath)
+        {
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null)
+                return true;
+
+            var root = new GameObject(spec.Name);
+            try
+            {
+                var meshRoot = NewAnchor(root.transform, "MeshRoot", Vector3.zero);
+                var placeholder = meshRoot.gameObject.AddComponent<MeshRenderer>();
+                var bounds = new Bounds(Vector3.zero, new Vector3(10f, 5f, 20f));
+
+                CreateContractAnchors(root.transform, bounds);
+                CreateEnvironmentCollision(root.transform, bounds);
+
+                var lodGroup = root.AddComponent<LODGroup>();
+                lodGroup.SetLODs(new[]
+                {
+                    new LOD(0.60f, new Renderer[] { placeholder }),
+                    new LOD(0.25f, new Renderer[] { placeholder }),
+                    new LOD(0.05f, new Renderer[] { placeholder })
+                });
+                lodGroup.RecalculateBounds();
+
+                bool success;
+                PrefabUtility.SaveAsPrefabAsset(root, prefabPath, out success);
+                return success;
             }
             finally
             {
