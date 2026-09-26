@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2781089749977061977}
   - component: {fileID: 564235652175489414}
   - component: {fileID: 8406367383111493702}
+  - component: {fileID: 1000002003}
   m_Layer: 0
   m_Name: obj37
   m_TagString: Untagged
@@ -2134,7 +2135,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4297753020900196279}
-  - component: {fileID: 1000002003}
   m_Layer: 0
   m_Name: Factory_Chemical
   m_TagString: Untagged
@@ -7386,7 +7386,7 @@ LODGroup:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2941653449887260592}
+  m_GameObject: {fileID: 67992332236850455}
   serializedVersion: 2
   m_LODs:
   - serializedVersion: 2
