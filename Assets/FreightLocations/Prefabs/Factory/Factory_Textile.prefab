@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7337796821707189880}
+  - component: {fileID: 1000002003}
   m_Layer: 0
   m_Name: CompanySign
   m_TagString: Untagged
@@ -6970,7 +6971,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 210720765169367361}
-  - component: {fileID: 1000002003}
   m_Layer: 0
   m_Name: Factory_Textile
   m_TagString: Untagged
@@ -7386,7 +7386,7 @@ LODGroup:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8705409141668574656}
+  m_GameObject: {fileID: 17140696189459188}
   serializedVersion: 2
   m_LODs:
   - serializedVersion: 2
