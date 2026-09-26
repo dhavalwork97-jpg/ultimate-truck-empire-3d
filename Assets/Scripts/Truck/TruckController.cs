@@ -53,6 +53,18 @@ namespace UltimateTruckEmpire.Truck
         public float Condition { get; private set; } = 100f;
         public string FleetTruckId { get; private set; } = "";
 
+        /// <summary>
+        /// Returns the stable identity used by systems that need to associate
+        /// runtime truck activity (for example toll payments) with a fleet truck.
+        /// Falls back to the Unity instance ID for an unbound runtime truck.
+        /// </summary>
+        public string GetEntityId()
+        {
+            return !string.IsNullOrEmpty(FleetTruckId)
+                ? FleetTruckId
+                : GetInstanceID().ToString();
+        }
+
         public void ApplyFleetConfiguration(FleetTruckData truck)
         {
             if (truck == null) return;
