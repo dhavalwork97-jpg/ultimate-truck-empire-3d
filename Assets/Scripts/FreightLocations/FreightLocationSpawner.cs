@@ -10,6 +10,8 @@ namespace UltimateTruckEmpire.FreightLocations
     /// </summary>
     public sealed class FreightLocationSpawner : MonoBehaviour
     {
+        private const string CatalogResourcePath = "FreightLocations/FreightLocationPrefabCatalog";
+
         [SerializeField] private string locationId;
         [SerializeField] private Transform visualRoot;
         [SerializeField] private bool addDeliveryTrigger = false;
@@ -34,12 +36,12 @@ namespace UltimateTruckEmpire.FreightLocations
             if (visualRoot != null && visualRoot.childCount > 0)
                 return true;
 
-            GameObject prefab = Resources.Load<GameObject>(definition.prefabResourcePath);
+            GameObject prefab = ResolvePrefab(definition);
             if (prefab == null)
             {
                 Debug.LogWarning(
-                    $"Freight location '{definition.id}' expects prefab at Resources/{definition.prefabResourcePath}. " +
-                    "The raw warehouse/factory ZIPs must be imported into Unity and converted to production prefabs first.",
+                    $"Freight location '{definition.id}' has no production prefab reference. " +
+                    "Check FreightLocationPrefabCatalog and the location registry.",
                     this);
                 return false;
             }
@@ -65,6 +67,12 @@ namespace UltimateTruckEmpire.FreightLocations
             }
 
             return true;
+        }
+
+        private static GameObject ResolvePrefab(FreightLocationDefinition definition)
+        {
+            var catalog = Resources.Load<FreightLocationPrefabCatalog>(CatalogResourcePath);
+            return catalog != null ? catalog.Find(definition.id) : null;
         }
     }
 }
