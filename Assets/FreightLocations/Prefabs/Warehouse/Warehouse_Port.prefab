@@ -733,7 +733,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8965636525268626705}
-  - component: {fileID: 9000000000000002018}\n  m_Layer: 0
+  - component: {fileID: 9000000000000002018}
+  m_Layer: 0
   m_Name: Warehouse_Port
   m_TagString: Untagged
   m_Icon: {fileID: 0}
