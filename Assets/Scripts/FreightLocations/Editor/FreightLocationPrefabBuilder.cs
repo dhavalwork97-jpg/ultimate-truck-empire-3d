@@ -8,19 +8,16 @@ using UnityEngine;
 namespace UltimateTruckEmpire.FreightLocations.Editor
 {
     /// <summary>
-    /// Builds the seven production Freight Location prefabs from the two imported
-    /// FBX source models already committed under Assets/FreightLocations/Source.
+    /// Validates and upgrades the seven production Freight Location prefabs.
     ///
-    /// The generator deliberately keeps the imported mesh/material assets intact:
-    /// the generated prefab hierarchy references the imported FBX sub-assets rather
-    /// than copying mesh or texture data.
+    /// Existing production prefabs under Assets/FreightLocations/Prefabs are the
+    /// primary source of truth. Their authored meshes, materials and hierarchy are
+    /// preserved. The committed FBX files are used only as a fallback when a
+    /// production prefab is genuinely missing or contains no visual renderers.
     ///
-    /// Unity's LODGroup API controls which Renderer set is visible at each screen
-    /// size. Because the source pack does not contain authored lower-detail meshes,
-    /// this first-pass generator uses the same imported renderers for all three LOD
-    /// levels. This satisfies the production contract without tripling mesh memory.
-    /// Replace the LOD1/LOD2 renderer sets with authored/decimated meshes later when
-    /// real distance-optimized geometry is available.
+    /// The builder only repairs the gameplay contract: required anchors and the
+    /// root three-level LODGroup. Existing valid LODGroups are preserved so authored
+    /// distance meshes are not accidentally replaced with duplicated renderers.
     /// </summary>
     public static class FreightLocationPrefabBuilder
     {
@@ -106,24 +103,10 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
             EnsureFolder(WarehousePrefabRoot);
             EnsureFolder(FactoryPrefabRoot);
 
+            // Existing production prefabs are authoritative. Import FBX sources
+            // only as a fallback for a genuinely missing/empty production prefab.
             EnsureSourceImported(WarehouseSource);
             EnsureSourceImported(FactorySource);
-
-            var missingSources = new List<string>();
-            if (LoadModel(WarehouseSource) == null) missingSources.Add(WarehouseSource);
-            if (LoadModel(FactorySource) == null) missingSources.Add(FactorySource);
-
-            if (missingSources.Count > 0)
-            {
-                // The source files are committed to the repository. Never silently
-                // replace an existing FBX with a placeholder just because Unity has
-                // not finished importing it yet.
-                Debug.LogError(
-                    "[FreightLocationPrefabBuilder] Source FBX import is unavailable:\n" +
-                    string.Join("\n", missingSources) +
-                    "\nThe files exist in the project; wait for Unity import to finish and run the builder again.");
-                return;
-            }
 
             int created = 0;
             foreach (var spec in Specs)
@@ -205,17 +188,23 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
 
         private static bool BuildOne(PrefabSpec spec, string sourcePath, string prefabPath, bool allowContractFallback)
         {
+            // IMPORTANT: never delete an existing production prefab before reading it.
+            // These prefabs contain the authored building geometry/materials that the
+            // game should use. Upgrade them in place when possible.
+            var existing = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (existing != null && HasVisualRenderers(existing))
+                return UpgradeExistingPrefab(spec, prefabPath);
+
+            // FBX is a fallback only when the production prefab is missing or empty.
             var source = LoadModel(sourcePath);
             if (source == null)
             {
                 Debug.LogError(
                     "[FreightLocationPrefabBuilder] Cannot build " + spec.Name +
-                    " because the source model is not imported: " + sourcePath);
+                    " because neither a usable production prefab nor an imported source model exists: " +
+                    sourcePath);
                 return false;
             }
-
-            if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null)
-                AssetDatabase.DeleteAsset(prefabPath);
 
             var root = new GameObject(spec.Name);
             root.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
@@ -225,9 +214,6 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
                 var meshRoot = new GameObject("MeshRoot");
                 meshRoot.transform.SetParent(root.transform, false);
 
-                // Instantiate the FBX model so its imported renderers/materials are
-                // retained. Unpack the model prefab connection before saving a new
-                // production prefab.
                 var model = PrefabUtility.InstantiatePrefab(source) as GameObject;
                 if (model == null)
                     model = UnityEngine.Object.Instantiate(source);
@@ -244,7 +230,7 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
                         InteractionMode.AutomatedAction);
                 }
 
-                var renderers = meshRoot.GetComponentsInChildren<Renderer>(true);
+                var renderers = root.GetComponentsInChildren<Renderer>(true);
                 if (renderers.Length == 0)
                 {
                     Debug.LogError(
@@ -254,17 +240,7 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
                 }
 
                 Bounds bounds = CalculateBounds(root.transform, renderers);
-                CreateContractAnchors(root.transform, bounds);
-                CreateEnvironmentCollision(root.transform, bounds);
-
-                var lodGroup = root.AddComponent<LODGroup>();
-                lodGroup.SetLODs(new[]
-                {
-                    new LOD(0.60f, renderers),
-                    new LOD(0.25f, renderers),
-                    new LOD(0.05f, renderers)
-                });
-                lodGroup.RecalculateBounds();
+                EnsureContract(root.transform, bounds, renderers);
 
                 bool success;
                 PrefabUtility.SaveAsPrefabAsset(root, prefabPath, out success);
@@ -276,8 +252,8 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
                 }
 
                 Debug.Log(
-                    "[FreightLocationPrefabBuilder] Built " + prefabPath +
-                    " from " + sourcePath +
+                    "[FreightLocationPrefabBuilder] Built missing production prefab " + prefabPath +
+                    " from FBX fallback " + sourcePath +
                     " (" + renderers.Length + " renderers).");
 
                 return true;
@@ -286,6 +262,97 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
             {
                 UnityEngine.Object.DestroyImmediate(root);
             }
+        }
+
+        private static bool UpgradeExistingPrefab(PrefabSpec spec, string prefabPath)
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (asset == null)
+                return false;
+
+            var root = PrefabUtility.InstantiatePrefab(asset) as GameObject;
+            if (root == null)
+                root = UnityEngine.Object.Instantiate(asset);
+
+            try
+            {
+                root.name = spec.Name;
+
+                if (PrefabUtility.IsAnyPrefabInstanceRoot(root))
+                {
+                    PrefabUtility.UnpackPrefabInstance(
+                        root,
+                        PrefabUnpackMode.Completely,
+                        InteractionMode.AutomatedAction);
+                }
+
+                var renderers = root.GetComponentsInChildren<Renderer>(true);
+                if (renderers.Length == 0)
+                {
+                    Debug.LogError(
+                        "[FreightLocationPrefabBuilder] Existing prefab has no visual renderers: " +
+                        prefabPath);
+                    return false;
+                }
+
+                Bounds bounds = CalculateBounds(root.transform, renderers);
+                EnsureContract(root.transform, bounds, renderers);
+
+                bool success;
+                PrefabUtility.SaveAsPrefabAsset(root, prefabPath, out success);
+                if (!success)
+                {
+                    Debug.LogError(
+                        "[FreightLocationPrefabBuilder] Failed to upgrade " + prefabPath);
+                    return false;
+                }
+
+                Debug.Log(
+                    "[FreightLocationPrefabBuilder] Preserved and upgraded existing production prefab " +
+                    prefabPath + " (" + renderers.Length + " renderers).");
+                return true;
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        private static void EnsureContract(Transform root, Bounds bounds, Renderer[] renderers)
+        {
+            var meshRoot = FindChild(root, "MeshRoot");
+            if (meshRoot == null)
+                meshRoot = NewAnchor(root, "MeshRoot", root.position);
+
+            CreateContractAnchors(root, bounds);
+            CreateEnvironmentCollision(root, bounds);
+            EnsureLodGroup(root.gameObject, renderers);
+        }
+
+        private static void EnsureLodGroup(GameObject root, Renderer[] renderers)
+        {
+            var lodGroup = root.GetComponent<LODGroup>();
+            if (lodGroup == null)
+                lodGroup = root.AddComponent<LODGroup>();
+
+            // Preserve authored LOD data when the existing prefab already has the
+            // required three levels. Only repair missing/incorrect LOD contracts.
+            if (lodGroup.lodCount != 3)
+            {
+                lodGroup.SetLODs(new[]
+                {
+                    new LOD(0.60f, renderers),
+                    new LOD(0.25f, renderers),
+                    new LOD(0.05f, renderers)
+                });
+            }
+
+            lodGroup.RecalculateBounds();
+        }
+
+        private static bool HasVisualRenderers(GameObject root)
+        {
+            return root != null && root.GetComponentsInChildren<Renderer>(true).Length > 0;
         }
 
         private static bool BuildContractShell(PrefabSpec spec, string prefabPath)
@@ -447,8 +514,7 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
                 if (lod == null || lod.lodCount != 3)
                     return false;
 
-                var meshRoot = FindChild(root.transform, "MeshRoot");
-                if (meshRoot == null || meshRoot.GetComponentsInChildren<Renderer>(true).Length == 0)
+                if (!HasVisualRenderers(root))
                     return false;
 
                 foreach (var anchor in RequiredAnchors)
