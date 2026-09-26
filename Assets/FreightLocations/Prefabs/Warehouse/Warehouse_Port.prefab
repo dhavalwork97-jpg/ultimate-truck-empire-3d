@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4079313327548204896}
   - component: {fileID: 654611055692108408}
   - component: {fileID: 3304999771942525204}
+  - component: {fileID: 14000000000000000008}
   m_Layer: 0
   m_Name: Walkway.001
   m_TagString: Untagged
@@ -3261,3 +3262,156 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &14000000000000000009
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 14000000000000000010}
+  m_Layer: 0
+  m_Name: MeshRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 22
+  m_IsActive: 1
+--- !u!4 &14000000000000000010
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4079313327548204896}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+
+--- !u!92 &14000000000000000008
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 168443803487355019}
+  serializedVersion: 2
+  m_LODs:
+  - serializedVersion: 2
+    screenRelativeTransitionHeight: 0.6
+    fadeTransitionWidth: 0
+    renderers:
+    - {fileID: 3304999771942525204}
+    - {fileID: 1559636129288502641}
+    - {fileID: 4882054736140422822}
+    - {fileID: 997231985552194792}
+    - {fileID: 1801848971963484819}
+    - {fileID: 925453898711594628}
+    - {fileID: 5629709471302935116}
+    - {fileID: 1979475297331369088}
+    - {fileID: 7062810615264939259}
+    - {fileID: 2499847962193546225}
+    - {fileID: 1214849772838204822}
+    - {fileID: 3872009846866653693}
+    - {fileID: 477037441245812808}
+    - {fileID: 7423392781341819420}
+    - {fileID: 1295990846696918665}
+    - {fileID: 5768130952693907067}
+    - {fileID: 407030839581880507}
+    - {fileID: 950701336562160233}
+    - {fileID: 1425534955117504945}
+    - {fileID: 9217162360325215147}
+    - {fileID: 4366722159376610607}
+    - {fileID: 178822346454743484}
+    - {fileID: 5217201140381630562}
+    - {fileID: 5383827593410617952}
+    - {fileID: 495355019578196487}
+    - {fileID: 6858498676252105950}
+    - {fileID: 7652728104897911929}
+    - {fileID: 3198599513164647647}
+    - {fileID: 999089335848354339}
+    - {fileID: 5897680499866544658}
+    - {fileID: 2864023193970215671}
+    - {fileID: 4832031209252642148}
+  - serializedVersion: 2
+    screenRelativeTransitionHeight: 0.25
+    fadeTransitionWidth: 0
+    renderers:
+    - {fileID: 3304999771942525204}
+    - {fileID: 1559636129288502641}
+    - {fileID: 4882054736140422822}
+    - {fileID: 997231985552194792}
+    - {fileID: 1801848971963484819}
+    - {fileID: 925453898711594628}
+    - {fileID: 5629709471302935116}
+    - {fileID: 1979475297331369088}
+    - {fileID: 7062810615264939259}
+    - {fileID: 2499847962193546225}
+    - {fileID: 1214849772838204822}
+    - {fileID: 3872009846866653693}
+    - {fileID: 477037441245812808}
+    - {fileID: 7423392781341819420}
+    - {fileID: 1295990846696918665}
+    - {fileID: 5768130952693907067}
+    - {fileID: 407030839581880507}
+    - {fileID: 950701336562160233}
+    - {fileID: 1425534955117504945}
+    - {fileID: 9217162360325215147}
+    - {fileID: 4366722159376610607}
+    - {fileID: 178822346454743484}
+    - {fileID: 5217201140381630562}
+    - {fileID: 5383827593410617952}
+    - {fileID: 495355019578196487}
+    - {fileID: 6858498676252105950}
+    - {fileID: 7652728104897911929}
+    - {fileID: 3198599513164647647}
+    - {fileID: 999089335848354339}
+    - {fileID: 5897680499866544658}
+    - {fileID: 2864023193970215671}
+    - {fileID: 4832031209252642148}
+  - serializedVersion: 2
+    screenRelativeTransitionHeight: 0.1
+    fadeTransitionWidth: 0
+    renderers:
+    - {fileID: 3304999771942525204}
+    - {fileID: 1559636129288502641}
+    - {fileID: 4882054736140422822}
+    - {fileID: 997231985552194792}
+    - {fileID: 1801848971963484819}
+    - {fileID: 925453898711594628}
+    - {fileID: 5629709471302935116}
+    - {fileID: 1979475297331369088}
+    - {fileID: 7062810615264939259}
+    - {fileID: 2499847962193546225}
+    - {fileID: 1214849772838204822}
+    - {fileID: 3872009846866653693}
+    - {fileID: 477037441245812808}
+    - {fileID: 7423392781341819420}
+    - {fileID: 1295990846696918665}
+    - {fileID: 5768130952693907067}
+    - {fileID: 407030839581880507}
+    - {fileID: 950701336562160233}
+    - {fileID: 1425534955117504945}
+    - {fileID: 9217162360325215147}
+    - {fileID: 4366722159376610607}
+    - {fileID: 178822346454743484}
+    - {fileID: 5217201140381630562}
+    - {fileID: 5383827593410617952}
+    - {fileID: 495355019578196487}
+    - {fileID: 6858498676252105950}
+    - {fileID: 7652728104897911929}
+    - {fileID: 3198599513164647647}
+    - {fileID: 999089335848354339}
+    - {fileID: 5897680499866544658}
+    - {fileID: 2864023193970215671}
+    - {fileID: 4832031209252642148}
+  m_LocalReferencePoint: {x: 0, y: 0, z: 0}
+  m_Size: 20
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_UsePercentage: 0
