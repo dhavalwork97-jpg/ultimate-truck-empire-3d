@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8496575246033643390}
   - component: {fileID: 3526597749574529429}
   - component: {fileID: 5437684381830027941}
+  - component: {fileID: 1000002003}
   m_Layer: 0
   m_Name: obj61
   m_TagString: Untagged
@@ -1999,7 +2000,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1879496690893487936}
-  - component: {fileID: 1000002003}
   m_Layer: 0
   m_Name: Factory_Automotive
   m_TagString: Untagged
@@ -7386,7 +7386,7 @@ LODGroup:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2141422428264472823}
+  m_GameObject: {fileID: 38953413066602323}
   serializedVersion: 2
   m_LODs:
   - serializedVersion: 2
