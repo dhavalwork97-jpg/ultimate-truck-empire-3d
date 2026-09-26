@@ -875,7 +875,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 240286295407801024}
-  - component: {fileID: 9000000000000002018}\n  m_Layer: 0
+  - component: {fileID: 9000000000000002018}
+  m_Layer: 0
   m_Name: Factory_Base
   m_TagString: Untagged
   m_Icon: {fileID: 0}
