@@ -32,6 +32,16 @@ namespace UltimateTruckEmpire.FreightLocations
             new FreightLocationDefinition("DEL-FAC-01", "Delhi", "Delhi Consumer Goods Factory", FreightLocationKind.Factory, "FreightLocations/Prefabs/Factory/Factory_Base", 3, "PALLETS", "MACHINERY", "GENERAL_FREIGHT"),
             new FreightLocationDefinition("IND-FOOD-01", "Indore", "Indore Food Processing Factory", FreightLocationKind.Factory, "FreightLocations/Prefabs/Factory/Factory_Base", 3, "FOOD", "PALLETS", "GENERAL_FREIGHT"),
             new FreightLocationDefinition("IND-WH-01", "Indore", "Indore Grain Warehouse", FreightLocationKind.Warehouse, "FreightLocations/Prefabs/Warehouse/Warehouse_Large", 4, "FOOD", "PALLETS", "GENERAL_FREIGHT")
+            new FreightLocationDefinition("AMD-WH-02", "Ahmedabad", "Ahmedabad Cargo Depot", FreightLocationKind.Warehouse, "FreightLocations/Prefabs/Warehouse/Warehouse_Base", 2, "FOOD", "CONSUMER_GOODS"),
+            new FreightLocationDefinition("VAD-FAC-02", "Vadodara", "Vadodara Industrial Factory", FreightLocationKind.Factory, "FreightLocations/Prefabs/Factory/Factory_Base", 3, "CHEMICALS", "MACHINERY"),
+            new FreightLocationDefinition("SUR-WH-02", "Surat", "Surat Consumer Warehouse", FreightLocationKind.Warehouse, "FreightLocations/Prefabs/Warehouse/Warehouse_Base", 2, "CONSUMER_GOODS", "FOOD"),
+            new FreightLocationDefinition("RJK-FAC-02", "Rajkot", "Rajkot Auto Components Factory", FreightLocationKind.Factory, "FreightLocations/Prefabs/Factory/Factory_Automotive", 4, "AUTO_PARTS", "STEEL"),
+            new FreightLocationDefinition("KDL-WH-03", "Kandla", "Kandla Export Warehouse", FreightLocationKind.Warehouse, "FreightLocations/Prefabs/Warehouse/Warehouse_Large", 4, "CONTAINERS", "CONSUMER_GOODS"),
+            new FreightLocationDefinition("MUM-WH-02", "Mumbai", "Mumbai Consumer Warehouse", FreightLocationKind.Warehouse, "FreightLocations/Prefabs/Warehouse/Warehouse_Large", 4, "CONSUMER_GOODS", "FOOD"),
+            new FreightLocationDefinition("PUN-FAC-02", "Pune", "Pune Machinery Factory", FreightLocationKind.Factory, "FreightLocations/Prefabs/Factory/Factory_Base", 3, "MACHINERY", "STEEL"),
+            new FreightLocationDefinition("JAI-WH-02", "Jaipur", "Jaipur Marble Warehouse", FreightLocationKind.Warehouse, "FreightLocations/Prefabs/Warehouse/Warehouse_Large", 4, "STONE", "CONSUMER_GOODS"),
+            new FreightLocationDefinition("DEL-WH-02", "Delhi", "Delhi Industrial Warehouse", FreightLocationKind.Warehouse, "FreightLocations/Prefabs/Warehouse/Warehouse_Base", 2, "MACHINERY", "AUTO_PARTS"),
+            new FreightLocationDefinition("IND-FAC-02", "Indore", "Indore Consumer Goods Factory", FreightLocationKind.Factory, "FreightLocations/Prefabs/Factory/Factory_Base", 3, "CONSUMER_GOODS", "FOOD")
         };
 
         public static IReadOnlyList<FreightLocationDefinition> All => definitions;
