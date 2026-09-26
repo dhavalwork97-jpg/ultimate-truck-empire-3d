@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4079313327548204896}
   - component: {fileID: 654611055692108408}
   - component: {fileID: 3304999771942525204}
+  - component: {fileID: 1000002003}
   m_Layer: 0
   m_Name: Walkway.001
   m_TagString: Untagged
@@ -733,7 +734,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8965636525268626705}
-  - component: {fileID: 1000002003}
   m_Layer: 0
   m_Name: Warehouse_Port
   m_TagString: Untagged
@@ -3299,7 +3299,7 @@ LODGroup:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1591331787587518128}
+  m_GameObject: {fileID: 168443803487355019}
   serializedVersion: 2
   m_LODs:
   - serializedVersion: 2
