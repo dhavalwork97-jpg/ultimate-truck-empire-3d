@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8496575246033643390}
   - component: {fileID: 3526597749574529429}
   - component: {fileID: 5437684381830027941}
-  - component: {fileID: 1000002003}
+  - component: {fileID: 1400000000000000003}
   m_Layer: 0
   m_Name: obj61
   m_TagString: Untagged
@@ -7349,7 +7349,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &1000000001
+--- !u!1 &1400000000000000001
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7357,7 +7357,7 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1000001002}
+  - component: {fileID: 1400000000000000002}
   m_Layer: 0
   m_Name: MeshRoot
   m_TagString: Untagged
@@ -7365,7 +7365,7 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 22
   m_IsActive: 1
---- !u!4 &1000001002
+--- !u!4 &1400000000000000002
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7380,7 +7380,7 @@ Transform:
   m_Father: {fileID: 8496575246033643390}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 
---- !u!92 &1000002003
+--- !u!92 &1400000000000000003
 LODGroup:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
