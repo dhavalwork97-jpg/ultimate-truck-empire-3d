@@ -2134,7 +2134,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4297753020900196279}
-  - component: {fileID: 9000000000000002018}\n  m_Layer: 0
+  - component: {fileID: 9000000000000002018}
+  m_Layer: 0
   m_Name: Factory_Chemical
   m_TagString: Untagged
   m_Icon: {fileID: 0}
