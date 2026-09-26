@@ -63,7 +63,9 @@ namespace UltimateTruckEmpire.Tests.Editor
             {
                 string prefabPath = "Assets/FreightLocations/Prefabs/" +
                     location.prefabResourcePath.Substring("FreightLocations/Prefabs/".Length) + ".prefab";
-                if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) == null)
+                AssetDatabase.ImportAsset(prefabPath, ImportAssetOptions.ForceUpdate);
+                var prefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                if (prefabAsset == null)
                     missing.Add(location.id + " -> " + prefabPath);
             }
 
@@ -90,24 +92,21 @@ namespace UltimateTruckEmpire.Tests.Editor
             {
                 string folder = prefabName.StartsWith("Warehouse") ? "Warehouse" : "Factory";
                 string path = $"Assets/FreightLocations/Prefabs/{folder}/{prefabName}.prefab";
-                var root = PrefabUtility.LoadPrefabContents(path);
-                try
-                {
-                    Assert.That(root, Is.Not.Null, path);
-                    foreach (var anchor in anchors)
-                        Assert.That(FindChild(root.transform, anchor), Is.Not.Null, $"{prefabName} missing {anchor}");
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+                var root = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                Assert.That(root, Is.Not.Null, path);
+                Assert.That(PrefabUtility.IsPartOfPrefabAsset(root), Is.True, $"{prefabName} is not a prefab asset");
 
-                    var lod = root.GetComponent<LODGroup>();
-                    Assert.That(lod, Is.Not.Null, $"{prefabName} missing LODGroup");
-                    Assert.That(lod.lodCount, Is.EqualTo(3), $"{prefabName} must have 3 LOD levels");
+                foreach (var anchor in anchors)
+                    Assert.That(FindChild(root.transform, anchor), Is.Not.Null, $"{prefabName} missing {anchor}");
 
-                    var delivery = FindChild(root.transform, "DeliveryTrigger");
-                    Assert.That(delivery.gameObject.isStatic, Is.False, $"{prefabName} DeliveryTrigger must be non-static");
-                }
-                finally
-                {
-                    PrefabUtility.UnloadPrefabContents(root);
-                }
+                var lod = root.GetComponent<LODGroup>();
+                Assert.That(lod, Is.Not.Null, $"{prefabName} missing LODGroup");
+                Assert.That(lod.lodCount, Is.EqualTo(3), $"{prefabName} must have 3 LOD levels");
+
+                var delivery = FindChild(root.transform, "DeliveryTrigger");
+                Assert.That(delivery, Is.Not.Null, $"{prefabName} missing DeliveryTrigger");
+                Assert.That(delivery.gameObject.isStatic, Is.False, $"{prefabName} DeliveryTrigger must be non-static");
             }
         }
 
