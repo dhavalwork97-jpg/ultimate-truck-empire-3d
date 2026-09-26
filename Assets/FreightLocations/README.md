@@ -52,3 +52,7 @@ Existing `DeliveryTrigger` remains authoritative for freight completion.
 20 reusable locations cover all 10 existing freight cities.
 
 The same warehouse/factory source models are intentionally reused through different location definitions.
+
+
+## Company data
+Example company definitions are stored under `Assets/FreightLocations/Data/Companies/` and reference the reusable production prefabs.
