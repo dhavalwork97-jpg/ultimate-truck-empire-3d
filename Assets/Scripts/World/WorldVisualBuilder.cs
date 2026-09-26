@@ -34,11 +34,22 @@ namespace UltimateTruckEmpire.World
             CreateGround(root);
             BuildRoadNetwork(root);
             BuildSites(root);
-            BuildCityBlocks(root);
-            BuildBackgroundSkyline(root);
-            BuildVegetation(root);
-            BuildStreetFurniture(root);
-            BuildRegionalExpansion(root);
+
+            // Versatile Studio becomes the authoritative visual environment when
+            // its prepared Resources prefabs are present. The procedural builder
+            // remains a safe fallback for CI/dev machines without the Asset Store pack.
+            if (VersatileStudioWorldBuilder.IsAvailable)
+            {
+                VersatileStudioWorldBuilder.Build(root);
+            }
+            else
+            {
+                BuildCityBlocks(root);
+                BuildBackgroundSkyline(root);
+                BuildVegetation(root);
+                BuildStreetFurniture(root);
+                BuildRegionalExpansion(root);
+            }
 
             EnvironmentAtmosphere.Ensure();
             StreetLightManager.Ensure();

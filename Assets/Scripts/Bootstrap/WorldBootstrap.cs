@@ -98,6 +98,9 @@ namespace UltimateTruckEmpire.Bootstrap
 
         private static void BuildWorld()
         {
+            // Tenkoku owns sky/sun/weather when the optional Asset Store package
+            // has been prepared. The gameplay world remains package-independent.
+            TenkokuWorldBridge.Ensure();
             CreateLight();
             WorldVisualBuilder.Build();
             RestAreaWorldBuilder.Build();
@@ -117,6 +120,8 @@ namespace UltimateTruckEmpire.Bootstrap
 
         private static void CreateLight()
         {
+            if (TenkokuWorldBridge.IsActive) return;
+
             var existing = FindFirstObjectByType<EnvironmentAtmosphere>();
             if (existing != null && existing.sun != null) return;
 
@@ -326,6 +331,8 @@ namespace UltimateTruckEmpire.Bootstrap
                 cockpit != null ? cockpit.eyeAnchor : null,
                 truck.transform.Find("HoodCameraAnchor"),
                 truck.transform.Find("BumperCameraAnchor"));
+
+            TenkokuWorldBridge.BindCamera(cam);
         }
 
         private static void CreateHud(GameObject truck)

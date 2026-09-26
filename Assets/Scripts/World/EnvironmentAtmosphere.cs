@@ -76,6 +76,8 @@ namespace UltimateTruckEmpire.World
 
         private void SetupSkybox()
         {
+            if (TenkokuWorldBridge.IsActive) return;
+
             Shader procedural = Shader.Find("Skybox/Procedural");
             if (procedural == null) return;
 
@@ -92,6 +94,19 @@ namespace UltimateTruckEmpire.World
         /// </summary>
         public void Apply(float timeOfDay, WeatherState weather)
         {
+            if (TenkokuWorldBridge.IsActive)
+            {
+                TenkokuWorldBridge.Apply(timeOfDay, weather);
+                if (nightState != (DaylightNight(timeOfDay)))
+                {
+                    nightState = DaylightNight(timeOfDay);
+                    StreetLightManager.SetNight(nightState);
+                }
+                lastAppliedTime = timeOfDay;
+                lastWeather = (int)weather;
+                return;
+            }
+
             if (sun == null) ResolveSun();
 
             float daylight = Mathf.Clamp01(Mathf.Sin((timeOfDay - 6f) * Mathf.PI / 12f));
@@ -117,6 +132,12 @@ namespace UltimateTruckEmpire.World
 
             lastAppliedTime = timeOfDay;
             lastWeather = (int)weather;
+        }
+
+        private static bool DaylightNight(float timeOfDay)
+        {
+            float daylight = Mathf.Clamp01(Mathf.Sin((timeOfDay - 6f) * Mathf.PI / 12f));
+            return daylight < 0.16f;
         }
 
         private static void WeatherFactors(WeatherState weather, out float light, out float fog, out bool wet)
