@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5990991072287731318}
+  - component: {fileID: 14000000000000000008}
   m_Layer: 0
   m_Name: ParkingSlot_02
   m_TagString: Untagged
@@ -3261,3 +3262,156 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &14000000000000000009
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 14000000000000000010}
+  m_Layer: 0
+  m_Name: MeshRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 22
+  m_IsActive: 1
+--- !u!4 &14000000000000000010
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5990991072287731318}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+
+--- !u!92 &14000000000000000008
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 323709366044240021}
+  serializedVersion: 2
+  m_LODs:
+  - serializedVersion: 2
+    screenRelativeTransitionHeight: 0.6
+    fadeTransitionWidth: 0
+    renderers:
+    - {fileID: 4466357088011065678}
+    - {fileID: 2114322353976179890}
+    - {fileID: 6135779553980248447}
+    - {fileID: 7803978155506077072}
+    - {fileID: 5775896091680305077}
+    - {fileID: 2838227039357618588}
+    - {fileID: 5709219066115102191}
+    - {fileID: 7511550364076907788}
+    - {fileID: 5053846646842492856}
+    - {fileID: 7182507175377319277}
+    - {fileID: 1100389765407793932}
+    - {fileID: 5867569487807913803}
+    - {fileID: 3890939901051490501}
+    - {fileID: 4129513959066260624}
+    - {fileID: 5063955556042799835}
+    - {fileID: 7868425115468707513}
+    - {fileID: 571886318076477385}
+    - {fileID: 6143994757928677790}
+    - {fileID: 7442155163927851885}
+    - {fileID: 6938757460137460448}
+    - {fileID: 8128278357603214210}
+    - {fileID: 6249291153154490161}
+    - {fileID: 241467048814787877}
+    - {fileID: 9192609340065942798}
+    - {fileID: 7461376778689919139}
+    - {fileID: 7881461788234747642}
+    - {fileID: 579133740326048869}
+    - {fileID: 9018581424595888677}
+    - {fileID: 672909911022172008}
+    - {fileID: 6866084327269196824}
+    - {fileID: 7416202959918118224}
+    - {fileID: 6660537635465223716}
+  - serializedVersion: 2
+    screenRelativeTransitionHeight: 0.25
+    fadeTransitionWidth: 0
+    renderers:
+    - {fileID: 4466357088011065678}
+    - {fileID: 2114322353976179890}
+    - {fileID: 6135779553980248447}
+    - {fileID: 7803978155506077072}
+    - {fileID: 5775896091680305077}
+    - {fileID: 2838227039357618588}
+    - {fileID: 5709219066115102191}
+    - {fileID: 7511550364076907788}
+    - {fileID: 5053846646842492856}
+    - {fileID: 7182507175377319277}
+    - {fileID: 1100389765407793932}
+    - {fileID: 5867569487807913803}
+    - {fileID: 3890939901051490501}
+    - {fileID: 4129513959066260624}
+    - {fileID: 5063955556042799835}
+    - {fileID: 7868425115468707513}
+    - {fileID: 571886318076477385}
+    - {fileID: 6143994757928677790}
+    - {fileID: 7442155163927851885}
+    - {fileID: 6938757460137460448}
+    - {fileID: 8128278357603214210}
+    - {fileID: 6249291153154490161}
+    - {fileID: 241467048814787877}
+    - {fileID: 9192609340065942798}
+    - {fileID: 7461376778689919139}
+    - {fileID: 7881461788234747642}
+    - {fileID: 579133740326048869}
+    - {fileID: 9018581424595888677}
+    - {fileID: 672909911022172008}
+    - {fileID: 6866084327269196824}
+    - {fileID: 7416202959918118224}
+    - {fileID: 6660537635465223716}
+  - serializedVersion: 2
+    screenRelativeTransitionHeight: 0.1
+    fadeTransitionWidth: 0
+    renderers:
+    - {fileID: 4466357088011065678}
+    - {fileID: 2114322353976179890}
+    - {fileID: 6135779553980248447}
+    - {fileID: 7803978155506077072}
+    - {fileID: 5775896091680305077}
+    - {fileID: 2838227039357618588}
+    - {fileID: 5709219066115102191}
+    - {fileID: 7511550364076907788}
+    - {fileID: 5053846646842492856}
+    - {fileID: 7182507175377319277}
+    - {fileID: 1100389765407793932}
+    - {fileID: 5867569487807913803}
+    - {fileID: 3890939901051490501}
+    - {fileID: 4129513959066260624}
+    - {fileID: 5063955556042799835}
+    - {fileID: 7868425115468707513}
+    - {fileID: 571886318076477385}
+    - {fileID: 6143994757928677790}
+    - {fileID: 7442155163927851885}
+    - {fileID: 6938757460137460448}
+    - {fileID: 8128278357603214210}
+    - {fileID: 6249291153154490161}
+    - {fileID: 241467048814787877}
+    - {fileID: 9192609340065942798}
+    - {fileID: 7461376778689919139}
+    - {fileID: 7881461788234747642}
+    - {fileID: 579133740326048869}
+    - {fileID: 9018581424595888677}
+    - {fileID: 672909911022172008}
+    - {fileID: 6866084327269196824}
+    - {fileID: 7416202959918118224}
+    - {fileID: 6660537635465223716}
+  m_LocalReferencePoint: {x: 0, y: 0, z: 0}
+  m_Size: 20
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_UsePercentage: 0
