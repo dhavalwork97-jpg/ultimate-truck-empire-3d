@@ -30,8 +30,6 @@ namespace UltimateTruckEmpire.Truck
         [SerializeField] private KeyCode cruiseKey = KeyCode.V;
         [SerializeField] private float minCruiseKph = 25f;
 
-        private static int nextEntityId = 1;
-        private int entityId;
         private Rigidbody body;
         private bool engineRunning = true;
         private float steerInput, throttleInput;
@@ -55,8 +53,17 @@ namespace UltimateTruckEmpire.Truck
         public float Condition { get; private set; } = 100f;
         public string FleetTruckId { get; private set; } = "";
 
-        /// <summary>Runtime-stable identity used by systems that need to distinguish truck instances.</summary>
-        public int GetEntityId() => entityId;
+        /// <summary>
+        /// Returns the stable identity used by systems that need to associate
+        /// runtime truck activity with a fleet truck.
+        /// Falls back to the Unity instance ID for an unbound runtime truck.
+        /// </summary>
+        public string GetEntityId()
+        {
+            return !string.IsNullOrEmpty(FleetTruckId)
+                ? FleetTruckId
+                : GetInstanceID().ToString();
+        }
 
         public void ApplyFleetConfiguration(FleetTruckData truck)
         {
@@ -99,7 +106,6 @@ namespace UltimateTruckEmpire.Truck
 
         private void Awake()
         {
-            if (entityId == 0) entityId = nextEntityId++;
             body = GetComponent<Rigidbody>();
             body.mass = 8000f;
             body.centerOfMass = new Vector3(0f, -0.65f, 0.15f);
