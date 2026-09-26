@@ -52,6 +52,8 @@ namespace UltimateTruckEmpire.Truck
         public float FuelEfficiency { get; private set; } = 3.2f;
         public float Condition { get; private set; } = 100f;
         public string FleetTruckId { get; private set; } = "";
+        /// <summary>Stable gameplay identifier used by tolls, telemetry and save systems.</summary>
+        public string GetEntityId() => string.IsNullOrEmpty(FleetTruckId) ? gameObject.name : FleetTruckId;
 
         public void ApplyFleetConfiguration(FleetTruckData truck)
         {
