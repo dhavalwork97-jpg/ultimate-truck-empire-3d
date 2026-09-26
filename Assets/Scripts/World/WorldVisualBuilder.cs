@@ -33,12 +33,24 @@ namespace UltimateTruckEmpire.World
 
             CreateGround(root);
             BuildRoadNetwork(root);
+
+            // When the purchased Demo City kit is imported, it becomes the
+            // authoritative visual city layer. The gameplay road graph remains
+            // procedural/semantic so deliveries, traffic and tolls keep working.
+            bool usingVersatileKit = VersatileStudioWorldBuilder.Build(root);
+
             BuildSites(root);
-            BuildCityBlocks(root);
-            BuildBackgroundSkyline(root);
-            BuildVegetation(root);
-            BuildStreetFurniture(root);
-            BuildRegionalExpansion(root);
+
+            if (!usingVersatileKit)
+            {
+                // Development fallback only. Production worlds should use the
+                // Versatile Studio asset kit instead of generated placeholders.
+                BuildCityBlocks(root);
+                BuildBackgroundSkyline(root);
+                BuildVegetation(root);
+                BuildStreetFurniture(root);
+                BuildRegionalExpansion(root);
+            }
 
             EnvironmentAtmosphere.Ensure();
             StreetLightManager.Ensure();
