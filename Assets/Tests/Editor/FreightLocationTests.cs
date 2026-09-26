@@ -71,7 +71,6 @@ namespace UltimateTruckEmpire.Tests.Editor
         }
 
 
-#if UNITY_EDITOR
         [Test]
         public void PrefabContractsContainAnchorsAndThreeLodLevels()
         {
