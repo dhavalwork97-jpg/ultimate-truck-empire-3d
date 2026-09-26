@@ -149,16 +149,16 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
                     continue;
                 }
 
-                if (root.GetComponent<LODGroup>() == null)
+                var authoredLodGroups = root.GetComponentsInChildren<LODGroup>(true);
+                if (authoredLodGroups.Length != 1)
                 {
-                    Debug.LogError(spec.Name + " is missing LODGroup.");
+                    Debug.LogError(spec.Name + " must contain exactly one LODGroup.");
                     errors++;
                 }
-                else if (root.GetComponent<LODGroup>().lodCount != 3)
+                else if (authoredLodGroups[0].lodCount != 3)
                 {
                     Debug.LogError(
-                        spec.Name + " has " +
-                        root.GetComponent<LODGroup>().lodCount +
+                        spec.Name + " has " + authoredLodGroups[0].lodCount +
                         " LOD levels; expected 3.");
                     errors++;
                 }
@@ -338,9 +338,8 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
 
         private static void EnsureLodGroup(GameObject root, Renderer[] renderers)
         {
-            var lodGroup = root.GetComponent<LODGroup>();
-            if (lodGroup == null)
-                lodGroup = root.AddComponent<LODGroup>();
+            var lodGroups = root.GetComponentsInChildren<LODGroup>(true);
+            var lodGroup = lodGroups.Length > 0 ? lodGroups[0] : root.AddComponent<LODGroup>();
 
             // Preserve authored LOD data when the existing prefab already has the
             // required three levels. Only repair missing/incorrect LOD contracts.
@@ -544,7 +543,8 @@ namespace UltimateTruckEmpire.FreightLocations.Editor
                 if (root == null)
                     return false;
 
-                var lod = root.GetComponent<LODGroup>();
+                var lodGroups = root.GetComponentsInChildren<LODGroup>(true);
+                var lod = lodGroups.Length == 1 ? lodGroups[0] : null;
                 if (lod == null || lod.lodCount != 3)
                     return false;
 
