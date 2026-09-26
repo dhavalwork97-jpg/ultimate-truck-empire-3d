@@ -56,3 +56,20 @@ The same warehouse/factory source models are intentionally reused through differ
 
 ## Company data
 Example company definitions are stored under `Assets/FreightLocations/Data/Companies/` and reference the reusable production prefabs.
+
+## Editor prefab generation
+
+The source FBX models can be converted into the seven production prefabs automatically with:
+
+**Unity menu:** `Ultimate Truck Empire > Freight Locations > Build Production Prefabs`
+
+The generator reads:
+
+- `Assets/FreightLocations/Source/Warehouse/warehouseupload2.fbx`
+- `Assets/FreightLocations/Source/Factory/basic_factory_modeling_.fbx`
+
+and writes the seven contract prefabs into the existing `Warehouse` and `Factory` prefab folders. It also refreshes `Assets/Resources/FreightLocations/FreightLocationPrefabCatalog.asset` so all 30 registered locations point at a valid production prefab.
+
+A second menu item, **Validate Production Prefabs**, checks the seven prefab paths, required anchors, root `LODGroup` and its three LOD levels, and the non-static `DeliveryTrigger` anchor.
+
+Because the supplied source pack contains one high-detail mesh per building type rather than authored LOD meshes, the generator initially uses the imported renderer set at all three LOD thresholds. This keeps the hierarchy contract and avoids duplicating mesh memory. Authored/decimated LOD1 and LOD2 meshes can be substituted later without changing the prefab contract.
