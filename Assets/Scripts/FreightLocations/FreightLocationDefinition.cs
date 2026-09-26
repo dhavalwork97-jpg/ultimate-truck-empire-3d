@@ -18,6 +18,9 @@ namespace UltimateTruckEmpire.FreightLocations
         public FreightLocationKind kind;
         public string prefabResourcePath;
         public string[] cargoIds;
+        public bool pickupEnabled;
+        public bool deliveryEnabled;
+        public string[] jobTypes;
         public int loadingDockCount;
 
         public FreightLocationDefinition(
@@ -36,6 +39,9 @@ namespace UltimateTruckEmpire.FreightLocations
             this.prefabResourcePath = prefabResourcePath;
             this.loadingDockCount = Mathf.Max(1, loadingDockCount);
             this.cargoIds = cargoIds ?? Array.Empty<string>();
+            pickupEnabled = true;
+            deliveryEnabled = true;
+            jobTypes = new[] { "FactoryToWarehouse", "WarehouseToFactory", "WarehouseToWarehouse", "FactoryToPort", "PortToWarehouse" };
         }
     }
 }
