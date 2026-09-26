@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8112154999984427008}
   - component: {fileID: 1051369491045846025}
   - component: {fileID: 68262087553576719}
+  - component: {fileID: 1000002003}
   m_Layer: 0
   m_Name: Door2.005
   m_TagString: Untagged
@@ -2452,7 +2453,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7778911462772151391}
-  - component: {fileID: 1000002003}
   m_Layer: 0
   m_Name: Warehouse_Large
   m_TagString: Untagged
@@ -3299,7 +3299,7 @@ LODGroup:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6080659457941834585}
+  m_GameObject: {fileID: 343195180212241339}
   serializedVersion: 2
   m_LODs:
   - serializedVersion: 2
