@@ -4,46 +4,51 @@ This pack turns the warehouse and factory source models into reusable logistics 
 
 ## Source assets
 
-The supplied ZIPs are **raw 3D assets**, not Unity prefabs. They must be imported through the Unity Editor and converted into production prefabs under:
+The supplied models are imported into Unity under:
 
-`Assets/Resources/FreightLocations/Prefabs/`
+- `Assets/FreightLocations/Source/Factory/basic_factory_modeling_.fbx`
+- `Assets/FreightLocations/Source/Warehouse/warehouseupload2.fbx`
 
-Expected production prefab resource names:
+Their imported materials/textures are retained under the FreightLocations source/material folders.
 
-- `Warehouse_Small.prefab`
-- `Warehouse_Large.prefab`
-- `Warehouse_Port.prefab`
-- `Factory_Base.prefab`
-- `Factory_Textile.prefab`
-- `Factory_Chemical.prefab`
-- `Factory_Automotive.prefab`
-- `Factory_Food.prefab`
+## Production prefabs
 
-The runtime catalog in `FreightLocationRegistry` deliberately references these prefab paths without embedding model-specific logic into the freight economy.
+Production prefabs live under:
+
+`Assets/FreightLocations/Prefabs/`
+
+Current variants:
+
+- Warehouse_Base.prefab
+- Warehouse_Large.prefab
+- Warehouse_Port.prefab
+- Factory_Base.prefab
+- Factory_Textile.prefab
+- Factory_Chemical.prefab
+- Factory_Automotive.prefab
+
+The runtime `FreightLocationPrefabCatalog` in `Assets/Resources/FreightLocations/` references these prefabs directly, so no duplicate prefab copies are required.
 
 ## Gameplay contract
 
-Location prefabs are visual/logistics infrastructure only. They must not replace the authoritative road network, city delivery triggers, trailer system, economy, or save system.
+Location prefabs are visual/logistics infrastructure only. They do not replace the authoritative road network, city delivery triggers, trailer system, economy, or save system.
 
-When production prefabs are created, use these optional child anchors where appropriate:
+Required anchors are:
 
 - `LoadingDock_A`
 - `LoadingDock_B`
 - `TrailerSpawn`
 - `CargoSpawn`
+- `DeliveryTrigger`
 - `ParkingSlot_01`
+- `ParkingSlot_02`
 - `CompanySign`
+- `EnvironmentCollision`
 
-Existing `DeliveryTrigger` instances remain authoritative for freight completion.
+Existing `DeliveryTrigger` remains authoritative for freight completion.
 
 ## Current catalog
 
-20 reusable locations cover all 10 existing freight cities:
+20 reusable locations cover all 10 existing freight cities.
 
-Ahmedabad, Vadodara, Surat, Rajkot, Kandla, Mumbai, Pune, Jaipur, Delhi, and Indore.
-
-The same warehouse/factory source models are intentionally reused through different prefab resource paths and location definitions.
-
-## Important validation rule
-
-Do not claim the raw ZIPs are Unity-ready. A Unity Editor import step is still required to produce the actual `.prefab`, `.mat`, and `.meta` files. The code in this branch is safe without those assets: missing production prefabs produce a warning rather than breaking compilation.
+The same warehouse/factory source models are intentionally reused through different location definitions.
