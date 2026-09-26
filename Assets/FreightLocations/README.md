@@ -33,7 +33,7 @@ The runtime `FreightLocationPrefabCatalog` in `Assets/Resources/FreightLocations
 
 Location prefabs are visual/logistics infrastructure only. They do not replace the authoritative road network, city delivery triggers, trailer system, economy, or save system.
 
-Required anchors are:
+Each production prefab contains a `MeshRoot`, a 3-level `LODGroup`, and the following logistics anchors:
 
 - `LoadingDock_A`
 - `LoadingDock_B`
@@ -49,7 +49,7 @@ Existing `DeliveryTrigger` remains authoritative for freight completion.
 
 ## Current catalog
 
-20 reusable locations cover all 10 existing freight cities.
+30 reusable locations cover all 10 existing freight cities.
 
 The same warehouse/factory source models are intentionally reused through different location definitions.
 
