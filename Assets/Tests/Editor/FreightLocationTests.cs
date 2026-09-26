@@ -14,7 +14,7 @@ namespace UltimateTruckEmpire.Tests.Editor
         [Test]
         public void CatalogHasReusableLocationsAcrossAllFreightCities()
         {
-            Assert.That(FreightLocationRegistry.All.Count, Is.EqualTo(20));
+            Assert.That(FreightLocationRegistry.All.Count, Is.EqualTo(30));
 
             var cities = new HashSet<string>();
             foreach (var location in FreightLocationRegistry.All)
