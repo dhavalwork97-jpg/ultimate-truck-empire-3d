@@ -174,7 +174,7 @@ namespace UltimateTruckEmpire.Gameplay.Toll
             var truck = other.GetComponentInParent<TruckController>();
             if (truck == null || !inside.Add(truck.GetEntityId().ToString())) return;
             TollPlazaManager.Instance?.AnnounceApproach(plazaId);
-            TollPlazaManager.Instance?.TryPay(plazaId, method, truck, truck.GetInstanceID().ToString());
+            TollPlazaManager.Instance?.TryPay(plazaId, method, truck, truck.GetEntityId().ToString());
         }
 
         private void OnTriggerExit(Collider other)
